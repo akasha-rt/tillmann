@@ -332,10 +332,13 @@ class Note extends SugarBean {
          * To Hide Email Attachments
          * @author Dhaval Darji
          */
-        if (isset($where) && $where != '')
-            $where .= ' AND (notes.parent_type <> "Emails") ';
-        else
-            $where .= ' notes.parent_type <> "Emails" ';
+        //but only for note listview
+        if ($_REQUEST['module'] == 'Notes' && $_REQUEST['action'] == 'index') {
+            if (isset($where) && $where != '')
+                $where .= ' AND (notes.parent_type <> "Emails") ';
+            else
+                $where .= ' notes.parent_type <> "Emails" ';
+        }
         $query = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect, $ifListForExport);
         return $query;
     }
