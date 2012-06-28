@@ -63,6 +63,6 @@ $unified_search_modules_display = array (
   ),
   'Tasks' => 
   array (
-    'visible' => false,
+    'visible' => true,
   ),
 );
