@@ -444,7 +444,11 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
                 $email->retrieve($id);
     	        $email->parent_id = $modId;
                 $email->parent_type = $_REQUEST['parent_type'];
-                $email->status = 'read';
+                //Dhaval
+                //Mark email closed when Related
+                //$email->status = 'read';
+                $email->status = 'closed';
+                //End - Dhaval
                 $email->save();
                 $email->load_relationship($mod);
                 $email->$mod->add($modId);
