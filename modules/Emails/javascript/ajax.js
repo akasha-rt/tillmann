@@ -745,11 +745,27 @@ AjaxObject.detailView = {
 	    SUGAR.hideMessageBox();
 		SUGAR.email2.detailView.quickCreateDialog.hide();
 		validate['EditView'] = [ ];
+            //Dhaval
+            var ret = YAHOO.lang.JSON.parse(o.responseText);
+            if(ret.id == 0 ){
+                    ajaxStatus.showStatus('Contact already exists');
+                     window.setTimeout("ajaxStatus.hideStatus();", 2000);
+                }
+            //End - Dhaval
 	},
 
 	saveQuickCreateFormAndReply : function(o) {
         SUGAR.hideMessageBox();
         var ret = YAHOO.lang.JSON.parse(o.responseText);
+        //Dhaval
+        if(ret.id == 0 ){
+                    ajaxStatus.showStatus('Contact already exists');
+                     window.setTimeout("ajaxStatus.hideStatus();", 2000);
+                     SUGAR.email2.detailView.quickCreateDialog.hide();
+                     validate['EditView'] = [ ];
+                     return ;
+                }
+        //End - Dhaval        
         SUGAR.email2.detailView.quickCreateDialog.hide();
         var qcd = SUGAR.email2.detailView.quickCreateDialog;
         var type = (qcd.qcmodule == 'Cases') ? 'replyCase' : 'reply';
@@ -764,10 +780,17 @@ AjaxObject.detailView = {
     },
 
 	saveQuickCreateFormAndAddToAddressBook : function(o) {
-	   SUGAR.hideMessageBox();
+	   
+           SUGAR.hideMessageBox();
 		SUGAR.email2.detailView.quickCreateDialog.hide();
 		SUGAR.email2.complexLayout.findPanel('contactsTab').show();
 		validate['EditView'] = [ ];
+                //Dhaval
+                var ret = YAHOO.lang.JSON.parse(o.responseText);
+                if(ret.id == 0 ){
+                    ajaxStatus.showStatus('Contact already exists');
+                     window.setTimeout("ajaxStatus.hideStatus();", 2000);}
+                 //End - Dhaval
 	},
 
 	handleAssignmentDialogAssignAction : function() {
