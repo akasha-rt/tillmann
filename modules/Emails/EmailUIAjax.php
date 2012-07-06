@@ -461,6 +461,18 @@ if (isset($_REQUEST['emailUIAction'])) {
                     $email->save();
                     $email->load_relationship($mod);
                     $email->$mod->add($modId);
+                    //Dhaval - Special for Task as add relation is failing
+                    if ($_REQUEST['parent_type'] == 'Tasks') {
+                        if ($email->load_relationship('notes')) {
+                            foreach ($email->notes->getBeans() as $note) {
+                                $note->retrieve($note->id);
+                                $note->parent_type = $email->parent_type;
+                                $note->parent_id = $email->parent_id;
+                                $note->save();
+                            }
+                        }
+                    }
+                    //End - Dhaval
                 }
             }
             break;
