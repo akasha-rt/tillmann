@@ -2482,6 +2482,7 @@ class Email extends SugarBean {
         global $beanList;
         global $sugar_config;
         global $app_strings;
+        global $app_list_strings;
 
         $emailSettings = $current_user->getPreference('emailSettings', 'Emails');
         // cn: default to a low number until user specifies otherwise
@@ -2533,6 +2534,7 @@ class Email extends SugarBean {
             $temp = array();
             $temp['flagged'] = (is_null($a['flagged']) || $a['flagged'] == '0') ? '' : 1;
             $temp['status'] = (is_null($a['reply_to_status']) || $a['reply_to_status'] == '0') ? '' : 1;
+            $temp['emailstatus'] = $app_list_strings['dom_email_status'][$a['status']];
             $temp['subject'] = $a['name'];
             $temp['date'] = $timedate->to_display_date_time($a['date_sent']);
             $temp['uid'] = $a['id'];

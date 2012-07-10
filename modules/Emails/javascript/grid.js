@@ -130,6 +130,13 @@ function gridInit() {
                         key: 'to_addrs'
 					}, 
 					{
+						label: mod_strings.LBL_LIST_STATUS,
+						width: widths[4], 
+						sortable: false,
+						resizeable: true,
+                        key: 'emailstatus'
+					}, 
+					{
 						label: 'uid',
 						hidden: true,
                         key: 'uid'
@@ -163,7 +170,7 @@ function gridInit() {
 				responseType: YAHOO.util.DataSource.TYPE_JSON,
 				responseSchema: {
 				    resultsList: 'Email',
-		            fields: ['flagged', 'status', 'from', 'subject', 'date','to_addrs', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
+		            fields: ['flagged', 'status', 'from', 'subject', 'date','to_addrs','emailstatus', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
 		            metaFields: {total: 'TotalCount', unread:"UnreadCount", fromCache: "FromCache"}
 				}
 		    });

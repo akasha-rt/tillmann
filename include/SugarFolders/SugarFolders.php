@@ -309,6 +309,7 @@ class SugarFolder {
 		global $beanList;
 		global $sugar_config;
 		global $app_strings;
+                global $app_list_strings;
 
 		$this->retrieve($folderId);
 		$start = ($page - 1) * $pageSize;
@@ -345,6 +346,7 @@ class SugarFolder {
 			$temp = array();
 			$temp['flagged'] = (is_null($a['flagged']) || $a['flagged'] == '0') ? '' : 1;
 			$temp['status'] = (is_null($a['reply_to_status']) || $a['reply_to_status'] == '0') ? '' : 1;
+                        $temp['emailstatus'] = $app_list_strings['dom_email_status'][$a['status']];
 			$temp['from']	= preg_replace('/[\x00-\x08\x0B-\x1F]/', '', $a['from_addr']);
 			$temp['subject'] = $a['name'];
 			$temp['date']	= $timedate->to_display_date_time($this->db->fromConvert($a['date_sent'], 'datetime'));
