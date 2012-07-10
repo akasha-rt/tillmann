@@ -2506,7 +2506,8 @@ class Email extends SugarBean {
             'subject' => 'name',
             'date' => 'date_sent',
             'AssignedTo' => 'assigned_user_id',
-            'flagged' => 'flagged'
+            'flagged' => 'flagged',
+            'emailstatus' => 'status'
         );
 
         $sort = !empty($_REQUEST['sort']) ? $_REQUEST['sort'] : "";

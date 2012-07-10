@@ -83,7 +83,8 @@ class SugarFolder {
             'subject' => 'name',
             'date'    => 'date_sent',
             'AssignedTo' => 'assigned_user_id',
-            'flagged' => 'flagged'
+            'flagged' => 'flagged',
+            'emailstatus' => 'status'
         );
     var $defaultSort = 'date';
     var $defaultDirection = "DESC";

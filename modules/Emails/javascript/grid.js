@@ -132,7 +132,7 @@ function gridInit() {
 					{
 						label: mod_strings.LBL_LIST_STATUS,
 						width: widths[4], 
-						sortable: false,
+						sortable: true,
 						resizeable: true,
                         key: 'emailstatus'
 					}, 
