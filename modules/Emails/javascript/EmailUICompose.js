@@ -1333,8 +1333,9 @@ SE.composeLayout = {
 	       });
 	       return;
 		}
-
-		YAHOO.SUGAR.MessageBox.show({
+        //Dhaval
+        SUGAR.email2.composeLayout.processResult(idx, id);
+	/*	YAHOO.SUGAR.MessageBox.show({
            title:box_title,
            msg: box_msg,
            type: 'confirm',
@@ -1343,7 +1344,8 @@ SE.composeLayout = {
            		SUGAR.email2.composeLayout.processResult(idx, id);},
            modal:true,
            scope:this
-       });
+       });*/
+           //End - Dhaval
     },
 
     processNoneResult : function(idx, id) {
@@ -1401,10 +1403,24 @@ SE.composeLayout = {
 
         var tiny = SE.util.getTiny('htmleditor' + idx);
         var tinyHTML = tiny.getContent();
-        var openTag = '<div><span><span>';
-        var closeTag = '</span></span></div>';
+        //Dhaval
+        //var openTag = '<div><span><span>';
+        var openTag = '<body>';
+        //var closeTag = '</span></span></div>';
+        var closeTag = '</body>';
+        
+        //first process text if it contains <html> and <body> tag
+        var startText = text.indexOf(openTag)+6;
+        var endText   = text.indexOf(closeTag) - 1;
+        var lengthText = endText - startText; 
+        if(text.indexOf(openTag) > -1){
+            text = text.substr(startText,lengthText);
+        }
+        
+        
         var htmllow = tinyHTML.toLowerCase();
-        var start = htmllow.indexOf(openTag);
+        var start = htmllow.indexOf(openTag)+6;
+        //End - Dhaval
 		if (start > -1) {
 	        var htmlPart2 = tinyHTML.substr(start);
 	        tinyHTML = text + htmlPart2;

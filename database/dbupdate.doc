@@ -1,0 +1,4 @@
+@Dhaval - 13_07_12
+funcionality : Email autofillup
+
+ALTER TABLE  `email_templates` ADD  `department` VARCHAR( 255 ) NOT NULL
