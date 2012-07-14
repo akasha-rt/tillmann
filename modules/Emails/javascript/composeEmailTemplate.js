@@ -91,7 +91,9 @@ function selectTemplate()
 {
     if(xmlHttp.readyState==4 || xmlHttp.readyState=="complete")
     { 
-        document.getElementById("ajaxDiv").innerHTML = xmlHttp.responseText;	
+        var resonseText = xmlHttp.responseText;       
+        var str = resonseText.split("||");       
+        document.getElementById("emailTemplate"+str[1]).innerHTML = str[0];
     }  
 }
 
@@ -339,7 +341,7 @@ SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout
     '						</td>' +
     '					</tr>' +
     '					<tr>' +
-    '						<td NOWRAP style="padding:2px;"><div id="ajaxDiv">' +
+    '						<td NOWRAP style="padding:2px;"><div id="emailTemplate{idx}">' +
     '						</div></td>' +
     '					</tr>' +
     '				</table>' +

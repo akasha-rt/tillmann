@@ -29,7 +29,7 @@ class EmailsController extends SugarController {
             $html .= '</option>';
         }
         $html .= '</select>';
-        echo $html;
+        echo $html . "||" . $idx;
         exit;
     }
 
