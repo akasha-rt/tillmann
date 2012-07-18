@@ -1,4 +1,7 @@
-@Dhaval - 13_07_12
+﻿@Dhaval - 13_07_12
 funcionality : Email autofillup
 
 ALTER TABLE  `email_templates` ADD  `department` VARCHAR( 255 ) NOT NULL
+
+@Dhaval - 17_07_12
+ALTER TABLE email_templates   modify COLUMN department varchar(255)  NULL ;

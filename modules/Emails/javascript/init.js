@@ -62,8 +62,9 @@ function email2init() {
          extended_valid_elements : tinyConfig.extended_valid_elements,
          mode: tinyConfig.mode,
          strict_loading_mode : true,
-		 force_br_newlines : true,
+	 force_br_newlines : false,
          forced_root_block : '',
+         force_p_newlines : false, 
          directionality : (typeof(rtl) == "undefined") ? "ltr" : "rtl"
      });
     }

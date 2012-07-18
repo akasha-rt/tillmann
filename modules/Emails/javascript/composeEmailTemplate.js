@@ -150,6 +150,75 @@ function ForwardLookUp(input_fields, module_name, action){
     return true;
 }
 
+//showdiv Canned Response div
+function showCRdiv(idx,id)
+{    
+    if(id == 'newCannedResponse'){
+        var showHideCheck = document.getElementById('cannedresponsediv'+idx).style.display;
+        if(showHideCheck == "block")
+            document.getElementById('cannedresponsediv'+idx).style.display="none";        
+        else
+            document.getElementById('cannedresponsediv'+idx).style.display="block";    
+    }
+}
+
+
+// Save Canned Response
+function saveCannedResponse(idx)
+{   
+   
+    var tiny = SE.util.getTiny('htmleditor' + idx);
+    var tinyHTML = tiny.getContent();
+    var text = decodeURI(encodeURI(tinyHTML)).replace(/<BR>/ig, '\n').replace(/<br>/gi, "\n").replace(/&amp;/gi,'&').replace(/&nbsp;/gi,' ').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&#039;/gi,'\'').replace(/&quot;/gi,'"').replace(/#/gi,'h3a5sh'); //replace('#',/&#35;/gi).
+    var openTag = '<body>';        
+    var closeTag = '</body>';
+        
+    //first process text if it contains <html> and <body> tag
+    var startText = text.indexOf(openTag)+6;
+    var endText   = text.indexOf(closeTag) - 1;
+    var lengthText = endText - startText; 
+    if(text.indexOf(openTag) > -1){
+        text = text.substr(startText,lengthText);
+    }
+    
+    if(tinyHTML){
+        var mydiv = document.createElement("div");
+        mydiv.innerHTML = tinyHTML;
+        var body = '';
+        if (document.all) // IE Stuff
+        {
+            body = mydiv.innerText;               
+        }   
+        else // Mozilla does not work with innerText
+        {                
+            body = mydiv.textContent;             
+        }                           
+    }
+        
+    var name = document.getElementById('name'+idx).value;
+    var subject = document.getElementById('emailSubject'+idx).value;        
+    var dept = document.getElementById('dept'+idx).value;      
+    //validate data
+    if(name == ''){
+        alert("Name for canned response is required");
+        document.getElementById('name'+idx).focus(); 
+        return false;
+    }
+    //End 
+    $.ajax({
+        cache: true,
+        async: true,
+        type: 'POST',
+        url: 'index.php?module=EmailTemplates&action=cannedresponse&name='+name+'&sub='+subject+'&dept='+dept+'&body='+body+'&body_html='+text,                   
+        success: function(data) {  
+            alert('Canned response created.');
+            return false;
+        }
+    });
+
+    return true;
+}
+
 SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout-inactive-content"></div>' +
     '<div id="composeOverFrame{idx}" style="height:100%;width:100%">' +
     '	<form id="emailCompose{idx}" name="ComposeEditView{idx}" action="index.php" method="POST">' +
@@ -363,6 +432,23 @@ SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout
     '						<td NOWRAP style="padding:2px;">' +
     '							<input type="checkbox" id="setEditor{idx}" name="setEditor{idx}" value="1" onclick="SUGAR.email2.composeLayout.renderTinyMCEToolBar(\'{idx}\', this.checked);"/>&nbsp;' +
     '							<b>{mod_strings.LBL_SEND_IN_PLAIN_TEXT}</b>' +
+    '						</td>' +
+    '					</tr>' +
+    '				</table>' +
+    '				<table border="0" width="100%">' +
+    '					<tr>' +
+    '						<td NOWRAP style="padding:2px;">' +    
+    '							<input type="button" name="newCannedResponse" value="New Canned Response" id="newCannedResponse" onclick="showCRdiv(\'{idx}\',id);">' +
+    '						</td>' +
+    '					</tr>' +
+    '				</table>' +
+    '				<table border="0" width="100%">' +
+    '					<tr>' +
+    '						<td NOWRAP style="padding:2px;">' +    
+    '							<div id="cannedresponsediv{idx}" style="display:none;">'+
+    '                                                   <b>Name : </b> <br/> <input type="text" name="name{idx}" id="name{idx}"><br/><br/>' +
+    '                                                   <b>Department : </b> <br/> <select name="dept{idx}" id="dept{idx}"><option id="Operation"  value="Operation">Operation</option><option id="Marketing" value="Marketing">Marketing</option><option id="Accounts" value="Accounts">Accounts</option><option id="Support" value="Support">Support</option></select>' +
+    '                                                   <input type="button" onclick="return saveCannedResponse(\'{idx}\');" value="Create" name="submit">' +
     '						</td>' +
     '					</tr>' +
     '				</table>' +

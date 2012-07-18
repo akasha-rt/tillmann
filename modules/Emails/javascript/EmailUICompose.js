@@ -2314,7 +2314,7 @@ SE.composeLayout = {
         for(var key in this.emailTemplates) { // iterate through assoc array
             var display = this.emailTemplates[key];
             var opt = new Option(display, key);
-            et.options.add(opt);
+                //et.options.add(opt);     
         }
 
         // signatures
