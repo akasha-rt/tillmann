@@ -18,7 +18,7 @@ class EmailsController extends SugarController {
 
         $query_order = "SELECT id,name,department
                         FROM email_templates
-                        WHERE department = '" . $dept . "' ORDER BY name ASC ";
+                        WHERE department = '" . $dept . "' AND deleted = 0 ORDER BY name ASC ";
         $result = $db->query($query_order);
         $html = '';
         $html .= '<select name="email_template' . $idx . '" id="email_template' . $idx . '"  onchange="SUGAR.email2.composeLayout.applyEmailTemplate(' . $idx . ', this.value);">';
