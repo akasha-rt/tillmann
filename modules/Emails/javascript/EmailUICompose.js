@@ -1075,7 +1075,8 @@ SE.composeLayout = {
 			field_to_name_array:{
 				id:'data_parent_id' + idx,
 				name:'data_parent_name' + idx,
-				email1:'email1'}
+				email1:'email1',
+                                case_number:'case_number'} 
 		});
 	},
 
@@ -1089,8 +1090,49 @@ SE.composeLayout = {
         	var target = Dom.get("addressTO" + SE.composeLayout.currentInstanceId);
         	target.value = SE.addressBook.smartAddEmailAddressToComposeField(target.value, data[nameKey] + "<" + data.email1 + ">");
         }
+               /**
+                * @author: Reena Sattani
+                * @description:  This is for Cases module only and it will return case reference number in compose mail body
+                *
+                **/ 
+                var moduleName =  document.getElementById('data_parent_type' + SE.composeLayout.currentInstanceId).value;       
+                if(moduleName == 'Cases' && data['case_number'] != '')
+                    {               
+                        var caseNumber = data['case_number'];
+                        SE.composeLayout.getEmailMacro(caseNumber);                      
+                    }
+                 //End   
 		set_return(o);
 	},
+        
+    /**
+        * @author: Reena Sattani
+        * @module: Cases
+        * @return: Case Refrence number 
+        *
+        **/
+         getEmailMacro : function(caseNumber)
+                    { 
+                        xmlHttp=GetXmlHttpObject()
+                        if (xmlHttp==null)
+                        {
+                            alert ("Browser does not support HTTP Request")
+                            return
+                        }
+                        
+                        var url="index.php?module=Cases&action=EmailMacro&case_number="+caseNumber;                          
+                        xmlHttp.onreadystatechange = SE.composeLayout.selectEmailMacro
+                        xmlHttp.open("GET",url,true)
+                        xmlHttp.send(null); 
+                    },
+
+                     selectEmailMacro : function()
+                    {
+                        if(xmlHttp.readyState==4 || xmlHttp.readyState=="complete")
+                        { 
+                            tinyMCE.activeEditor.selection.setNode(tinyMCE.activeEditor.dom.create('span','' ,xmlHttp.responseText));
+                        }  
+                    },
     /**
      * Prepare TinyMCE
      */

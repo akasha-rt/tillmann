@@ -1519,7 +1519,6 @@ var callbackReplyForward = {
 			var html = t.getContent();
 
             html = "&nbsp;";
-            debugger;
             //add hr tag if this is not a reply draft or forward draft
             //To remove hr from the body part when pressed reply
            /* if(!isReOrFwDraft){
