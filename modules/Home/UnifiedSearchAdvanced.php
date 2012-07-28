@@ -216,7 +216,8 @@ class UnifiedSearchAdvanced {
                 $mod_strings = return_module_language($current_language, $seed->module_dir);
 
                 //retrieve the original list view defs and store for processing in case of custom layout changes
-                require('modules/' . $seed->module_dir . '/metadata/listviewdefs.php');
+                if (file_exists('modules/' . $seed->module_dir . '/metadata/listviewdefs.php'))
+                    require('modules/' . $seed->module_dir . '/metadata/listviewdefs.php');
                 $orig_listViewDefs = $listViewDefs;
 
                 if (file_exists('custom/modules/' . $seed->module_dir . '/metadata/listviewdefs.php')) {
