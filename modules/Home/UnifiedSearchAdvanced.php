@@ -70,6 +70,13 @@ class UnifiedSearchAdvanced {
         $unified_search_modules_display = $this->getUnifiedSearchModulesDisplay();
 
         global $mod_strings, $modListHeader, $app_list_strings, $current_user, $app_strings, $beanList;
+        //Save Preference for search sequence for module in DB - before retrieving it 
+        $GLOBALS['savePreferencesToDB'] = true;
+        if (!isset($GLOBALS['savePreferencesToDBCats']))
+            $GLOBALS['savePreferencesToDBCats'] = array();
+        $GLOBALS['savePreferencesToDBCats']['search'] = true;
+        //End 
+
         $users_modules = $current_user->getPreference('globalSearch', 'search');
 
         // preferences are empty, select all
