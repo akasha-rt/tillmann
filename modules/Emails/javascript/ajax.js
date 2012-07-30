@@ -750,7 +750,10 @@ AjaxObject.detailView = {
             if(ret.id == 0 ){
                     ajaxStatus.showStatus('Contact already exists');
                      window.setTimeout("ajaxStatus.hideStatus();", 2000);
-                }
+                }//Reena
+                if(ret.module == 'Contacts'){
+                    window.location = "index.php?module=Contacts&action=DetailView&record="+ret.beanId;
+                }//End - Reena
             //End - Dhaval
 	},
 
