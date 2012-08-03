@@ -136,6 +136,18 @@ function gridInit() {
 						resizeable: true,
                         key: 'emailstatus'
 					}, 
+                                        {
+						label: "Case", 
+						width: widths[5], 												
+						resizeable: true,						
+			key: 'caseflag'
+					},
+                                        {
+						label: "Contact", 
+						width: widths[5], 												
+						resizeable: true,						
+			key: 'contactflag'
+					},
 					{
 						label: 'uid',
 						hidden: true,
@@ -170,7 +182,7 @@ function gridInit() {
 				responseType: YAHOO.util.DataSource.TYPE_JSON,
 				responseSchema: {
 				    resultsList: 'Email',
-		            fields: ['flagged', 'status', 'from', 'subject', 'date','to_addrs','emailstatus', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
+		            fields: ['flagged', 'status', 'from', 'subject', 'date','to_addrs','emailstatus','caseflag','contactflag', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
 		            metaFields: {total: 'TotalCount', unread:"UnreadCount", fromCache: "FromCache"}
 				}
 		    });

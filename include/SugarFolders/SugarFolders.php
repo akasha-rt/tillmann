@@ -341,12 +341,36 @@ class SugarFolder {
 		$return = array();
 
 		$email = new Email(); //Needed for email specific functions.
+                require_once 'modules/Contacts/ContactFormBase.php';                
+                $contactFormBase = new ContactFormBase();
 
 		while($a = $this->db->fetchByAssoc($r)) {
+                    $fromname = explode("<", html_entity_decode($a['from_addr']));
+                    $emailAdd = explode(">", html_entity_decode($fromname[1]));
+                    $emailid = $emailAdd[0];
+                    $name = explode(" ",$fromname[0]);
+                    $fname = $name[0];
+                    $lname = $name[1];
+                    $contactFormBase->moduleName = 'Contacts';
+                    $_POST['first_name'] = $fname;
+                    $_POST['last_name'] = $lname;
+                    $_POST["Contacts0emailAddress0"] = $emailid;
+                    $dup = $contactFormBase->checkForDuplicates();
+                    $con_img = (isset($dup))?'<img src="custom/include/images/green.png" />':'';
 
+                    $email->retrieve($a['id']);
+                    $email->load_relationship('cases');
+                    $emailCase = $email->cases->getBeans();
+                    foreach ($emailCase as $emailcasenumber) {
+                        $case_number = $emailcasenumber->case_number;
+                    }
+
+                        $case_img = (count($emailCase) > 0) ? $case_number : '';
 			$temp = array();
 			$temp['flagged'] = (is_null($a['flagged']) || $a['flagged'] == '0') ? '' : 1;
 			$temp['status'] = (is_null($a['reply_to_status']) || $a['reply_to_status'] == '0') ? '' : 1;
+                        $temp['caseflag'] = $case_img;                                                
+                        $temp['contactflag'] = $con_img;
                         $temp['emailstatus'] = $app_list_strings['dom_email_status'][$a['status']];
 			$temp['from']	= preg_replace('/[\x00-\x08\x0B-\x1F]/', '', $a['from_addr']);
 			$temp['subject'] = $a['name'];
