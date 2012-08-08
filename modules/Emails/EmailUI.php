@@ -1210,6 +1210,7 @@ eoq;
         global $beanList;
         global $beanFiles;
         global $current_language;
+        global $db;
 
         //Setup the current module languge
         $mod_strings = return_module_language($current_language, $_REQUEST['qc_module']);
@@ -1267,6 +1268,21 @@ eoq;
             // bugs, cases, tasks
             $focus->name = trim($email->name);
         }
+
+        //Reena
+        //To select contact for task and opportunity if related email has contact
+        $query = "SELECT contacts.id, CONCAT(contacts.first_name,' ',contacts.last_name) as name,email_addr_bean_rel.bean_id AS bean_id,email_addr_bean_rel.bean_module AS bean_module
+            FROM contacts            
+            LEFT JOIN email_addr_bean_rel ON email_addr_bean_rel.bean_id = contacts.id            
+            LEFT JOIN email_addresses ON email_addr_bean_rel.email_address_id = email_addresses.id            
+            WHERE email_addresses.deleted = 0 AND email_addr_bean_rel.deleted = 0  AND contacts.deleted = 0 
+            AND email_addresses.email_address = '{$email->from_addr}'";
+        $result = $db->query($query);
+        $row = $db->fetchByAssoc($result);
+        $focus->contact_id = $row['id'];
+        $focus->contact_name = $row['name'];
+
+        //End - Reena
 
         $focus->description = trim(strip_tags($email->description));
         $focus->assigned_user_id = $current_user->id;
@@ -1765,7 +1781,7 @@ eoq;
             $email->assigned_user_id = $thisRobin;
             /**
              * To set Status to Assigned instead of unread
-             *@author Dhaval Darji 
+             * @author Dhaval Darji 
              */
             //$email->status = 'unread';
             $email->status = 'Assigned';
@@ -1796,7 +1812,7 @@ eoq;
             $email->assigned_user_id = $leastBusy;
             /**
              * To set Status to Assigned instead of unread
-             *@author Dhaval Darji 
+             * @author Dhaval Darji 
              */
             //$email->status = 'unread';
             $email->status = 'Assigned';
@@ -1818,7 +1834,7 @@ eoq;
             $email->assigned_user_id = $user;
             /**
              * To set Status to Assigned instead of unread
-             *@author Dhaval Darji 
+             * @author Dhaval Darji 
              */
             //$email->status = 'unread';
             $email->status = 'Assigned';
