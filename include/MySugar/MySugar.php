@@ -53,8 +53,7 @@ class MySugar{
 				&& !in_array($this->type, $GLOBALS['modInvisList']))
 				&& (!in_array('Activities', $GLOBALS['moduleList']))){
 			$displayDashlet = false;
-		}
-		elseif (ACLController::moduleSupportsACL($this->type) ) {
+		}elseif (ACLController::moduleSupportsACL($this->type) ) {
 		    $bean = SugarModule::get($this->type)->loadBean();
 		    if ( !ACLController::checkAccess($this->type,'list',true,$bean->acltype)) {
 		        $displayDashlet = false;
@@ -409,10 +408,437 @@ EOJS;
 		}
 	}
 
+// Added by RS BC 18-1-2012
+    function addTab() {
+        if (isset($_REQUEST['numColumns'])) {
+            $numCols = $_REQUEST['numColumns'];
+        } else {
+            $numCols = '2';
+        }
+
+        $pageName = js_escape($_REQUEST['pageName']);
+
+        $json = getJSONobj();
+        echo 'result = ' . $json->encode(array('pageName' => $pageName, 'numCols' => $numCols));
+    }
+
+    function addPage() {
+        global $current_user, $sugar_version, $sugar_config, $sugar_flavor;
+        global $app_strings;
+        global $current_language;
+
+        $pages = $current_user->getPreference('pages', $this->type);
+        $columns = array();
+
+        $numColumns = $_REQUEST['numCols'];
+
+        switch ($numColumns) {
+            case '1':
+                $columns[0] = array();
+                $columns[0]['dashlets'] = array();
+                $columns[0]['width'] = '100%';
+                break;
+            case '2':
+                $columns[0] = array();
+                $columns[0]['dashlets'] = array();
+                $columns[0]['width'] = '60%';
+                $columns[1] = array();
+                $columns[1]['dashlets'] = array();
+                $columns[1]['width'] = '40%';
+                break;
+            case '3':
+                $columns[0] = array();
+                $columns[0]['dashlets'] = array();
+                $columns[0]['width'] = '30%';
+                $columns[1] = array();
+                $columns[1]['dashlets'] = array();
+                $columns[1]['width'] = '30%';
+                $columns[2] = array();
+                $columns[2]['dashlets'] = array();
+                $columns[2]['width'] = '40%';
+                break;
+}
+        $newPage = array();
+        $newPage['columns'] = $columns;
+
+        $json = getJSONobj();
+        $newPageName = $json->decode(html_entity_decode($_REQUEST['pageName']));
+
+        // javascript hack for single quotes -- escape the backspaces
+        $newPageName = str_replace("\'", "'", $newPageName);
+
+//        $newPage['pageTitle'] = $newPageName['jsonObject']; - Reena
+        $newPage['pageTitle'] = $newPageName;
+        $newPage['numColumns'] = $_REQUEST['numCols'];
+
+        array_push($pages, $newPage);
+
+        $current_user->setPreference('pages', $pages, 0, $this->type);
+
+        $newPagesPref = $current_user->getPreference('pages', $this->type);
+
+        $display = array();
+
+        foreach ($newPage['columns'] as $colNum => $column)
+            $display[$colNum]['width'] = $column['width'];
+
+        $home_mod_strings = return_module_language($current_language, 'Home');
+
+        $sugar_smarty = new Sugar_Smarty();
+        $sugar_smarty->assign('columns', $display);
+        $sugar_smarty->assign('selectedPage', sizeof($pages) - 1);
+        $sugar_smarty->assign('mod', $home_mod_strings);
+        $sugar_smarty->assign('app', $GLOBALS['app_strings']);
+        $sugar_smarty->assign('lblAddDashlets', $home_mod_strings['LBL_ADD_DASHLETS']);
+        $sugar_smarty->assign('numCols', $newPage['numColumns']);
+
+        $sugar_smarty->assign('sugarVersion', $sugar_version);
+        $sugar_smarty->assign('sugarFlavor', $sugar_flavor);
+        $sugar_smarty->assign('currentLanguage', $GLOBALS['current_language']);
+        $sugar_smarty->assign('serverUniqueKey', $GLOBALS['server_unique_key']);
+        $sugar_smarty->assign('imagePath', $GLOBALS['image_path']);
+        $sugar_smarty->assign('lblLnkHelp', $GLOBALS['app_strings']['LNK_HELP']);
+
+        return $sugar_smarty->fetch('include/MySugar/tpls/retrievePage.tpl');
+    }
+
+    function deletePage() {
+        global $current_user;
+
+        $pages = $current_user->getPreference('pages', $this->type);
+
+        array_splice($pages, $_REQUEST['pageNumToDelete'], 1);
+
+        if ($GLOBALS['module'] == 'Dashboard') {
+            $cookiePageIndex = $current_user->id . '_activeDashboardPage';
+        } else {
+            $cookiePageIndex = $current_user->id . '_activePage';
+        }
+
+        if (isset($_COOKIE[$cookiePageIndex]) && ($_COOKIE[$cookiePageIndex] == $_REQUEST['pageNumToDelete'])) {
+            $_COOKIE[$cookiePageIndex] = '0';
+            setcookie($cookiePageIndex, '0', 3000);
+        }
+        $current_user->setPreference('pages', $pages, 0, $this->type);
+        $pages = $current_user->getPreference('pages', $this->type);
+
+        unset($_COOKIE[$cookiePageIndex]);
+
+        header("Location: index.php?module=" . $this->type . "&action=index");
+    }
+
+    /**
+     * @todo the css is not fully inherited in this file
+     */
+    function retrievePage() {
+        global $current_user, $sugar_version, $sugar_config, $sugar_flavor, $current_language;
+        global $app_strings, $theme;
+
+        // build dashlet cache file if not found
+        if (!is_file($GLOBALS['sugar_config']['cache_dir'] . 'dashlets/dashlets.php')) {
+            require_once('include/Dashlets/DashletCacheBuilder.php');
+
+            $dc = new DashletCacheBuilder();
+            $dc->buildCache();
+        }
+        require_once($GLOBALS['sugar_config']['cache_dir'] . 'dashlets/dashlets.php');
+
+        $pages = $current_user->getPreference('pages', $this->type);
+        $dashlets = $current_user->getPreference('dashlets', $this->type);
+
+        $count = 0;
+        $dashletIds = array(); // collect ids to pass to javascript
+        $display = array();
+
+        $predefinedChartsList = array('MyPipelineBySalesStageDashlet',
+            'OpportunitiesByLeadSourceDashlet',
+            'OpportunitiesByLeadSourceByOutcomeDashlet',
+            'OutcomeByMonthDashlet',
+            'PipelineBySalesStageDashlet',
+            'CampaignROIChartDashlet',
+            'MyOpportunitiesGaugeDashlet',
+            'MyForecastingChartDashlet',
+            'MyModulesUsedChartDashlet',
+            'MyTeamModulesUsedChartDashlet',
+        );
+
+        $pageData = array();
+        $chartsArray = array();
+
+        $chartStyleCSS = SugarThemeRegistry::current()->getCSSURL('chart.css');
+        $chartColorsXML = SugarThemeRegistry::current()->getImageURL('sugarColors.xml');
+
+        $chartStringsXML = $sugar_config['tmp_dir'] . 'chart_strings.' . $current_language . '.lang.xml';
+        if (!file_exists($chartStringsXML)) {
+            require_once('include/SugarCharts/SugarChart.php');
+            $chart = new SugarChart;
+            $chart->generateChartStrings($chartStringsXML);
+        }
+
+        $selectedPage = $_REQUEST['pageId'];
+
+        $numCols = $pages[$selectedPage]['numColumns'];
+        $trackerScript = '';
+        $dashletScript = '';
+        $trackerScriptArray = "<script>var trackerGridArray = [";
+        $toggleHeaderToolsetScript = "";
+        foreach ($pages[$selectedPage]['columns'] as $colNum => $column) {
+            if ($colNum == $numCols) {
+                break;
+            }
+            $display[$colNum]['width'] = $column['width'];
+            $display[$colNum]['dashlets'] = array();
+
+            foreach ($column['dashlets'] as $num => $id) {
+                if (!empty($id) && isset($dashlets[$id]) && is_file($dashlets[$id]['fileLocation'])) {
+                    // clint - fixes bug #20398
+                    // only display dashlets that are from visibile modules and that the user has permission to list
+                    $module = 'Home';
+                    if (isset($dashletsFiles[$dashlets[$id]['className']]['module']))
+                        $module = $dashletsFiles[$dashlets[$id]['className']]['module'];
+
+                    $myDashlet = new MySugar($module);
+
+                    if ($myDashlet->checkDashletDisplay()) {
+                        require_once($dashlets[$id]['fileLocation']);
+                        if ($dashlets[$id]['className'] == 'ChartsDashlet') {
+                            $dashlet = new $dashlets[$id]['className']($id, $dashlets[$id]['reportId'], (isset($dashlets[$id]['options']) ? $dashlets[$id]['options'] : array()));
+
+                            $chartsArray[$id] = array();
+                            $chartsArray[$id]['id'] = $id;
+                            $chartsArray[$id]['xmlFile'] = $sugar_config['tmp_dir'] . $dashlets[$id]['reportId'] . '_saved_chart.xml';
+                            $chartsArray[$id]['width'] = '100%';
+                            $chartsArray[$id]['height'] = '480';
+                            $chartsArray[$id]['styleSheet'] = $chartStyleCSS;
+                            $chartsArray[$id]['colorScheme'] = $chartColorsXML;
+                            $chartsArray[$id]['langFile'] = $chartStringsXML;
+                        } else {
+                            $dashlet = new $dashlets[$id]['className']($id, (isset($dashlets[$id]['options']) ? $dashlets[$id]['options'] : array()));
+
+                            if (in_array($dashlets[$id]['className'], $predefinedChartsList)) {
+                                $chartsArray[$id] = array();
+                                $chartsArray[$id]['id'] = $id;
+                                require_once('include/SugarCharts/SugarChart.php');
+                                $chartsArray[$id]['xmlFile'] = SugarChart::getXMLFileName($id);
+                                $chartsArray[$id]['width'] = '100%';
+                                $chartsArray[$id]['height'] = '480';
+                                $chartsArray[$id]['styleSheet'] = $chartStyleCSS;
+                                $chartsArray[$id]['colorScheme'] = $chartColorsXML;
+                                $chartsArray[$id]['langFile'] = $chartStringsXML;
+                            }
+                        }
+                        // Need to add support to dynamically display/hide dashlets
+                        // If it has a method 'shouldDisplay' we will call it to see if we should display it or not
+                        if (method_exists($dashlet, 'shouldDisplay')) {
+                            if (!$dashlet->shouldDisplay()) {
+                                // This dashlet doesn't want us to show it, skip it.
+                                continue;
+                            }
+                        }
+
+                        array_push($dashletIds, $id);
+                        try {
+                            $dashlet->process();
+                            $display[$colNum]['dashlets'][$id]['display'] = $dashlet->display();
+                            $display[$colNum]['dashlets'][$id]['displayHeader'] = $dashlet->getHeader();
+                            $display[$colNum]['dashlets'][$id]['displayFooter'] = $dashlet->getFooter();
+
+                            if ($dashlet->hasScript) {
+                                $dashletScript .= $dashlet->displayScript();
+                            }
+                            if ($dashlets[$id]['className'] == 'TrackerDashlet') {
+                                $trackerScriptArray .= "'$id',";
+                                $trackerScript = empty($trackerScript) ? $dashlet->displayScript() : $trackerScript;
+                            }
+                            $toggleHeaderToolsetScript .= "SUGAR.mySugar.attachToggleToolsetEvent('$id');";
+                        } catch (Exception $ex) {
+                            $display[$colNum]['dashlets'][$id]['display'] = $ex->getMessage();
+                            $display[$colNum]['dashlets'][$id]['displayHeader'] = $dashlet->getHeader();
+                            $display[$colNum]['dashlets'][$id]['displayFooter'] = $dashlet->getFooter();
+                        }
+                    }
+                }
+            }
+        }
+
+        $sugar_smarty = new Sugar_Smarty();
+        $sugar_smarty->assign('sugarVersion', $sugar_version);
+        $sugar_smarty->assign('sugarFlavor', $sugar_flavor);
+        $sugar_smarty->assign('currentLanguage', $GLOBALS['current_language']);
+        $sugar_smarty->assign('serverUniqueKey', $GLOBALS['server_unique_key']);
+        $sugar_smarty->assign('imagePath', $GLOBALS['image_path']);
+        $sugar_smarty->assign('lblLnkHelp', $GLOBALS['app_strings']['LNK_HELP']);
+        $sugar_smarty->assign('mod', return_module_language($current_language, 'Home'));
+        $sugar_smarty->assign('app', $GLOBALS['app_strings']);
+
+        $sugar_smarty->assign('maxCount', empty($sugar_config['max_dashboards']) ? 15 : $sugar_config['max_dashboards']);
+        $sugar_smarty->assign('dashletCount', $count);
+        $sugar_smarty->assign('columns', $display);
+        $sugar_smarty->assign('selectedPage', $selectedPage);
+        $sugar_smarty->assign('numCols', $numCols);
+        if (!empty($sugar_config['lock_homepage']) && $sugar_config['lock_homepage'] == true)
+            $sugar_smarty->assign('lock_homepage', true);
+
+        $htmlOutput = $sugar_smarty->fetch('include/MySugar/tpls/retrievePage.tpl');
+
+        $json = getJSONobj();
+
+        $scriptResponse = array();
+        $scriptResponse['dashletScript'] = $dashletScript;
+        $scriptResponse['newDashletsToReg'] = $dashletIds;
+        $scriptResponse['numCols'] = sizeof($pages[$selectedPage]['columns']);
+        $scriptResponse['chartsArray'] = $chartsArray;
+        $scriptResponse['trackerScript'] = $trackerScript . (strpos($trackerScriptArray, ',') ? (substr($trackerScriptArray, 0, strlen($trackerScriptArray) - 1) . ']; </script>') : $trackerScriptArray . ']; </script>');
+        $scriptResponse['toggleHeaderToolsetScript'] = "<script>" . $toggleHeaderToolsetScript . "</script>";
+
+        $scriptOutput = 'var scriptResponse = ' . $json->encode($scriptResponse);
+
+        return 'response = ' . $json->encode(array('html' => $htmlOutput, 'script' => $scriptOutput));
+    }
+
+    function changeLayout() {
+        if (isset($_REQUEST['changeLayoutParams']) && $_REQUEST['changeLayoutParams']) {
+            echo "var numCols = '" . $_REQUEST['numColumns'] . "';";
+        } else {
 
 
+            global $current_user;
 
+            if (isset($_REQUEST['selectedPage'])) {
+                $newNumColumns = $_REQUEST['numColumns'];
+                $newColumns = array();
 
+                $pages = $current_user->getPreference('pages', $this->type);
 
+                $page = $pages[$_REQUEST['selectedPage']];
+                $newColumns = $pages[$_REQUEST['selectedPage']]['columns'];
+                $prevNumColumns = $pages[$_REQUEST['selectedPage']]['numColumns'];
+
+                $page['numColumns'] = $newNumColumns;
+                switch ($prevNumColumns) {
+                    case '1':
+                        if ($newNumColumns == '2') {
+                            $newColumns[0]['width'] = '60%';
+                            $newColumns[1] = array();
+                            $newColumns[1]['dashlets'] = array();
+                            $newColumns[1]['width'] = '40%';
+
+                            $reOrgDashlets = array();
+                            $reOrgDashlets[0] = array();
+                            $reOrgDashlets[1] = array();
+
+                            $i = 0;
+                            foreach ($newColumns[0]['dashlets'] as $dashlet) {
+                                array_push($reOrgDashlets[$i % 2], $dashlet);
+                                $i++;
+                            }
+                            $newColumns[0]['dashlets'] = $reOrgDashlets[0];
+                            $newColumns[1]['dashlets'] = $reOrgDashlets[1];
+                        } else if ($newNumColumns == '3') {
+                            $newColumns[0]['width'] = '30%';
+                            $newColumns[1] = array();
+                            $newColumns[1]['dashlets'] = array();
+                            $newColumns[1]['width'] = '30%';
+                            $newColumns[2] = array();
+                            $newColumns[2]['dashlets'] = array();
+                            $newColumns[2]['width'] = '40%';
+
+                            $reOrgDashlets = array();
+                            $reOrgDashlets[0] = array();
+                            $reOrgDashlets[1] = array();
+                            $reOrgDashlets[2] = array();
+
+                            $i = 0;
+                            foreach ($newColumns[0]['dashlets'] as $dashlet) {
+                                array_push($reOrgDashlets[$i % 3], $dashlet);
+                                $i++;
+                            }
+                            $newColumns[0]['dashlets'] = $reOrgDashlets[0];
+                            $newColumns[1]['dashlets'] = $reOrgDashlets[1];
+                            $newColumns[2]['dashlets'] = $reOrgDashlets[2];
+                        } else {
+                            break;
+                        }
+                        break;
+                    case '2':
+                        if ($newNumColumns == '1') {
+                            $newColumns[0]['width'] = '100%';
+                            $newColumns[0]['dashlets'] = array_merge($newColumns[0]['dashlets'], $newColumns[1]['dashlets']);
+                            unset($newColumns[1]);
+                        } else if ($newNumColumns == '3') {
+                            $newColumns[0]['width'] = '30%';
+                            $newColumns[1]['width'] = '30%';
+                            $newColumns[2] = array();
+                            $newColumns[2]['dashlets'] = array();
+                            $newColumns[2]['width'] = '40%';
+
+                            $reOrgDashlets = array();
+                            $reOrgDashlets[0] = array();
+                            $reOrgDashlets[1] = array();
+                            $reOrgDashlets[2] = array();
+
+                            $i = 0;
+                            foreach ($newColumns[0]['dashlets'] as $dashlet) {
+                                array_push($reOrgDashlets[$i % 3], $dashlet);
+                                $i++;
+                            }
+                            foreach ($newColumns[1]['dashlets'] as $dashlet) {
+                                array_push($reOrgDashlets[$i % 3], $dashlet);
+                                $i++;
+                            }
+                            $newColumns[0]['dashlets'] = $reOrgDashlets[0];
+                            $newColumns[1]['dashlets'] = $reOrgDashlets[1];
+                            $newColumns[2]['dashlets'] = $reOrgDashlets[2];
+                        } else {
+                            break;
+                        }
+                        break;
+                    case '3':
+                        if ($newNumColumns == '1') {
+                            $newColumns[0]['width'] = '100%';
+                            $newColumns[0]['dashlets'] = array_merge($newColumns[0]['dashlets'], $newColumns[1]['dashlets'], $newColumns[2]['dashlets']);
+                            unset($newColumns[1]);
+                            unset($newColumns[2]);
+                        } else if ($newNumColumns == '2') {
+                            $newColumns[0]['width'] = '60%';
+                            $newColumns[1]['width'] = '40%';
+                            $newColumns[0]['dashlets'] = array_merge($newColumns[0]['dashlets'], $newColumns[2]['dashlets']);
+                            unset($newColumns[2]);
+                        } else {
+                            break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                $page['columns'] = $newColumns;
+
+                $pages[$_REQUEST['selectedPage']] = $page;
+                $current_user->setPreference('pages', $pages, 0, $this->type);
+
+                echo $_REQUEST['selectedPage'];
+            } else {
+                echo '0';
+            }
+        }
+    }
+
+    function savePageTitle() {
+        global $current_user;
+
+        $pages = $current_user->getPreference('pages', $this->type);
+
+        $json = getJSONobj();
+        $newPageName = $json->decode(html_entity_decode($_REQUEST['newPageTitle']));
+
+        //$pages[$_REQUEST['pageId']]['pageTitle'] = $newPageName['jsonObject'];
+        $pages[$_REQUEST['pageId']]['pageTitle'] = $newPageName;
+        $current_user->setPreference('pages', $pages, 0, $this->type);
+
+        return $pages[$_REQUEST['pageId']]['pageTitle'];
+    }
 
 }
+
+?>

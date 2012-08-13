@@ -69,9 +69,32 @@ var moduleName = 'Home';
 
 <script type="text/javascript" src="{sugar_getjspath file='cache/include/javascript/sugar_grp_yui_widgets.js'}"></script>
 <script type="text/javascript" src="{sugar_getjspath file='include/javascript/dashlets.js'}"></script>
+<script type="text/javascript" src='{sugar_getjspath file='include/JSON.js'}'></script>
 <script type='text/javascript' src='{sugar_getjspath file='include/MySugar/javascript/MySugar.js'}'></script>
 <link rel='stylesheet' href='{sugar_getjspath file='include/javascript/yui/build/assets/skins/sam/skin.css'}'>
 
+<script type="text/javascript" src="{sugar_getjspath file='include/javascript/swfobject.js'}"></script>
+<ul class="subpanelTablist" id="tabList">
+    {foreach from=$pages key=pageNum item=pageData}
+        <li id="pageNum_{$pageNum}">
+            <a id="pageNum_{$pageNum}_anchor" class="{$pageData.tabClass}" href="javascript:SUGAR.mySugar.togglePages('{$pageNum}');">
+                <span id="pageNum_{$pageNum}_input_span" style="display:none;">
+                    <input type="hidden" id="pageNum_{$pageNum}_name_hidden_input" value="{$pageData.pageTitle}"/>
+                    <input type="text" id="pageNum_{$pageNum}_name_input" value="{$pageData.pageTitle}" size="10" onblur="SUGAR.mySugar.savePageTitle('{$pageNum}',this.value);"/>
+                </span>
+                <span id="pageNum_{$pageNum}_link_span">
+                    <span id="pageNum_{$pageNum}_title_text" ondblclick="SUGAR.mySugar.renamePage('{$pageNum}');">{$pageData.pageTitle}</span>&nbsp;
+                    <span id="pageNum_{$pageNum}_more_detail" {if $pageData.tabClass != 'current'}style="display:none;"{/if}>
+                        <img onclick="return SUGAR.mySugar.showTabContext('{$pageNum}');" onmouseout="return nd(1000);" src="{sugar_getimagepath file='MoreDetail.png'}" width="8" height="7" border="0"/>
+                    </span>
+                </span>
+            </a>
+        </li>
+    {/foreach}	
+    <li id="addPageItem" style="background: #FFFFFF; border-color: #FFFFFF;">
+        <a style="background: #FFFFFF; border-color: #FFFFFF; padding-left: 10px; text-decoration: none;" href="javascript:SUGAR.mySugar.showAddPageDialog();">+ {$lblAddPage}</a>
+    </li>
+</ul>
 
 <!-- CSS Files -->
 <link type="text/css" href="{sugar_getjspath file='custom/include/SugarCharts/js/Jit/Examples/css/base.css'}" rel="stylesheet" />
@@ -112,7 +135,7 @@ var moduleName = 'Home';
 			</a>
 		</td>
 	</tr>
-	<tr>
+	<tr height="350px">
 		{counter assign=hiddenCounter start=0 print=false}
 		{foreach from=$columns key=colNum item=data}
 		<td valign='top' width='{$data.width}'>

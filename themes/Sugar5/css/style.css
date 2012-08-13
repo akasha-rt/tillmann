@@ -1948,8 +1948,109 @@ padding-left: 3px;
 }
 
 #dashletCtrls
+{    
+    border-bottom:2px solid #ccc;
+    height:27px;
+    padding-left:10px;
+    padding-top:3px;    
+}
+#dashletCtrls a
 {
-    float: right;
+    font-size:13px;
+    padding-right: 10px;
+}
+#add_dashlets
+{
+    margin-left:5px;
+    *margin-left:0px;
+}
+#tabListContainerTD
+{
+    background:url(../../../../index.php?entryPoint=getImage&themeName=Sugar&themeName=Sugar&imageName=dashlet-tab-bg-bottom.png) repeat-x;
+    
+}
+#tabListContainer.yui-scroll
+{
+    position:relative;
+    top:5px;
+}
+#tabListContainer
+{
+    margin-top:0px;
+    border:0px;
+    float:left;
+}
+#tabListContainer ul.subpanelTablist
+{
+    padding:6px 0 10px;
+    width:100%;
+    height:auto;
+}
+#tabListContainer ul.subpanelTablist li a.current img
+{
+    visibility:hidden;
+}
+#tabListContainer ul.subpanelTablist li a.current:hover img
+{
+    visibility:visible;
+}
+li.active a img.deletePageImg {
+    display: inline !important;
+    margin-bottom: 2px;
+}
+.yui-scroll .yui-hd
+{
+    position:relative;
+}
+div#tabListContainer .yui-bd
+{
+    clear:both;
+    overflow:hidden;
+    zoom:1;
+    margin:0;
+}
+ul.tablist li,
+ul.subpanelTablist li
+{
+    list-style:none;
+    margin:0;
+    display:inline;
+}
+ul.tablist li a,
+ul.subpanelTablist li a
+{
+    padding:3px 8px;
+    margin:0px;
+    border-bottom:none;
+    text-decoration:none;
+}
+
+ul.tablist li a:link,
+ul.tablist li a:visited,
+ul.subpanelTablist li a:link,
+ul.subpanelTablist li a:visited
+{
+    text-decoration:none;
+}
+#addPage
+{
+    height:30px;
+    margin-top:6px;
+}
+#addPage a
+{
+    border-width:2px 2px 0px 2px;
+    border-style:solid;
+    border-color:#ccc;
+    background-color:#fff;
+    margin-left:2px;
+    padding:5px 10px 7px 10px;
+    * padding:7px 10px 22px;
+    position:relative;
+    top:6px;
+    -moz-border-radius:0px 6px 0px 0px;
+    border-radius:0px 6px 0px 0px;
+    -webkit-border-top-right-radius:6px;
 }
 
 ul#dashletCategories li a:link, ul#dashletCategories li a:visited
@@ -2734,7 +2835,7 @@ border-right: 2px solid #ddd;
 /* for subpanel tabs */
 ul.tablist, ul.subpanelTablist
 {
-    border-bottom: 2px solid;
+    /*border-bottom: 2px solid;*/
 }
 ul.tablist li a, ul.subpanelTablist li a
 {
