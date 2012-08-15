@@ -79,13 +79,22 @@
 		</td>
 		<td>&nbsp;</td>
 		<td style="padding-bottom: 2px;" align="left" width="5%">
-			<input title="{MOD.LBL_BUTTON_REPLY_TITLE}"
+			<!--<input title="{MOD.LBL_BUTTON_REPLY_TITLE}"
 					accessKey="{MOD.LBL_BUTTON_REPLY_KEY}"
 					class="button" onclick="this.form.return_module.value='{RETURN_MODULE}';
 											this.form.return_action.value='{RETURN_ACTION}';
 											this.form.return_id.value='{ID}';
 											this.form.action.value='EditView'"
 					type="submit" name="button"
+					value="  {MOD.LBL_BUTTON_REPLY}  "
+					style="display:{DISABLE_REPLY_BUTTON};"
+			>-->
+                        <input title="{MOD.LBL_BUTTON_REPLY_TITLE}"
+					accessKey="{MOD.LBL_BUTTON_REPLY_KEY}"
+                                        id="composeemail_button"
+					class="button" 
+                                        onclick='{REPLYFUNCTION}'
+					type="button" name="ComposeEmail_button"
 					value="  {MOD.LBL_BUTTON_REPLY}  "
 					style="display:{DISABLE_REPLY_BUTTON};"
 			>

@@ -1,6 +1,8 @@
 <?php
-if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
-/*********************************************************************************
+
+if (!defined('sugarEntry') || !sugarEntry)
+    die('Not A Valid Entry Point');
+/* * *******************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
  * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
  * 
@@ -33,20 +35,20 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * SugarCRM" logo. If the display of the logo is not reasonably feasible for
  * technical reasons, the Appropriate Legal Notices must display the words
  * "Powered by SugarCRM".
- ********************************************************************************/
+ * ****************************************************************************** */
 
-/*********************************************************************************
+/* * *******************************************************************************
 
  * Description:  TODO: To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
- ********************************************************************************/
+ * ****************************************************************************** */
 
 ///////////////////////////////////////////////////////////////////////////////
 ////	CANCEL HANDLING
-if(!isset($_REQUEST['record']) || empty($_REQUEST['record'])) {
-	header("Location: index.php?module=Emails&action=index");
+if (!isset($_REQUEST['record']) || empty($_REQUEST['record'])) {
+    header("Location: index.php?module=Emails&action=index");
 }
 ////	CANCEL HANDLING
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,79 +60,78 @@ global $app_strings;
 global $focus;
 
 // SETTING DEFAULTS
-$focus		= new Email();
-$detailView	= new DetailView();
-$offset		= 0;
-$email_type	= 'archived';
+$focus = new Email();
+$detailView = new DetailView();
+$offset = 0;
+$email_type = 'archived';
 
 ///////////////////////////////////////////////////////////////////////////////
 ////	TO HANDLE 'NEXT FREE'
-if(!empty($_REQUEST['next_free']) && $_REQUEST['next_free'] == true) {
-	$_REQUEST['record'] = $focus->getNextFree();
+if (!empty($_REQUEST['next_free']) && $_REQUEST['next_free'] == true) {
+    $_REQUEST['record'] = $focus->getNextFree();
 }
 ////	END 'NEXT FREE'
 ///////////////////////////////////////////////////////////////////////////////
 
 if (isset($_REQUEST['offset']) or isset($_REQUEST['record'])) {
-	$result = $detailView->processSugarBean("EMAIL", $focus, $offset);
-	if($result == null) {
-	    sugar_die($app_strings['ERROR_NO_RECORD']);
-	}
-	$focus=$result;
+    $result = $detailView->processSugarBean("EMAIL", $focus, $offset);
+    if ($result == null) {
+        sugar_die($app_strings['ERROR_NO_RECORD']);
+    }
+    $focus = $result;
 } else {
-	header("Location: index.php?module=Emails&action=index");
-	die();
+    header("Location: index.php?module=Emails&action=index");
+    die();
 }
 
 /* if the Email status is draft, say as a saved draft to a Lead/Case/etc.,
  * don't show detail view. go directly to EditView */
-if($focus->status == 'draft') {
-	//header('Location: index.php?module=Emails&action=EditView&record='.$_REQUEST['record']);
-	//die();
+if ($focus->status == 'draft') {
+    //header('Location: index.php?module=Emails&action=EditView&record='.$_REQUEST['record']);
+    //die();
 }
 
 // ACL Access Check
-if (!$focus->ACLAccess('DetailView')){
-	ACLController::displayNoAccess(true);
-	sugar_cleanup(true);
+if (!$focus->ACLAccess('DetailView')) {
+    ACLController::displayNoAccess(true);
+    sugar_cleanup(true);
 }
 
 //needed when creating a new email with default values passed in
 if (isset($_REQUEST['contact_name']) && is_null($focus->contact_name)) {
-	$focus->contact_name = $_REQUEST['contact_name'];
+    $focus->contact_name = $_REQUEST['contact_name'];
 }
 if (isset($_REQUEST['contact_id']) && is_null($focus->contact_id)) {
-	$focus->contact_id = $_REQUEST['contact_id'];
+    $focus->contact_id = $_REQUEST['contact_id'];
 }
 if (isset($_REQUEST['opportunity_name']) && is_null($focus->parent_name)) {
-	$focus->parent_name = $_REQUEST['opportunity_name'];
+    $focus->parent_name = $_REQUEST['opportunity_name'];
 }
 if (isset($_REQUEST['opportunity_id']) && is_null($focus->parent_id)) {
-	$focus->parent_id = $_REQUEST['opportunity_id'];
+    $focus->parent_id = $_REQUEST['opportunity_id'];
 }
 if (isset($_REQUEST['account_name']) && is_null($focus->parent_name)) {
-	$focus->parent_name = $_REQUEST['account_name'];
+    $focus->parent_name = $_REQUEST['account_name'];
 }
 if (isset($_REQUEST['account_id']) && is_null($focus->parent_id)) {
-	$focus->parent_id = $_REQUEST['account_id'];
+    $focus->parent_id = $_REQUEST['account_id'];
 }
 
 // un/READ flags
 if (!empty($focus->status)) {
-	// "Read" flag for InboundEmail
-	if($focus->status == 'unread') {
-		// creating a new instance here to avoid data corruption below
-		$e = new Email();
-		$e->retrieve($focus->id);
-		$e->status = 'read';
-		$e->save();
-		$email_type = $e->status;
-	} else {
-		$email_type = $focus->status;
-	}
-
+    // "Read" flag for InboundEmail
+    if ($focus->status == 'unread') {
+        // creating a new instance here to avoid data corruption below
+        $e = new Email();
+        $e->retrieve($focus->id);
+        $e->status = 'read';
+        $e->save();
+        $email_type = $e->status;
+    } else {
+        $email_type = $focus->status;
+    }
 } elseif (!empty($_REQUEST['type'])) {
-	$email_type = $_REQUEST['type'];
+    $email_type = $_REQUEST['type'];
 }
 
 
@@ -140,19 +141,19 @@ if (!empty($focus->status)) {
 echo "\n<p>\n";
 $GLOBALS['log']->info("Email detail view");
 if ($email_type == 'archived') {
-	echo getClassicModuleTitle('Emails', array($mod_strings['LBL_ARCHIVED_EMAIL'],$focus->name), true);
-	$xtpl=new XTemplate ('modules/Emails/DetailView.html');
+    echo getClassicModuleTitle('Emails', array($mod_strings['LBL_ARCHIVED_EMAIL'], $focus->name), true);
+    $xtpl = new XTemplate('modules/Emails/DetailView.html');
 } else {
-	$xtpl=new XTemplate ('modules/Emails/DetailViewSent.html');
-	if($focus->type == 'out') {
-		echo getClassicModuleTitle('Emails', array($mod_strings['LBL_SENT_MODULE_NAME'],$focus->name), true);
-		//$xtpl->assign('DISABLE_REPLY_BUTTON', 'NONE');
-	} elseif ($focus->type == 'draft') {
-		$xtpl->assign('DISABLE_FORWARD_BUTTON', 'NONE');
-		echo getClassicModuleTitle('Emails', array($mod_strings['LBL_LIST_FORM_DRAFTS_TITLE'],$focus->name), true);
-	} elseif($focus->type == 'inbound') {
-		echo getClassicModuleTitle('Emails', array($mod_strings['LBL_INBOUND_TITLE'],$focus->name), true);
-	}
+    $xtpl = new XTemplate('modules/Emails/DetailViewSent.html');
+    if ($focus->type == 'out') {
+        echo getClassicModuleTitle('Emails', array($mod_strings['LBL_SENT_MODULE_NAME'], $focus->name), true);
+        //$xtpl->assign('DISABLE_REPLY_BUTTON', 'NONE');
+    } elseif ($focus->type == 'draft') {
+        $xtpl->assign('DISABLE_FORWARD_BUTTON', 'NONE');
+        echo getClassicModuleTitle('Emails', array($mod_strings['LBL_LIST_FORM_DRAFTS_TITLE'], $focus->name), true);
+    } elseif ($focus->type == 'inbound') {
+        echo getClassicModuleTitle('Emails', array($mod_strings['LBL_INBOUND_TITLE'], $focus->name), true);
+    }
 }
 echo "\n</p>\n";
 
@@ -163,79 +164,81 @@ echo "\n</p>\n";
 $uri = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php';
 $start = $focus->getStartPage($uri);
 if (isset($_REQUEST['return_id'])) { // coming from a subpanel, return_module|action is not set
-	$xtpl->assign('RETURN_ID', $_REQUEST['return_id']);
-	if (isset($_REQUEST['return_module']))	$xtpl->assign('RETURN_MODULE', $_REQUEST['return_module']);
-	else $xtpl->assign('RETURN_MODULE', 'Emails');
-	if (isset($_REQUEST['return_action']))	$xtpl->assign('RETURN_ACTION', $_REQUEST['return_action']);
-	else $xtpl->assign('RETURN_ACTION', 'DetailView');
+    $xtpl->assign('RETURN_ID', $_REQUEST['return_id']);
+    if (isset($_REQUEST['return_module']))
+        $xtpl->assign('RETURN_MODULE', $_REQUEST['return_module']);
+    else
+        $xtpl->assign('RETURN_MODULE', 'Emails');
+    if (isset($_REQUEST['return_action']))
+        $xtpl->assign('RETURN_ACTION', $_REQUEST['return_action']);
+    else
+        $xtpl->assign('RETURN_ACTION', 'DetailView');
 }
 
-if(isset($start['action']) && !empty($start['action'])) {
-	$xtpl->assign('DELETE_RETURN_ACTION', $start['action']);
+if (isset($start['action']) && !empty($start['action'])) {
+    $xtpl->assign('DELETE_RETURN_ACTION', $start['action']);
 }
-if(isset($start['module']) && !empty($start['module'])) {
-	$xtpl->assign('DELETE_RETURN_MODULE', $start['module']);
+if (isset($start['module']) && !empty($start['module'])) {
+    $xtpl->assign('DELETE_RETURN_MODULE', $start['module']);
 }
-if(isset($start['record']) && !empty($start['record'])) {
-	$xtpl->assign('DELETE_RETURN_ID', $start['record']);
+if (isset($start['record']) && !empty($start['record'])) {
+    $xtpl->assign('DELETE_RETURN_ID', $start['record']);
 }
 // this is to support returning to My Inbox
-if(isset($start['type']) && !empty($start['type'])) {
-	$xtpl->assign('DELETE_RETURN_TYPE', $start['type']);
+if (isset($start['type']) && !empty($start['type'])) {
+    $xtpl->assign('DELETE_RETURN_TYPE', $start['type']);
 }
-if(isset($start['assigned_user_id']) && !empty($start['assigned_user_id'])) {
-	$xtpl->assign('DELETE_RETURN_ASSIGNED_USER_ID', $start['assigned_user_id']);
+if (isset($start['assigned_user_id']) && !empty($start['assigned_user_id'])) {
+    $xtpl->assign('DELETE_RETURN_ASSIGNED_USER_ID', $start['assigned_user_id']);
 }
 
 
 
 ////	END RETURN NAVIGATION
 ///////////////////////////////////////////////////////////////////////////////
-
-
 // DEFAULT TO TEXT IF NO HTML CONTENT:
 $html = trim(from_html($focus->description_html));
-if(empty($html)) {
-	$xtpl->assign('SHOW_PLAINTEXT', 'true');
+if (empty($html)) {
+    $xtpl->assign('SHOW_PLAINTEXT', 'true');
 } else {
-	$xtpl->assign('SHOW_PLAINTEXT', 'false');
+    $xtpl->assign('SHOW_PLAINTEXT', 'false');
 }
-$show_subpanels=true;
+$show_subpanels = true;
 //if the email is of type campaign, process the macros...using the values stored in the relationship table.
 //this is is part of the feature that adds support for one email per campaign.
-if ($focus->type=='campaign' and !empty($_REQUEST['parent_id']) and !empty($_REQUEST['parent_module'])) {
-    $show_subpanels=false;
-    $parent_id=$_REQUEST['parent_id'];
+if ($focus->type == 'campaign' and !empty($_REQUEST['parent_id']) and !empty($_REQUEST['parent_module'])) {
+    $show_subpanels = false;
+    $parent_id = $_REQUEST['parent_id'];
 
-	// cn: bug 14300 - emails_beans schema refactor - fixing query
-	$query="SELECT * FROM emails_beans WHERE email_id='{$focus->id}' AND bean_id='{$parent_id}' AND bean_module = '{$_REQUEST['parent_module']}' " ;
+    // cn: bug 14300 - emails_beans schema refactor - fixing query
+    $query = "SELECT * FROM emails_beans WHERE email_id='{$focus->id}' AND bean_id='{$parent_id}' AND bean_module = '{$_REQUEST['parent_module']}' ";
 
-    $res=$focus->db->query($query);
-    $row=$focus->db->fetchByAssoc($res);
+    $res = $focus->db->query($query);
+    $row = $focus->db->fetchByAssoc($res);
     if (!empty($row)) {
-        $campaign_data=$row['campaign_data'];
-        $macro_values=array();
+        $campaign_data = $row['campaign_data'];
+        $macro_values = array();
         if (!empty($campaign_data)) {
-            $macro_values=unserialize(from_html($campaign_data));
+            $macro_values = unserialize(from_html($campaign_data));
         }
 
         if (count($macro_values) > 0) {
-            $m_keys=array_keys($macro_values);
-            $m_values=array_values($macro_values);
+            $m_keys = array_keys($macro_values);
+            $m_values = array_values($macro_values);
 
-            $focus->name = str_replace($m_keys,$m_values,$focus->name);
-            $focus->description = str_replace($m_keys,$m_values,$focus->description);
-            $focus->description_html = str_replace($m_keys,$m_values,$focus->description_html);
+            $focus->name = str_replace($m_keys, $m_values, $focus->name);
+            $focus->description = str_replace($m_keys, $m_values, $focus->description);
+            $focus->description_html = str_replace($m_keys, $m_values, $focus->description_html);
             if (!empty($macro_values['sugar_to_email_address'])) {
-                $focus->to_addrs=$macro_values['sugar_to_email_address'];
+                $focus->to_addrs = $macro_values['sugar_to_email_address'];
             }
         }
     }
 }
 //if not empty or set to test (from test campaigns)
-if (!empty($focus->parent_type) && $focus->parent_type !='test') {
-	$xtpl->assign('PARENT_MODULE', $focus->parent_type);
-	$xtpl->assign('PARENT_TYPE_UNTRANSLATE', $focus->parent_type);
+if (!empty($focus->parent_type) && $focus->parent_type != 'test') {
+    $xtpl->assign('PARENT_MODULE', $focus->parent_type);
+    $xtpl->assign('PARENT_TYPE_UNTRANSLATE', $focus->parent_type);
     $xtpl->assign('PARENT_TYPE', $app_list_strings['record_type_display'][$focus->parent_type] . ':');
 }
 
@@ -247,7 +250,7 @@ $bcc_addr = !empty($focus->bcc_addrs_names) ? htmlspecialchars($focus->bcc_addrs
 $xtpl->assign('MOD', $mod_strings);
 $xtpl->assign('APP', $app_strings);
 $xtpl->assign('GRIDLINE', $gridline);
-$xtpl->assign('PRINT_URL', 'index.php?'.$GLOBALS['request_string']);
+$xtpl->assign('PRINT_URL', 'index.php?' . $GLOBALS['request_string']);
 $xtpl->assign('ID', $focus->id);
 $xtpl->assign('TYPE', $email_type);
 $xtpl->assign('PARENT_NAME', $focus->parent_name);
@@ -265,38 +268,41 @@ $xtpl->assign('BCC', $bcc_addr);
 $xtpl->assign('CREATED_BY', $focus->created_by_name);
 $xtpl->assign('MODIFIED_BY', $focus->modified_by_name);
 $xtpl->assign('DATE_SENT', $focus->date_entered);
-$xtpl->assign('EMAIL_NAME', 'RE: '.$focus->name);
+$xtpl->assign('EMAIL_NAME', 'RE: ' . $focus->name);
 $xtpl->assign("TAG", $focus->listviewACLHelper());
-if(!empty($focus->raw_source)) {
-	$xtpl->assign("RAW_METADATA", $focus->id);
+if (!empty($focus->raw_source)) {
+    $xtpl->assign("RAW_METADATA", $focus->id);
 } else {
-	$xtpl->assign("DISABLE_RAW_BUTTON", 'none');
+    $xtpl->assign("DISABLE_RAW_BUTTON", 'none');
 }
 
-if(!empty($focus->reply_to_email)) {
-	$replyTo = "
+if (!empty($focus->reply_to_email)) {
+    $replyTo = "
 		<tr>
-        <td class=\"tabDetailViewDL\"><slot>".$mod_strings['LBL_REPLY_TO_NAME']."</slot></td>
-        <td colspan=3 class=\"tabDetailViewDF\"><slot>".$focus->reply_to_email."</slot></td>
+        <td class=\"tabDetailViewDL\"><slot>" . $mod_strings['LBL_REPLY_TO_NAME'] . "</slot></td>
+        <td colspan=3 class=\"tabDetailViewDF\"><slot>" . $focus->reply_to_email . "</slot></td>
         </tr>";
- 	$xtpl->assign("REPLY_TO", $replyTo);
+    $xtpl->assign("REPLY_TO", $replyTo);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ////	JAVASCRIPT VARS
-$jsVars  = '';
+$jsVars = '';
 $jsVars .= "var showRaw = '{$mod_strings['LBL_BUTTON_RAW_LABEL']}';";
 $jsVars .= "var hideRaw = '{$mod_strings['LBL_BUTTON_RAW_LABEL_HIDE']}';";
 $xtpl->assign("JS_VARS", $jsVars);
 
 
 // ADMIN EDIT
-if(is_admin($GLOBALS['current_user']) && $_REQUEST['module'] != 'DynamicLayout' && !empty($_SESSION['editinplace'])){
-	$xtpl->assign("ADMIN_EDIT","<a href='index.php?action=index&module=DynamicLayout&from_action=".$_REQUEST['action'] ."&from_module=".$_REQUEST['module'] ."&record=".$_REQUEST['record']. "'>".SugarThemeRegistry::current()->getImage("EditLayout","border='0' align='bottom'",null,null,'.gif',$mod_strings['LBL_EDIT_LAYOUT'])."</a>");
+if (is_admin($GLOBALS['current_user']) && $_REQUEST['module'] != 'DynamicLayout' && !empty($_SESSION['editinplace'])) {
+    $xtpl->assign("ADMIN_EDIT", "<a href='index.php?action=index&module=DynamicLayout&from_action=" . $_REQUEST['action'] . "&from_module=" . $_REQUEST['module'] . "&record=" . $_REQUEST['record'] . "'>" . SugarThemeRegistry::current()->getImage("EditLayout", "border='0' align='bottom'", null, null, '.gif', $mod_strings['LBL_EDIT_LAYOUT']) . "</a>");
 }
 
-if(isset($_REQUEST['offset']) && !empty($_REQUEST['offset'])) { $offset = $_REQUEST['offset']; }
-else $offset = 1;
+if (isset($_REQUEST['offset']) && !empty($_REQUEST['offset'])) {
+    $offset = $_REQUEST['offset'];
+}
+else
+    $offset = 1;
 $detailView->processListNavigation($xtpl, "EMAIL", $offset, false);
 
 
@@ -305,7 +311,7 @@ $detailView->processListNavigation($xtpl, "EMAIL", $offset, false);
 require_once('modules/DynamicFields/templates/Files/DetailView.php');
 $do_open = true;
 if ($do_open) {
-	$xtpl->parse("main.open_source");
+    $xtpl->parse("main.open_source");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -316,26 +322,42 @@ $note = new Note();
 $where = "notes.parent_id='{$focus->id}'";
 //take in account if this is from campaign and the template id is stored in the macros.
 
-if(isset($macro_values) && isset($macro_values['email_template_id'])){
+if (isset($macro_values) && isset($macro_values['email_template_id'])) {
     $where = "notes.parent_id='{$macro_values['email_template_id']}'";
 }
 $notes_list = $note->get_full_list("notes.name", $where, true);
 
-if(! isset($notes_list)) {
-	$notes_list = array();
+if (!isset($notes_list)) {
+    $notes_list = array();
 }
 
 $attachments = '';
-for($i=0; $i<count($notes_list); $i++) {
-	$the_note = $notes_list[$i];
-	if(!empty($the_note->filename))
-    	$attachments .= "<a href=\"index.php?entryPoint=download&id=".$the_note->id."&type=Notes\">".$the_note->name."</a><br />";
+for ($i = 0; $i < count($notes_list); $i++) {
+    $the_note = $notes_list[$i];
+    if (!empty($the_note->filename))
+        $attachments .= "<a href=\"index.php?entryPoint=download&id=" . $the_note->id . "&type=Notes\">" . $the_note->name . "</a><br />";
     $focus->cid2Link($the_note->id, $the_note->file_mime_type);
 }
 
 $xtpl->assign('DESCRIPTION', nl2br($focus->description));
 $xtpl->assign('DESCRIPTION_HTML', from_html($focus->description_html));
 $xtpl->assign("ATTACHMENTS", $attachments);
+
+//Genereate reply box when replied from detail view rather than redirecting to EMail page
+require_once('modules/Emails/EmailUI.php');
+$eUi = new EmailUI();
+$focus->from_name = $focus->from_addr;
+$ema = $eUi->handleReplyType($focus, 'reply');
+$forward_header = $ema->getForwardHeader();
+$count = 1;
+$description = str_replace('<br /><br />', '<br />', $forward_header, $count) . $focus->description;
+
+$composeData = array("parent_id" => $_REQUEST['parent_id'], "parent_type" => $_REQUEST['parent_module'], "parent_name" => $focus->parent_name, "to_email_addrs" => $focus->to_addrs, "subject" => $focus->name, "body" => $description);
+$j_quickComposeOptions = $eUi->generateComposePackageForQuickCreate($composeData, http_build_query($composeData), false, $focus);
+$replyFunction = "SUGAR.quickCompose.init(" . $j_quickComposeOptions . ");";
+$xtpl->assign('REPLYFUNCTION', $replyFunction);
+//End
+
 $xtpl->parse("main");
 $xtpl->out("main");
 
