@@ -172,7 +172,27 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
             'attachments' => $attachments,
             'email_id' => $email_id,
         );
-    } else if (isset($_REQUEST['ListView'])) {
+    } else if (empty($data['parent_type']) && empty($data['parent_id'])) {        
+        $namePlusEmail = '';
+        if (isset($data['to_email_addrs'])) {
+            $namePlusEmail = $data['to_email_addrs'];
+            $namePlusEmail = from_html(str_replace("&nbsp;", " ", $namePlusEmail));
+        } else {
+            if (isset($bean->full_name)) {
+                $namePlusEmail = from_html($bean->full_name) . " <" . from_html($bean->emailAddress->getPrimaryAddress($bean)) . ">";
+            } else if (isset($bean->emailAddress)) {
+                $namePlusEmail = "<" . from_html($bean->emailAddress->getPrimaryAddress($bean)) . ">";
+            }
+        }
+        $ret = array(
+            'to_email_addrs' => $namePlusEmail,
+            'subject' => ($data['subject']) ? $data['subject'] : $subject,            
+            'body' => ($body) ? $body : $data['body'],            
+            'email_id' => $email_id,
+        );
+        
+    }
+    else if (isset($_REQUEST['ListView'])) {
 
         $email = new Email();
         $namePlusEmail = $email->getNamePlusEmailAddressesForCompose($_REQUEST['action_module'], (explode(",", $_REQUEST['uid'])));
