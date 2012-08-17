@@ -352,7 +352,7 @@ $forward_header = $ema->getForwardHeader();
 $count = 1;
 $description = str_replace('<br /><br />', '<br />', $forward_header, $count) . $focus->description;
 
-$composeData = array("parent_id" => $_REQUEST['parent_id'], "parent_type" => $_REQUEST['parent_module'], "parent_name" => $focus->parent_name, "to_email_addrs" => $focus->from_addr, "subject" => $focus->name, "body" => $description);
+$composeData = array("parent_id" => $focus->parent_id, "parent_type" => $focus->parent_type, "parent_name" => $focus->parent_name, "to_email_addrs" => $focus->from_addr, "subject" => $focus->name, "body" => $description);
 $j_quickComposeOptions = $eUi->generateComposePackageForQuickCreate($composeData, http_build_query($composeData), false, $focus);
 $replyFunction = "SUGAR.quickCompose.init(" . $j_quickComposeOptions . ");";
 $xtpl->assign('REPLYFUNCTION', $replyFunction);
