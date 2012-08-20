@@ -1398,7 +1398,9 @@ var callbackAssignmentAction = {
 		SE.listView.refreshGrid();
 		SUGAR.hideMessageBox();
 		if(o.responseText != '') {
-	       SUGAR.showMessageBox('Assignment action result', o.responseText, 'alert');
+	       //Prevent error msg - Niranjan
+               //SUGAR.showMessageBox('Assignment action result', o.responseText, 'alert');
+               //End
 	    } // if
 	} ,
 	failure	: AjaxObject.handleFailure,
@@ -1410,7 +1412,9 @@ var callbackMoveEmails = {
 	    SE.listView.refreshGrid();
 		SUGAR.hideMessageBox();
 		if(o.responseText != '') {
-	       SUGAR.showMessageBox(app_strings.LBL_EMAIL_ERROR_DESC, o.responseText, 'alert');
+	       //Prevent error msg - Niranjan
+               //SUGAR.showMessageBox(app_strings.LBL_EMAIL_ERROR_DESC, o.responseText, 'alert');
+               //End
 	    } // if
 	} ,
 	failure	: AjaxObject.handleFailure,
