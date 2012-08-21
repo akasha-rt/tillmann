@@ -347,6 +347,17 @@ $xtpl->assign("ATTACHMENTS", $attachments);
 require_once('modules/Emails/EmailUI.php');
 $eUi = new EmailUI();
 $focus->from_name = $focus->from_addr;
+//Code to handle Reply all from Email Detail View
+$ema_rply = $eUi->handleReplyType($focus, 'replyAll');
+$forward_header = $ema_rply->getForwardHeader();
+$count = 1;
+$description = str_replace('<br /><br />', '<br />', $forward_header, $count) . $focus->description;
+
+$composeData = array("parent_id" => $focus->parent_id, "parent_type" => $focus->parent_type, "parent_name" => $focus->parent_name, "to_email_addrs" => $focus->from_addr, "cc_addrs" => $focus->cc_addrs, "bcc_addrs" => $focus->bcc_addrs, "subject" => $focus->name, "body" => $description);
+$j_quickComposeOptions = $eUi->generateComposePackageForQuickCreate($composeData, http_build_query($composeData), false, $focus);
+$replyFunction = "SUGAR.quickCompose.init(" . $j_quickComposeOptions . ");";
+$xtpl->assign('REPLYAllFUNCTION', $replyFunction);
+//End
 $ema = $eUi->handleReplyType($focus, 'reply');
 $forward_header = $ema->getForwardHeader();
 $count = 1;

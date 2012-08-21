@@ -163,6 +163,8 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
             'to_email_addrs' => $namePlusEmail,
             'parent_type' => $data['parent_type'],
             'parent_id' => $data['parent_id'],
+            'cc_addrs'=>$data['cc_addrs'],
+            'bcc_addrs'=>$data['bcc_addrs'],
             //'parent_name' => $parentName,
             //'subject' => $subject,
             //'body' => $body,
@@ -186,7 +188,9 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
         }
         $ret = array(
             'to_email_addrs' => $namePlusEmail,
-            'subject' => ($data['subject']) ? $data['subject'] : $subject,            
+            'subject' => ($data['subject']) ? $data['subject'] : $subject,    
+            'cc_addrs'=>$data['cc_addrs'],
+            'bcc_addrs'=>$data['bcc_addrs'],
             'body' => ($body) ? $body : $data['body'],            
             'email_id' => $email_id,
         );
