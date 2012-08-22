@@ -2092,8 +2092,12 @@ eoq;
                     $myCaseMacro = $myCase->getEmailSubjectMacro();
                     $email->parent_name = $myCase->name;
                     $GLOBALS['log']->debug("****Case # : {$myCase->case_number} macro: $myCaseMacro");
-                    $email->description_html .= str_replace('%1', $myCase->case_number, $myCaseMacro);
-                    $email->description .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                    if ($myCase->id == NULL) {
+                        $email->parent_type = '';
+                    } else {
+                        $email->description_html .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                        $email->description .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                    }
                 }
                 //END - Dhaval
                 break;

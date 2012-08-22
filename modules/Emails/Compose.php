@@ -174,7 +174,7 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
             'attachments' => $attachments,
             'email_id' => $email_id,
         );
-    } else if (empty($data['parent_type']) && empty($data['parent_id'])) {        
+    } else if (empty($data['parent_type']) && empty($data['parent_name'])) {        
         $namePlusEmail = '';
         if (isset($data['to_email_addrs'])) {
             $namePlusEmail = $data['to_email_addrs'];
