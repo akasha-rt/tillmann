@@ -346,8 +346,9 @@ class SugarFolder {
 
 		while($a = $this->db->fetchByAssoc($r)) {
                     $fromname = explode("<", html_entity_decode($a['from_addr']));
-                    $emailAdd = explode(">", html_entity_decode($fromname[1]));
-                    $emailid = $emailAdd[0];
+                    $ltPos = strpos(html_entity_decode($a['from_addr']), '<', 1);
+                    $gtPos = strpos(html_entity_decode($a['from_addr']), '>', 1);
+                    $emailid = (($ltPos == true) && ($gtPos == true)) ? substr(html_entity_decode($a['from_addr']) , $ltPos + 1, $gtPos - $ltPos - 1) : html_entity_decode($a['from_addr']);
                     $name = explode(" ",$fromname[0]);
                     $fname = $name[0];
                     $lname = $name[1];
