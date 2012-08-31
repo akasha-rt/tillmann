@@ -5,3 +5,32 @@ ALTER TABLE  `email_templates` ADD  `department` VARCHAR( 255 ) NOT NULL
 
 @Dhaval - 17_07_12
 ALTER TABLE email_templates   modify COLUMN department varchar(255)  NULL ;
+
+
+@Dhaval 23_08_12 – when database compared with live db
+/* Create table in target */
+CREATE TABLE `cases_cstm`(
+	`id_c` char(36) COLLATE utf8_general_ci NOT NULL  , 
+	`cat1_c` varchar(10) COLLATE utf8_general_ci NULL  , 
+	`cat2_c` varchar(10) COLLATE utf8_general_ci NULL  , 
+	`cat3_c` varchar(10) COLLATE utf8_general_ci NULL  , 
+	PRIMARY KEY (`id_c`) 
+) ENGINE=InnoDB DEFAULT CHARSET='utf8';
+
+
+/* Create table in target */
+CREATE TABLE `tasks_cstm`(
+	`id_c` char(36) COLLATE utf8_general_ci NOT NULL  , 
+	`orderid_c` varchar(10) COLLATE utf8_general_ci NULL  , 
+	PRIMARY KEY (`id_c`) 
+) ENGINE=InnoDB DEFAULT CHARSET='utf8';
+
+
+INSERT INTO `fields_meta_data` VALUES ('Casescat2_c', 'cat2_c', 'LBL_CAT2', 'Please enter Biorbyt catalogue number', 'Please enter Biorbyt catalogue number', 'Cases', 'varchar', '10', '0', '', '2012-06-26 15:08:08', '0', '0', '0', '0', '1', 'true', '', '', '', '');
+INSERT INTO `fields_meta_data` VALUES ('Casescat3_c', 'cat3_c', 'LBL_CAT3', 'Please enter Biorbyt catalogue number', 'Please enter Biorbyt catalogue number', 'Cases', 'varchar', '10', '0', '', '2012-06-26 15:08:32', '0', '0', '0', '0', '1', 'true', '', '', '', '');
+INSERT INTO `fields_meta_data` VALUES ('Tasksorderid_c', 'orderid_c', 'LBL_ORDERID', 'Biorbyt Order#', 'Biorbyt Order#', 'Tasks', 'varchar', '10', '0', '', '2012-06-26 14:56:13', '0', '0', '0', '0', '1', 'true', '', '', '', '');
+INSERT INTO `fields_meta_data` VALUES ('Casescat1_c', 'cat1_c', 'LBL_CAT1', 'Please enter Biorbyt catalogue number', 'Please enter Biorbyt catalogue number', 'Cases', 'varchar', '10', '0', '', '2012-06-26 15:07:38', '0', '0', '0', '0', '1', 'true', '', '', '', '');
+
+UPDATE `fields_meta_data` SET `name`='type_c', `vname`='LBL_TYPE', `comments`='', `help`='', `custom_module`='Notes', `type`='enum', `len`='100', `required`='0', `default_value`='RnD', `date_modified`='2012-05-01 08:49:29', `deleted`='0', `audited`='0', `massupdate`='1', `duplicate_merge`='0', `reportable`='1', `importable`='true', `ext1`='note_type_list', `ext2`='', `ext3`='', `ext4`=''  WHERE (`id` = 'Notestype_c') ;
+UPDATE `fields_meta_data` SET `name`='type_c', `vname`='LBL_TYPE', `comments`='', `help`='', `custom_module`='Contacts', `type`='enum', `len`='100', `required`='0', `default_value`='Small_Molecule_Supplier', `date_modified`='2012-05-01 08:28:21', `deleted`='0', `audited`='1', `massupdate`='1', `duplicate_merge`='0', `reportable`='1', `importable`='true', `ext1`='contact_type_list', `ext2`='', `ext3`='', `ext4`=''  WHERE (`id` = 'Contactstype_c') ;
+UPDATE `fields_meta_data` SET `name`='product_c', `vname`='LBL_PRODUCT', `comments`='Product catalogue number', `help`='Enter Product catalogue number as csv', `custom_module`='Opportunities', `type`='varchar', `len`='255', `required`='1', `default_value`='', `date_modified`='2012-05-23 06:50:39', `deleted`='0', `audited`='1', `massupdate`='0', `duplicate_merge`='0', `reportable`='1', `importable`='true', `ext1`='', `ext2`='', `ext3`='', `ext4`=''  WHERE (`id` = 'Opportunitiesproduct_c') ;
