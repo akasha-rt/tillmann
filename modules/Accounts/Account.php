@@ -462,6 +462,7 @@ class Account extends Company {
                           ' '                    AS signed_user_owner,
                           ' '                    AS signed_user_mod,
                           tasks.created_by,
+                          ' '      from_addr_name,
                           'tasks'                   panel_name
                         FROM tasks
                           LEFT JOIN contacts contacts
@@ -508,6 +509,7 @@ class Account extends Company {
                           ' '                       AS signed_user_owner,
                           ' '                       AS signed_user_mod,
                           meetings.created_by,
+                          ' '      from_addr_name,
                           'meetings'                   panel_name
                         FROM meetings
                           LEFT JOIN users jt1
@@ -553,6 +555,7 @@ class Account extends Company {
                           ' '                    AS signed_user_owner,
                           ' '                    AS signed_user_mod,
                           calls.created_by,
+                          ' '      from_addr_name,
                           'calls'                   panel_name
                         FROM calls
                           LEFT JOIN users jt1
@@ -598,6 +601,7 @@ class Account extends Company {
                           ' '                    AS signed_user_owner,
                           ' '                    AS signed_user_mod,
                           notes.created_by,
+                          ' '      from_addr_name,
                           'notes'                   panel_name
                         FROM notes
                           LEFT JOIN contacts contacts
@@ -622,94 +626,115 @@ class Account extends Company {
                                 OR accounts_contacts.account_id = '{$this->id}')
                             AND notes.deleted = 0) 
                         UNION ALL 
-                        (SELECT DISTINCT
-                          emails.id,
-                          emails.name,
-                          emails.status,
-                          ' '                        contact_name,
-                          ' '                        contact_id,
-                          ' '                        contact_name_owner,
-                          ' '                        contact_name_mod,
-                          emails.date_modified,
-                          emails.date_entered,
-                          LTRIM(RTRIM(CONCAT(IFNULL(jt0.first_name,''),' ',IFNULL(jt0.last_name,'')))) AS signed_user_name,
-                          emails.assigned_user_id,
-                          jt0.created_by          AS signed_user_name_owner,
-                          'Users'                 AS signed_user_name_mod,
-                          emails.reply_to_status,
-                          emails.parent_id,
-                          emails.parent_type,
-                          ' '                        filename,
-                          ' '                     AS signed_user_owner,
-                          ' '                     AS signed_user_mod,
-                          ' '                        created_by,
-                          'emails'                   panel_name
-                        FROM emails
-                          LEFT JOIN users jt0
-                            ON emails.assigned_user_id = jt0.id
-                              AND jt0.deleted = 0
-                          INNER JOIN emails_beans
-                            ON emails.id = emails_beans.email_id
-                              AND emails_beans.deleted = 0
-                              AND (emails_beans.bean_module = 'Accounts'
-                                    OR emails_beans.bean_module = 'Contacts')
-                          LEFT JOIN accounts_contacts
-                            ON (accounts_contacts.contact_id = emails_beans.bean_id
-                                 OR accounts_contacts.account_id = emails_beans.bean_id)
-                              AND accounts_contacts.deleted = 0
-                        WHERE (emails_beans.bean_id = '{$this->id}'
-                                OR accounts_contacts.account_id = '{$this->id}')
-                            AND emails.deleted = 0) 
-                        UNION ALL 
-                        (SELECT DISTINCT
-                          emails.id,
-                          emails.name,
-                          emails.status,
-                          ' '                        contact_name,
-                          ' '                        contact_id,
-                          ' '                        contact_name_owner,
-                          ' '                        contact_name_mod,
-                          emails.date_modified,
-                          emails.date_entered,
-                          LTRIM(RTRIM(CONCAT(IFNULL(jt0.first_name,''),' ',IFNULL(jt0.last_name,'')))) AS signed_user_name,
-                          emails.assigned_user_id,
-                          jt0.created_by          AS signed_user_name_owner,
-                          'Users'                 AS signed_user_name_mod,
-                          emails.reply_to_status,
-                          emails.parent_id,
-                          emails.parent_type,
-                          ' '                        filename,
-                          ' '                     AS signed_user_owner,
-                          ' '                     AS signed_user_mod,
-                          emails.created_by,
-                          'linkedemails'             panel_name
-                        FROM emails
-                          LEFT JOIN users jt0
-                            ON emails.assigned_user_id = jt0.id
-                              AND jt0.deleted = 0
-                          JOIN (SELECT DISTINCT
-                                  email_id
-                                FROM emails_email_addr_rel eear
-                                  JOIN email_addr_bean_rel eabr
-                                    ON (eabr.bean_module = 'Accounts'
-                                         OR eabr.bean_module = 'Contacts')
-                                      AND eabr.email_address_id = eear.email_address_id
-                                      AND eabr.deleted = 0
-                                WHERE eear.deleted = 0
-                                    AND eear.email_id NOT IN(SELECT
-                                                               eb.email_id
-                                                             FROM emails_beans eb
-                                                               LEFT JOIN accounts_contacts
-                                                                 ON (accounts_contacts.contact_id = eb.bean_id
-                                                                      OR accounts_contacts.account_id = eb.bean_id)
-                                                                   AND accounts_contacts.deleted = 0
-                                                             WHERE eb.deleted = 0
-                                                                AND (eb.bean_module = 'Accounts'
-                                                                     OR eb.bean_module = 'Contacts')
-                                                                 AND (eb.bean_id = '{$this->id}'
-                                                                       OR accounts_contacts.account_id = '{$this->id}'))) derivedemails
-                            ON derivedemails.email_id = emails.id
-                        WHERE emails.deleted = 0";
+                        (SELECT
+                              emails.id,
+                              emails.name,
+                              emails.status,
+                              ' '                        contact_name,
+                              ' '                        contact_id,
+                              ' '                        contact_name_owner,
+                              ' '                        contact_name_mod,
+                              emails.date_modified,
+                              emails.date_entered,
+                              LTRIM(RTRIM(CONCAT(IFNULL(jt0.first_name,''),' ',IFNULL(jt0.last_name,'')))) AS signed_user_name,
+                              emails.assigned_user_id,
+                              jt0.created_by          AS signed_user_name_owner,
+                              'Users'                 AS signed_user_name_mod,
+                              emails.reply_to_status,
+                              emails.parent_id,
+                              emails.parent_type,
+                              ' '                        filename,
+                              ' '                     AS signed_user_owner,
+                              ' '                     AS signed_user_mod,
+                              ' '                        created_by,
+                              emails_text.from_addr      from_addr_name,
+                              'emails'                   panel_name
+                            FROM emails
+                              LEFT JOIN users jt0
+                                ON emails.assigned_user_id = jt0.id
+                                  AND jt0.deleted = 0
+                              LEFT JOIN contacts
+                              ON emails.parent_id = contacts.id
+                              AND contacts.deleted = 0
+
+                              LEFT JOIN accounts
+                              ON emails.parent_id = accounts.id
+                              AND accounts.deleted = 0
+
+                              INNER JOIN emails_beans
+                                ON emails.id = emails_beans.email_id
+                                  AND ((emails_beans.bean_module = 'Accounts' AND emails_beans.bean_id = accounts.id) OR (emails_beans.bean_module = 'Contacts' AND emails_beans.bean_id = contacts.id)) 
+                                  AND emails_beans.deleted = 0
+                             LEFT JOIN emails_text
+                                ON emails_text.email_id = emails_beans.email_id
+                                    AND emails_text.deleted = 0
+                            WHERE emails.deleted = 0
+                            AND (accounts.id = '{$this->id}'
+                            OR contacts.id IN (SELECT
+                                                           contacts.id
+                                                         FROM accounts
+                                                           LEFT JOIN accounts_contacts
+                                                             ON accounts_contacts.account_id = accounts.id
+                                                             AND accounts_contacts.deleted = 0
+                                                           LEFT JOIN contacts
+                                                             ON contacts.id = accounts_contacts.contact_id
+                                                         WHERE contacts.deleted = 0
+                                                             AND accounts.deleted = 0
+                                                             AND accounts.id = '{$this->id}'))) 
+                            UNION ALL 
+                            (SELECT
+                              emails.id,
+                              emails.name,
+                              emails.status,
+                              ' '                        contact_name,
+                              ' '                        contact_id,
+                              ' '                        contact_name_owner,
+                              ' '                        contact_name_mod,
+                              emails.date_modified,
+                              emails.date_entered,
+                              LTRIM(RTRIM(CONCAT(IFNULL(jt0.first_name,''),' ',IFNULL(jt0.last_name,'')))) AS signed_user_name,
+                              emails.assigned_user_id,
+                              jt0.created_by          AS signed_user_name_owner,
+                              'Users'                 AS signed_user_name_mod,
+                              emails.reply_to_status,
+                              emails.parent_id,
+                              emails.parent_type,
+                              ' '                        filename,
+                              ' '                     AS signed_user_owner,
+                              ' '                     AS signed_user_mod,
+                              emails.created_by,
+                              emails_text.from_addr      from_addr_name,
+                              'linkedemails'             panel_name
+                            FROM emails
+                              LEFT JOIN users jt0
+                                ON emails.assigned_user_id = jt0.id
+                                  AND jt0.deleted = 0
+                                  AND jt0.deleted = 0
+                              JOIN (SELECT DISTINCT
+                                      email_id
+                                    FROM emails_email_addr_rel eear
+                                      JOIN email_addr_bean_rel eabr
+                                        ON ((eabr.bean_module = 'Accounts' AND eabr.bean_id = '{$this->id}') OR (eabr.bean_module = 'Contacts' AND eabr.bean_id IN (SELECT
+                                                           contacts.id
+                                                         FROM accounts
+                                                           LEFT JOIN accounts_contacts
+                                                             ON accounts_contacts.account_id = accounts.id
+                                                             AND accounts_contacts.deleted = 0
+                                                           LEFT JOIN contacts
+                                                             ON contacts.id = accounts_contacts.contact_id
+                                                         WHERE contacts.deleted = 0
+                                                             AND accounts.deleted = 0
+                                                             AND accounts.id = '{$this->id}')))
+
+                                          AND eabr.email_address_id = eear.email_address_id
+                                          AND eabr.deleted = 0
+                                    WHERE eear.deleted = 0
+                            ) derivedemails
+                                ON derivedemails.email_id = emails.id
+                        LEFT JOIN emails_text
+                            ON emails_text.email_id = emails.id
+                                AND emails_text.deleted = 0
+                            WHERE emails.deleted = 0";
         return $query;
     }
 
