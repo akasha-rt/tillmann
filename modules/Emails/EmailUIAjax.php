@@ -87,7 +87,11 @@ if (isset($_REQUEST['emailUIAction'])) {
                 if ($_REQUEST['composeType'] == 'forward') {
                     $ret = $ie->email->et->getDraftAttachments($ret);
                 }
-                $ret = $ie->email->et->getFromAllAccountsArray($ie, $ret);
+                //Reena - To Stop All email acc in from when reply
+                $ret['fromAccounts'] = array();
+                $ret['fromAccounts']['status'] = false;
+                //$ret = $ie->email->et->getFromAllAccountsArray($ie, $ret);
+                //End - Stop All email acc in from 
                 $ret['from'] = from_html($ret['from']);
                 $ret['name'] = from_html($ret['name']);
                 $out = $json->encode($ret, true);
@@ -346,7 +350,7 @@ if (isset($_REQUEST['emailUIAction'])) {
                 $dup = $contactFormBase->checkForDuplicates();
                 if (!is_null($dup)) {
                     //echo $json->encode(array('dup' => true,'id' => $dup['id']));
-                    echo $json->encode(array('id' => 0,'beanId' => $dup[0]['id'],'module' => $controller->module));
+                    echo $json->encode(array('id' => 0, 'beanId' => $dup[0]['id'], 'module' => $controller->module));
                     //echo "<script type='text/javascript'>ajaxStatus.showStatus('Contact already exists');</script>";
                     break;
                 }
@@ -406,8 +410,8 @@ if (isset($_REQUEST['emailUIAction'])) {
                         } // if
                     } // if
                 } // if
-               //Reena                
-                echo $json->encode(array('id' => $ie->email->id,'beanId' => $controller->bean->id,'module' => $controller->module));
+                //Reena                
+                echo $json->encode(array('id' => $ie->email->id, 'beanId' => $controller->bean->id, 'module' => $controller->module));
                 //End - Reena
                 //echo $json->encode(array('id' => $ie->email->id));
             }
