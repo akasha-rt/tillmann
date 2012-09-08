@@ -767,6 +767,10 @@ EOHTML;
             echo getVersionedScript('cache/include/javascript/sugar_grp1_yui.js');
             echo getVersionedScript('cache/include/javascript/sugar_grp1.js');
             echo getVersionedScript('include/javascript/calendar.js');
+            //For lookup
+            echo getVersionedScript('custom/include/js/jquery.js');
+            echo getVersionedScript('custom/include/js/LookUp.js');
+            //End - lookup
 
             // output necessary config js in the top of the page
             $config_js = $this->getSugarConfigJS();

@@ -34,3 +34,63 @@ INSERT INTO `fields_meta_data` VALUES ('Casescat1_c', 'cat1_c', 'LBL_CAT1', 'Ple
 UPDATE `fields_meta_data` SET `name`='type_c', `vname`='LBL_TYPE', `comments`='', `help`='', `custom_module`='Notes', `type`='enum', `len`='100', `required`='0', `default_value`='RnD', `date_modified`='2012-05-01 08:49:29', `deleted`='0', `audited`='0', `massupdate`='1', `duplicate_merge`='0', `reportable`='1', `importable`='true', `ext1`='note_type_list', `ext2`='', `ext3`='', `ext4`=''  WHERE (`id` = 'Notestype_c') ;
 UPDATE `fields_meta_data` SET `name`='type_c', `vname`='LBL_TYPE', `comments`='', `help`='', `custom_module`='Contacts', `type`='enum', `len`='100', `required`='0', `default_value`='Small_Molecule_Supplier', `date_modified`='2012-05-01 08:28:21', `deleted`='0', `audited`='1', `massupdate`='1', `duplicate_merge`='0', `reportable`='1', `importable`='true', `ext1`='contact_type_list', `ext2`='', `ext3`='', `ext4`=''  WHERE (`id` = 'Contactstype_c') ;
 UPDATE `fields_meta_data` SET `name`='product_c', `vname`='LBL_PRODUCT', `comments`='Product catalogue number', `help`='Enter Product catalogue number as csv', `custom_module`='Opportunities', `type`='varchar', `len`='255', `required`='1', `default_value`='', `date_modified`='2012-05-23 06:50:39', `deleted`='0', `audited`='1', `massupdate`='0', `duplicate_merge`='0', `reportable`='1', `importable`='true', `ext1`='', `ext2`='', `ext3`='', `ext4`=''  WHERE (`id` = 'Opportunitiesproduct_c') ;
+
+
+@dhaval - 08_09_12- afet store data module install
+
+CREATE TABLE IF NOT EXISTS `bc_storedata` (
+  `id` char(36) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `date_entered` datetime DEFAULT NULL,
+  `date_modified` datetime DEFAULT NULL,
+  `modified_user_id` char(36) DEFAULT NULL,
+  `created_by` char(36) DEFAULT NULL,
+  `description` text,
+  `deleted` tinyint(1) DEFAULT '0',
+  `assigned_user_id` char(36) DEFAULT NULL,
+  `catalognumber` varchar(255) DEFAULT NULL,
+  `sku` varchar(255) DEFAULT NULL,
+  `supplierid` varchar(255) DEFAULT NULL,
+  `immunogen` varchar(255) DEFAULT NULL,
+  `purchasingemail` varchar(255) DEFAULT NULL,
+  `purchasingname` varchar(255) DEFAULT NULL,
+  `supportemail` varchar(255) DEFAULT NULL,
+  `supportname` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `bc_storedata_audit` (
+  `id` char(36) NOT NULL,
+  `parent_id` char(36) NOT NULL,
+  `date_created` datetime DEFAULT NULL,
+  `created_by` varchar(36) DEFAULT NULL,
+  `field_name` varchar(100) DEFAULT NULL,
+  `data_type` varchar(100) DEFAULT NULL,
+  `before_value_string` varchar(255) DEFAULT NULL,
+  `after_value_string` varchar(255) DEFAULT NULL,
+  `before_value_text` text,
+  `after_value_text` text,
+  KEY `idx_bc_storedata_primary` (`id`),
+  KEY `idx_bc_storedata_parent_id` (`parent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `upgrade_history` (`id`, `filename`, `md5sum`, `type`, `status`, `version`, `name`, `description`, `id_name`, `manifest`, `date_entered`, `enabled`) VALUES
+('b9321d09-2170-ae8d-9135-504aca4c60c6', 'upload://upgrades/module/StoreData2012_09_07_111635.zip', '7df88c135c793aa1491a7d788c0cc02f', 'module', 'installed', '1346996795', 'StoreData', '', 'StoreData', 'YTozOntzOjg6Im1hbmlmZXN0IjthOjEzOntpOjA7YToxOntzOjI1OiJhY2NlcHRhYmxlX3N1Z2FyX3ZlcnNpb25zIjthOjE6e2k6MDtzOjA6IiI7fX1pOjE7YToxOntzOjI0OiJhY2NlcHRhYmxlX3N1Z2FyX2ZsYXZvcnMiO2E6Mzp7aTowO3M6MjoiQ0UiO2k6MTtzOjM6IlBSTyI7aToyO3M6MzoiRU5UIjt9fXM6NjoicmVhZG1lIjtzOjA6IiI7czozOiJrZXkiO3M6MjoiYmMiO3M6NjoiYXV0aG9yIjtzOjA6IiI7czoxMToiZGVzY3JpcHRpb24iO3M6MDoiIjtzOjQ6Imljb24iO3M6MDoiIjtzOjE2OiJpc191bmluc3RhbGxhYmxlIjtiOjE7czo0OiJuYW1lIjtzOjk6IlN0b3JlRGF0YSI7czoxNDoicHVibGlzaGVkX2RhdGUiO3M6MTk6IjIwMTItMDktMDcgMDU6NDY6MzUiO3M6NDoidHlwZSI7czo2OiJtb2R1bGUiO3M6NzoidmVyc2lvbiI7aToxMzQ2OTk2Nzk1O3M6MTM6InJlbW92ZV90YWJsZXMiO3M6NjoicHJvbXB0Ijt9czoxMToiaW5zdGFsbGRlZnMiO2E6Nzp7czoyOiJpZCI7czo5OiJTdG9yZURhdGEiO3M6NToiYmVhbnMiO2E6MTp7aTowO2E6NDp7czo2OiJtb2R1bGUiO3M6MTI6ImJjX1N0b3JlRGF0YSI7czo1OiJjbGFzcyI7czoxMjoiYmNfU3RvcmVEYXRhIjtzOjQ6InBhdGgiO3M6Mzc6Im1vZHVsZXMvYmNfU3RvcmVEYXRhL2JjX1N0b3JlRGF0YS5waHAiO3M6MzoidGFiIjtiOjE7fX1zOjEwOiJsYXlvdXRkZWZzIjthOjA6e31zOjEzOiJyZWxhdGlvbnNoaXBzIjthOjA6e31zOjk6ImltYWdlX2RpciI7czoxNjoiPGJhc2VwYXRoPi9pY29ucyI7czo0OiJjb3B5IjthOjE6e2k6MDthOjI6e3M6NDoiZnJvbSI7czo0NDoiPGJhc2VwYXRoPi9TdWdhck1vZHVsZXMvbW9kdWxlcy9iY19TdG9yZURhdGEiO3M6MjoidG8iO3M6MjA6Im1vZHVsZXMvYmNfU3RvcmVEYXRhIjt9fXM6ODoibGFuZ3VhZ2UiO2E6MTp7aTowO2E6Mzp7czo0OiJmcm9tIjtzOjU5OiI8YmFzZXBhdGg+L1N1Z2FyTW9kdWxlcy9sYW5ndWFnZS9hcHBsaWNhdGlvbi9lbl91cy5sYW5nLnBocCI7czo5OiJ0b19tb2R1bGUiO3M6MTE6ImFwcGxpY2F0aW9uIjtzOjg6Imxhbmd1YWdlIjtzOjU6ImVuX3VzIjt9fX1zOjE2OiJ1cGdyYWRlX21hbmlmZXN0IjtzOjA6IiI7fQ==', '2012-09-08 04:30:23', 1);
+
+
+INSERT INTO `relationships` (`id`, `relationship_name`, `lhs_module`, `lhs_table`, `lhs_key`, `rhs_module`, `rhs_table`, `rhs_key`, `join_table`, `join_key_lhs`, `join_key_rhs`, `relationship_type`, `relationship_role_column`, `relationship_role_column_value`, `reverse`, `deleted`) VALUES
+('90fdd787-abe1-19f3-a68a-504aca96f24a', 'bc_storedata_modified_user', 'Users', 'users', 'id', 'bc_StoreData', 'bc_storedata', 'modified_user_id', NULL, NULL, NULL, 'one-to-many', NULL, NULL, 0, 0),
+('a6b0dcd7-fbf5-0f45-173b-504aca3cd1e1', 'bc_storedata_created_by', 'Users', 'users', 'id', 'bc_StoreData', 'bc_storedata', 'created_by', NULL, NULL, NULL, 'one-to-many', NULL, NULL, 0, 0),
+('c941588e-da65-5355-8043-504aca9a93ab', 'bc_storedata_assigned_user', 'Users', 'users', 'id', 'bc_StoreData', 'bc_storedata', 'assigned_user_id', NULL, NULL, NULL, 'one-to-many', NULL, NULL, 0, 0);
+
+
+
+INSERT INTO `acl_actions` (`id`, `date_entered`, `date_modified`, `modified_user_id`, `created_by`, `name`, `category`, `acltype`, `aclaccess`, `deleted`) VALUES
+('443047e9-6784-9e0a-f515-504ac9ee85e7', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'access', 'bc_StoreData', 'module', 89, 0),
+('557245a7-a000-4228-1e4b-504ac99968c9', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'view', 'bc_StoreData', 'module', 90, 0),
+('5f64ab47-defc-7693-c316-504ac9207dec', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'list', 'bc_StoreData', 'module', 90, 0),
+('69afaaf4-595e-b879-2354-504ac961550d', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'edit', 'bc_StoreData', 'module', 90, 0),
+('738cbad1-3e41-de77-8326-504ac98b9ab0', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'delete', 'bc_StoreData', 'module', 90, 0),
+('7e0748fb-06e2-c189-493c-504ac934e00a', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'import', 'bc_StoreData', 'module', 90, 0),
+('8a7cb203-90e1-5a42-9723-504ac9fc98c7', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'export', 'bc_StoreData', 'module', 90, 0),
+('96c8c8c1-572b-2ed1-cf74-504ac953a9df', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'massupdate', 'bc_StoreData', 'module', 90, 0);
