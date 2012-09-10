@@ -31,10 +31,22 @@ $(document).ready(function(){
             data: data,
             success:function(result){  
                 $('#lookup_result_div').html(result);
+                var x = e.pageX,y = e.pageY,
+                scX = $(window).scrollLeft(),
+                scY = $(window).scrollTop(),
+                scMaxX = scX + $(window).width(),
+                scMaxY = scY + $(window).height(),
+                wd = $("#lookup_result_div").width(),
+                hgh = $("#lookup_result_div").height();
+
+                if (x + wd > scMaxX) x = scMaxX - wd;
+                if (x < scX) x = scX;
+                if (y + hgh > scMaxY) y = scMaxY - hgh;
+                if (y < scY) y = scY;
                 $('#lookup_result_div').css( {
                     position:"absolute", 
-                    top:e.pageY + 10, 
-                    left: e.pageX + 15
+                    top:y , 
+                    left:x
                 }).fadeIn('slow');
             /*$('#lookup_result_div').css({
                     position:"absolute" , 
