@@ -4,13 +4,31 @@ require_once('custom/include/Dashlets/DashletGenericBarChart.php');
 
 class CRMSummary extends DashletGenericBarChart {
 
-    protected $_seedName = 'Employees';
+    protected $_seedName = 'Accounts';
     var $current_user = '';
+    var $where = '';
+
+    function CRMSummary($id, $def = null) {
+        global $current_user, $app_strings;
+        require('custom/modules/Charts/Dashlets/CRMSummary/CRMSummary.data.php');
+        parent::__construct($id, $def);
+        $this->_searchFields = $dashletData['CRMSummary']['searchFields'];
+    }
 
     protected function getDataset() {
         global $db, $current_user;
         $this->current_user = $current_user;
         $returnArray = array();
+
+        foreach ($this->assigned_user_id as $key => $userId) {
+            $this->where .= " assigned_user_id = '{$userId}' OR ";
+        }
+        $this->where = rtrim($this->where, ' OR ');
+
+        if (is_null($this->where) || $this->where == "") {
+            $this->where = "assigned_user_id = '{$this->current_user->id}'";
+        }
+
 
         //Total Email
         $EmailSql = $this->getNumberOfEmailsQuery();
@@ -79,39 +97,39 @@ class CRMSummary extends DashletGenericBarChart {
      * @author Reena Sattani
      */
     protected function getNumberOfEmailsQuery() {
-        return "SELECT COUNT(id) AS cnt_email FROM emails WHERE assigned_user_id = '{$this->current_user->id}' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_email FROM emails WHERE ({$this->where}) AND deleted = 0 AND (date_entered >= DATE_SUB(NOW(),INTERVAL 3 HOUR))";
     }
 
     protected function getNumberOfOpportunitiesQuery() {
-        return "SELECT COUNT(id) AS cnt_opp FROM opportunities WHERE assigned_user_id = '{$this->current_user->id}' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_opp FROM opportunities WHERE ({$this->where}) AND deleted = 0 AND (date_entered BETWEEN CURDATE() - INTERVAL 14 DAY AND CURDATE())";
     }
 
     protected function getNumberOfOverdueTaskQuery() {
-        return "SELECT COUNT(id) AS cnt_overduetask FROM tasks WHERE assigned_user_id = '{$this->current_user->id}' AND date_due < NOW() AND status != 'Completed' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_overduetask FROM tasks WHERE ({$this->where}) AND date_due < NOW() AND status != 'Completed' AND deleted = 0";
     }
 
     protected function getNumberOfOpenCasesQuery() {
-        return "SELECT COUNT(id) AS cnt_opencase FROM cases WHERE assigned_user_id = '{$this->current_user->id}' AND status='Open' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_opencase FROM cases WHERE ({$this->where}) AND status='Open' AND deleted = 0";
     }
 
     protected function getNumberOfPendingCasesQuery() {
-        return "SELECT COUNT(id) AS cnt_pendingcase FROM cases WHERE assigned_user_id = '{$this->current_user->id}' AND (status='Pending Input' OR status='pending_customer' OR status='pending_supplier') AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_pendingcase FROM cases WHERE ({$this->where}) AND (status='Pending Input' OR status='pending_customer' OR status='pending_supplier') AND deleted = 0";
     }
 
     protected function getNumberOfPOCasesQuery() {
-        return "SELECT COUNT(id) AS cnt_pocase FROM cases WHERE assigned_user_id = '{$this->current_user->id}' AND status='PO' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_pocase FROM cases WHERE ({$this->where}) AND status='PO' AND deleted = 0";
     }
 
     protected function getNumberOfNewCasesQuery() {
-        return "SELECT COUNT(id) AS cnt_newcase FROM cases WHERE assigned_user_id = '{$this->current_user->id}' AND status='New' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_newcase FROM cases WHERE ({$this->where}) AND status='New' AND deleted = 0";
     }
 
     protected function getNumberOfCasesInFollowupQuery() {
-        return "SELECT COUNT(id) AS cnt_followupcase FROM cases WHERE assigned_user_id = '{$this->current_user->id}' AND status='Followup' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_followupcase FROM cases WHERE ({$this->where}) AND status='Followup' AND deleted = 0";
     }
 
     protected function getNumberOfCallsQuery() {
-        return "SELECT COUNT(id) AS cnt_call FROM calls WHERE assigned_user_id = '{$this->current_user->id}' AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_call FROM calls WHERE ({$this->where}) AND deleted = 0";
     }
 
 }
