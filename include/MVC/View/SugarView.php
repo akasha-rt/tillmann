@@ -771,6 +771,10 @@ EOHTML;
             echo getVersionedScript('custom/include/js/jquery.js');
             echo getVersionedScript('custom/include/js/LookUp.js');
             //End - lookup
+            //For Notification
+            echo getVersionedScript('custom/include/js/unserialize.js');   
+            echo getVersionedScript('custom/include/js/notification.js');      
+            //End - Notification
 
             // output necessary config js in the top of the page
             $config_js = $this->getSugarConfigJS();

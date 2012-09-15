@@ -1685,8 +1685,17 @@ eoq;
 
     function doAssignment($distributeMethod, $ieid, $folder, $uids, $users) {
         global $app_strings;
+        global $db;
         $users = explode(",", $users);
         $emailIds = explode($app_strings['LBL_EMAIL_DELIMITER'], $uids);
+        foreach ($users as $key => $user) {
+            foreach ($emailIds as $emailKey => $emailId) {
+                $id = create_guid();
+                $sql = "INSERT into notification_queue (id,userid,bean_id,bean_type,date_time,is_notify)
+                    VALUES ('{$id}','{$user}','{$emailId}','{$_REQUEST['module']}',NOW(),0)";
+                $db->query($sql);
+            }
+        }
         $out = "";
         if ($folder != 'sugar::Emails') {
             $emailIds = array();

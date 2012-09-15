@@ -4,7 +4,7 @@
  * Case Custom code
  * @author Dhaval Darji
  */
-class CaseLogicHook {
+class NoteLogicHook {
 
     /**
      * To call after_save logic hook
@@ -13,16 +13,6 @@ class CaseLogicHook {
      * @param type $event
      * @param type $arguments 
      */
-    function closeEmails(&$bean, $event, $arguments) {
-        if ($bean->status == 'Closed') {
-            $bean->load_relationship('emails');
-            foreach ($bean->emails->getBeans() as $email) {
-                $email->status = 'closed';
-                $email->save();
-            }
-        }
-    }
-
     function queueNotification(&$bean, $event, $arguments) {
         if ($bean->fetched_row['assigned_user_id'] != $bean->assigned_user_id) {
             global $db;
