@@ -94,3 +94,34 @@ INSERT INTO `acl_actions` (`id`, `date_entered`, `date_modified`, `modified_user
 ('7e0748fb-06e2-c189-493c-504ac934e00a', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'import', 'bc_StoreData', 'module', 90, 0),
 ('8a7cb203-90e1-5a42-9723-504ac9fc98c7', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'export', 'bc_StoreData', 'module', 90, 0),
 ('96c8c8c1-572b-2ed1-cf74-504ac953a9df', '2012-09-08 04:30:23', '2012-09-08 04:30:23', '1', '1', 'massupdate', 'bc_StoreData', 'module', 90, 0);
+
+
+@Reena - Notification
+CREATE TABLE IF NOT EXISTS `notification_queue` (
+  `id` char(36) NOT NULL,
+  `userid` char(36) DEFAULT NULL,
+  `bean_id` char(36) DEFAULT NULL,
+  `bean_type` varchar(20) DEFAULT NULL,
+  `date_time` datetime DEFAULT NULL,
+  `is_notify` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+@Dhaval - New fields for Store Data
+CREATE TABLE IF NOT EXISTS `bc_storedata_cstm` (
+  `id_c` char(36) NOT NULL,
+  `order_number_c` varchar(255) DEFAULT NULL,
+  `customer_po_number_c` varchar(255) DEFAULT NULL,
+  `order_status_c` varchar(255) DEFAULT NULL,
+  `other_notes_c` varchar(255) DEFAULT NULL,
+  `admin_immunogen_c` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id_c`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('bc_StoreDataadmin_immunogen_c', 'admin_immunogen_c', 'LBL_ADMIN_IMMUNOGEN', '', '', 'bc_StoreData', 'varchar', 255, 0, '', '2012-09-14 05:57:11', 0, 0, 0, 1, 1, 'true', '', '', '', ''),
+('bc_StoreDatacustomer_po_number_c', 'customer_po_number_c', 'LBL_CUSTOMER_PO_NUMBER', '', '', 'bc_StoreData', 'varchar', 255, 0, '', '2012-09-14 05:15:28', 0, 0, 0, 1, 1, 'true', '', '', '', ''),
+('bc_StoreDataorder_number_c', 'order_number_c', 'LBL_ORDER_NUMBER', '', '', 'bc_StoreData', 'varchar', 255, 1, '', '2012-09-14 05:12:49', 0, 0, 0, 0, 1, 'true', '', '', '', ''),
+('bc_StoreDataorder_status_c', 'order_status_c', 'LBL_ORDER_STATUS', '', '', 'bc_StoreData', 'varchar', 255, 0, '', '2012-09-14 05:16:33', 0, 0, 0, 1, 1, 'true', '', '', '', ''),
+('bc_StoreDataother_notes_c', 'other_notes_c', 'LBL_OTHER_NOTES', '', '', 'bc_StoreData', 'varchar', 255, 0, '', '2012-09-14 05:17:16', 0, 0, 0, 1, 1, 'true', '', '', '', '');

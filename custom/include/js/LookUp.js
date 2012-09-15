@@ -76,7 +76,7 @@ $(document).ready(function(){
     }
     function createDiv() 
     { 
-        $('body').append('<div id="lookup_toolbar_div" style="display:none;"><img src="custom/include/images/lookup.png" id="lookpbtn" title="Look Up"></div>');
+        $('body').append('<div id="lookup_toolbar_div" style="display:none;z-index: 5000;"><img src="custom/include/images/lookup.png" id="lookpbtn" title="Look Up"></div>');
         $('body').append('<div id="lookup_result_div" style="display:none;z-index: 1000; background-image: none;"></div>');
     }
     
