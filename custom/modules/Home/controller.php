@@ -145,9 +145,9 @@ class HomeController extends SugarController {
         '<img border="0" style="margin-left:2px; margin-right: 2px;" src="index.php?entryPoint=getImage&amp;themeName=Sugar5&amp;imageName=close.gif">' .
         '</a></div></div>' .
         '</td></tr></tbody>' .
-        '</table>' .
+        '</table></td></tr><tr><td><div style="overflow: auto;max-height:400px;">' .
         $finalResult .
-        '</td></tr></tbody></table>';
+        '</div></td></tr></tbody></table>';
         exit;
     }
 
