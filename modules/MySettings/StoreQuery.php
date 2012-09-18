@@ -166,8 +166,10 @@ class StoreQuery{
 				}            	
             	
             	// cn: bug 6546 storequery stomps correct value for 'module' in Activities
-    			$_REQUEST[$key] = $value;	
-    			$_GET[$key] = $value;
+    			//$_REQUEST[$key] = $value;	
+    			//$_GET[$key] = $value;
+                        $_REQUEST[$key] = ($key == 'action') ? $_REQUEST[$key] :$value;	 //Reena
+    			$_GET[$key] = ($key == 'action') ? $_REQUEST[$key] :$value; // Reena
 
             }
         }

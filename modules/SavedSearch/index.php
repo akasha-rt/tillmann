@@ -72,7 +72,9 @@ elseif(!empty($_REQUEST['saved_search_select'])) { // requesting a search here.
 		$_SESSION['LastSavedView'][$_REQUEST['search_module']] = '';
         $current_user->setPreference('ListViewDisplayColumns', array(), 0, $_REQUEST['search_module']);
         $ajaxLoad = empty($_REQUEST['ajax_load']) ? "" : "&ajax_load=" . $_REQUEST['ajax_load'];
-        header("Location: index.php?action=index&module={$_REQUEST['search_module']}&searchFormTab={$searchFormTab}&query=true&clear_query=true$ajaxLoad");
+        //To handle advance popup
+        $return_action = ($_REQUEST['popup_return_action']) ? $_REQUEST['popup_return_action'] :'index'; // Reena
+        header("Location: index.php?action={$return_action}&module={$_REQUEST['search_module']}&searchFormTab={$searchFormTab}&query=true&clear_query=true$ajaxLoad");
 		die();
 	}
 	else {

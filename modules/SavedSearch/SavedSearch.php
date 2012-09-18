@@ -195,21 +195,27 @@ class SavedSearch extends SugarBean {
         $sugarSmarty->assign('SEARCH_MODULE', $module);
         $sugarSmarty->assign('MOD', $saved_search_mod_strings);
 
-        if(!empty($_SESSION['LastSavedView'][$module]) && (($_REQUEST['action'] == 'ListView') || ($_REQUEST['action'] == 'index')))
+        if(!empty($_SESSION['LastSavedView'][$module]) && (($_REQUEST['action'] == 'ListView') || ($_REQUEST['action'] == 'index') || ($_REQUEST['action'] == 'Popup')))
             $selectedSearch = $_SESSION['LastSavedView'][$module];
         else
             $selectedSearch = '';
 
         $sugarSmarty->assign('SAVED_SEARCHES_OPTIONS', get_select_options_with_id($savedSearchArray, $selectedSearch));
 
+        if(($_REQUEST['action'] == 'Popup')){
+            return $sugarSmarty->fetch('custom/modules/SavedSearch/advancedPopupSavedSearchSelects.tpl');
+        }else{
         return $sugarSmarty->fetch('modules/SavedSearch/SavedSearchSelects.tpl');
+    }
+
     }
 
     function returnSavedSearch($id, $searchFormTab = 'advanced_search', $showDiv='no') {
         global $db, $current_user, $currentModule;
         $this->retrieveSavedSearch($id);
 
-        $header = 'Location: index.php?action=index&module=';
+        $return_action = ($_REQUEST['popup_return_action']) ? $_REQUEST['popup_return_action'] : 'index';
+        $header = 'Location: index.php?action='.$return_action.'&module=';
 
         $saved_search_name = '';
         $header .= $this->contents['search_module'];
@@ -248,7 +254,8 @@ class SavedSearch extends SugarBean {
 
 	function handleDelete($id) {
 		$this->mark_deleted($id);
-		header("Location: index.php?action=index&module={$_REQUEST['search_module']}&advanced={$_REQUEST['advanced']}&query=true&clear_query=true");
+                $return_action = ($_REQUEST['popup_return_action']) ? $_REQUEST['popup_return_action'] :'index';
+		header("Location: index.php?action={$return_action}&module={$_REQUEST['search_module']}&advanced={$_REQUEST['advanced']}&query=true&clear_query=true");
 	}
 
 	function handleSave($prefix, $redirect = true, $useRequired = false, $id = null, $searchModuleBean) {
@@ -340,7 +347,7 @@ class SavedSearch extends SugarBean {
 
 	function handleRedirect($return_module, $search_query, $saved_search_id, $advanced = 'false') {
         $_SESSION['LastSavedView'][$return_module] = $saved_search_id;
-        $return_action = 'index';
+        $return_action = ($_REQUEST['popup_return_action']) ? $_REQUEST['popup_return_action'] :'index';
         $ajaxLoad = empty($_REQUEST['ajax_load']) ? "" : "&ajax_load=" . $_REQUEST['ajax_load'];
         //Reduce the params to avoid the problems caused by URL max length in IE ( the reduced params can be get from saved search according to saved_search_id).
         header("Location: index.php?action=$return_action&module=$return_module&saved_search_select={$saved_search_id}{$search_query}&advanced={$advanced}$ajaxLoad");
