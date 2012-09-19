@@ -1,5 +1,46 @@
 $(document).ready(function(){
     createDiv();
+    //For searching via Global search on ENTER key
+    $(document).keypress(function(e) {    
+        if(e.which == 13) {
+            if ($('#query_string').val() != ""){        
+                var data = '&search='+$('#query_string').val();                     
+                $.ajax({               
+                    url :'index.php?module=Home&action=lookup',                    
+                    type:"GET",
+                    data: data,
+                    success:function(result){  
+                        $('#lookup_result_div').html(result);
+                        var x = 280,y = 72,
+                        scX = $(window).scrollLeft(),
+                        scY = $(window).scrollTop(),
+                        scMaxX = scX + $(window).width(),
+                        scMaxY = scY + $(window).height(),
+                        wd = $("#lookup_result_div").width(),
+                        hgh = $("#lookup_result_div").height();
+
+                        if (x + wd > scMaxX) x = scMaxX - wd;
+                        if (x < scX) x = scX;
+                        if (y + hgh > scMaxY) y = scMaxY - hgh;
+                        if (y < scY) y = scY;
+                        $('#lookup_result_div').css( {
+                            position:"absolute", 
+                            top:y , 
+                            left:x
+                        }).fadeIn('slow');
+            
+                    }
+                                        
+                });
+                e.stopPropagation();
+                e.preventDefault();
+                e.returnValue = false;
+                e.cancelBubble = true;
+                return false; 
+                
+            }
+        }
+    });    
     $(document).mouseup(function(e) {
         if(getSelectedText().trim() !='')
         {
