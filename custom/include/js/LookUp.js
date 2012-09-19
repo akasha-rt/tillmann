@@ -26,7 +26,7 @@ $(document).ready(function(){
                         $('#lookup_result_div').css( {
                             position:"absolute", 
                             top:y , 
-                            left:x
+                            left:scMaxX - wd
                         }).fadeIn('slow');
             
                     }
