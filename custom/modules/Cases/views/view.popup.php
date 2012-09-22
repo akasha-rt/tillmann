@@ -80,22 +80,6 @@ class CasesViewPopup extends ViewPopup {
 
             $popup = new advancedPopupSmarty($this->bean, $this->module);
 
-            foreach ($listViewDefs[$this->module] as $col => $params) {
-                $filter_fields[strtolower($col)] = true;
-                if (!empty($params['related_fields'])) {
-                    foreach ($params['related_fields'] as $field) {
-                        //id column is added by query construction function. This addition creates duplicates
-                        //and causes issues in oracle. #10165
-                        if ($field != 'id') {
-                            $filter_fields[$field] = true;
-                        }
-                    }
-                }
-                if (!empty($params['default']) && $params['default'])
-                    $displayColumns[$col] = $params;
-            }
-            $popup->displayColumns = $displayColumns;
-            $popup->filter_fields = $filter_fields;
             $popup->mergeDisplayColumns = true;
             //check to see if popupdes contains searchdefs
             $popup->_popupMeta = $popupMeta;
@@ -142,7 +126,31 @@ class CasesViewPopup extends ViewPopup {
                 $popup->storeQuery->saveFromRequest($popup->module);
             }
 
+            if (!empty($_REQUEST['displayColumns'])) {
+                foreach (explode('|', $_REQUEST['displayColumns']) as $num => $col) {
+                    if (!empty($listViewDefs[$this->module][$col]))
+                        $displayColumns[$col] = $listViewDefs[$this->module][$col];
+                }
+            }
+            else {
 
+                foreach ($listViewDefs[$this->module] as $col => $params) {
+                    $filter_fields[strtolower($col)] = true;
+                    if (!empty($params['related_fields'])) {
+                        foreach ($params['related_fields'] as $field) {
+                            //id column is added by query construction function. This addition creates duplicates
+                            //and causes issues in oracle. #10165
+                            if ($field != 'id') {
+                                $filter_fields[$field] = true;
+                            }
+                        }
+                    }
+                    if (!empty($params['default']) && $params['default'])
+                        $displayColumns[$col] = $params;
+                }
+            }
+            $popup->displayColumns = $displayColumns;
+            $popup->filter_fields = $filter_fields;
             $popup->searchForm = new advancedPopupSearchForm($popup->seed, $popup->module, $popup->action);
             $popup->searchForm->setup($searchdefs, $searchFields, 'include/SearchForm/tpls/SearchFormGeneric.tpl', $view, $popup->listViewDefs);
             $popup->searchForm->lv = $this->lv;
