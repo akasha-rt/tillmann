@@ -4582,13 +4582,19 @@ eoq;
             } else {
                 $date = $storedOptions['only_since_last'];
             }
-            $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED UNSEEN');
+            //Dhaval - To enable import of read email from gmail
+            //$ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED UNSEEN');
+            $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED');
+            //End - Dhaval
             $check = imap_check($this->conn);
             $storedOptions['only_since_last'] = $check->Date;
             $this->stored_options = base64_encode(serialize($storedOptions));
             $this->save();
         } else {
-            $ret = imap_search($this->conn, 'UNDELETED UNSEEN');
+            //Dhaval - To enable import of read email from gmail
+            //$ret = imap_search($this->conn, 'UNDELETED UNSEEN');
+            $ret = imap_search($this->conn, 'UNDELETED');
+            //End - Dhaval
         }
 
         $GLOBALS['log']->debug('-----> getNewMessageIds() got ' . count($ret) . ' new Messages');
