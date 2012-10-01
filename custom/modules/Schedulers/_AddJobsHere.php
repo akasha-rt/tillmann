@@ -31,7 +31,13 @@ function createOppFromCase() {
                                 AND c.status = 'Closed'
                                 AND c.convertedtoopp = '0'
                                 AND c.deleted = 0
-                                AND c_c.deleted = 0");
+                                AND c_c.deleted = 0
+                                AND c.id IN(SELECT
+                                                c_a.parent_id
+                                            FROM cases_audit c_a
+                                            WHERE (c_a.before_value_string != 'PO'
+                                                   AND c_a.after_value_string != 'PO')
+                                                AND c_a.field_name = 'status')");
     while ($case = $db->fetchByAssoc($case_list)) {
         //$op->id = create_guid();  //if id is set save() will update the record if not then will insert new row
         $op->name = $case['name'];
