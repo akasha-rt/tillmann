@@ -209,7 +209,8 @@ function saveCannedResponse(idx)
         cache: true,
         async: true,
         type: 'POST',
-        url: 'index.php?module=EmailTemplates&action=cannedresponse&name='+name+'&sub='+subject+'&dept='+dept+'&body='+body+'&body_html='+text,                   
+        //url: 'index.php?module=EmailTemplates&action=cannedresponse&name='+name+'&sub='+subject+'&dept='+dept+'&body='+body+'&body_html='+text,                   
+        url: 'index.php?module=EmailTemplates&action=cannedresponse&name='+encodeURIComponent(name)+'&sub='+encodeURIComponent(subject)+'&dept='+encodeURIComponent(dept)+'&body='+encodeURIComponent(body)+'&body_html='+encodeURIComponent(text),
         success: function(data) {  
             alert('Canned response created.');
             return false;
