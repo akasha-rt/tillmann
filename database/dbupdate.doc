@@ -125,3 +125,103 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 ('bc_StoreDataorder_number_c', 'order_number_c', 'LBL_ORDER_NUMBER', '', '', 'bc_StoreData', 'varchar', 255, 1, '', '2012-09-14 05:12:49', 0, 0, 0, 0, 1, 'true', '', '', '', ''),
 ('bc_StoreDataorder_status_c', 'order_status_c', 'LBL_ORDER_STATUS', '', '', 'bc_StoreData', 'varchar', 255, 0, '', '2012-09-14 05:16:33', 0, 0, 0, 1, 1, 'true', '', '', '', ''),
 ('bc_StoreDataother_notes_c', 'other_notes_c', 'LBL_OTHER_NOTES', '', '', 'bc_StoreData', 'varchar', 255, 0, '', '2012-09-14 05:17:16', 0, 0, 0, 1, 1, 'true', '', '', '', '');
+
+
+
+@dhaval - 06_10_12
+New dropdown in opportunity for country and new scheduler job
+
+CREATE TABLE IF NOT EXISTS `bc_dropdown` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `dropdown_id` varchar(255) NOT NULL DEFAULT '',
+  `option_val` varchar(255) NOT NULL DEFAULT '',
+  `option_name` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=77 ;
+
+--
+-- Dumping data for table `bc_dropdown`
+--
+
+INSERT INTO `bc_dropdown` (`id`, `dropdown_id`, `option_val`, `option_name`) VALUES
+(1, 'Country', 'BE', 'Belgium'),
+(2, 'Country', 'FR', 'France'),
+(3, 'Country', 'DE', 'Germany'),
+(4, 'Country', 'IN', 'India'),
+(5, 'Country', 'ES', 'Spain'),
+(6, 'Country', 'SE', 'Sweden'),
+(7, 'Country', 'CH', 'Switzerland'),
+(8, 'Country', 'TW', 'Taiwan'),
+(9, 'Country', 'GB', 'United Kingdom'),
+(10, 'Country', 'US', 'United States'),
+(11, 'Country', 'AR', 'Argentina'),
+(12, 'Country', 'AU', 'Australia'),
+(13, 'Country', 'AT', 'Austria'),
+(14, 'Country', 'BA', 'Bosnia and Herzegovina'),
+(15, 'Country', 'BR', 'Brazil'),
+(16, 'Country', 'BG', 'Bulgaria'),
+(17, 'Country', 'CA', 'Canada'),
+(18, 'Country', 'CL', 'Chile'),
+(19, 'Country', 'CN', 'China'),
+(20, 'Country', 'CO', 'Colombia'),
+(21, 'Country', 'HR', 'Croatia'),
+(22, 'Country', 'CU', 'Cuba'),
+(23, 'Country', 'CZ', 'Czech Republic'),
+(24, 'Country', 'DK', 'Denmark'),
+(25, 'Country', 'EE', 'Estonia'),
+(26, 'Country', 'FI', 'Finland'),
+(27, 'Country', 'CY', 'Cyprus'),
+(28, 'Country', 'EG', 'Egypt'),
+(29, 'Country', 'GR', 'Greece'),
+(30, 'Country', 'HK', 'Hong Kong SAR China'),
+(31, 'Country', 'IL', 'Israel'),
+(32, 'Country', 'IT', 'Italy'),
+(33, 'Country', 'HU', 'Hungary'),
+(34, 'Country', 'IS', 'Iceland'),
+(35, 'Country', 'ID', 'Indonesia'),
+(36, 'Country', 'IR', 'Iran'),
+(37, 'Country', 'IQ', 'Iraq'),
+(38, 'Country', 'IE', 'Ireland'),
+(39, 'Country', 'JP', 'Japan'),
+(40, 'Country', 'JO', 'Jordan'),
+(41, 'Country', 'LV', 'Latvia'),
+(42, 'Country', 'LB', 'Lebanon'),
+(43, 'Country', 'LU', 'Luxembourg'),
+(44, 'Country', 'MT', 'Malta'),
+(45, 'Country', 'MX', 'Mexico'),
+(46, 'Country', 'MC', 'Monaco'),
+(47, 'Country', 'MA', 'Morocco'),
+(48, 'Country', 'NL', 'Netherlands'),
+(49, 'Country', 'NZ', 'New Zealand'),
+(50, 'Country', 'NO', 'Norway'),
+(51, 'Country', 'PK', 'Pakistan'),
+(52, 'Country', 'PY', 'Paraguay'),
+(53, 'Country', 'PE', 'Peru'),
+(54, 'Country', 'PH', 'Philippines'),
+(55, 'Country', 'PL', 'Poland'),
+(56, 'Country', 'PT', 'Portugal'),
+(57, 'Country', 'PR', 'Puerto Rico'),
+(58, 'Country', 'QA', 'Qatar'),
+(59, 'Country', 'RO', 'Romania'),
+(60, 'Country', 'RU', 'Russia'),
+(61, 'Country', 'SA', 'Saudi Arabia'),
+(62, 'Country', 'RS', 'Serbia'),
+(63, 'Country', 'SG', 'Singapore'),
+(64, 'Country', 'SK', 'Slovakia'),
+(65, 'Country', 'SI', 'Slovenia'),
+(66, 'Country', 'ZA', 'South Africa'),
+(67, 'Country', 'KR', 'South Korea'),
+(68, 'Country', 'SY', 'Syria'),
+(69, 'Country', 'TH', 'Thailand'),
+(70, 'Country', 'TN', 'Tunisia'),
+(71, 'Country', 'TR', 'Turkey'),
+(72, 'Country', 'UA', 'Ukraine'),
+(73, 'Country', 'AE', 'United Arab Emirates'),
+(74, 'Country', 'UY', 'Uruguay'),
+(75, 'Country', 'VE', 'Venezuela'),
+(76, 'Country', 'VN', 'Vietnam');
+
+
+INSERT INTO `sugar_biorbyt`.`fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Opportunitiescountry_c', 'country_c', 'LBL_COUNTRY', NULL, NULL, 'Opportunities', 'varchar', '100', '0', NULL, '2012-10-06 00:00:00', '0', '0', '1', '1', '1', '1', NULL, NULL, NULL, NULL);
+
+ALTER TABLE  `opportunities_cstm` ADD  `country_c` VARCHAR( 100 ) NULL DEFAULT NULL

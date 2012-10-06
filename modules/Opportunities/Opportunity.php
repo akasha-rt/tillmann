@@ -41,6 +41,7 @@ if (!defined('sugarEntry') || !sugarEntry)
 
  * Description:
  * ****************************************************************************** */
+require_once('custom/include/function/utilFunctions.php');
 
 // Opportunity is used to store customer information.
 class Opportunity extends SugarBean {
@@ -155,7 +156,7 @@ class Opportunity extends SugarBean {
         return $query;
     }
 
-    function create_export_query(&$order_by, &$where, $relate_link_join='') {
+    function create_export_query(&$order_by, &$where, $relate_link_join = '') {
         $custom_join = $this->custom_fields->getJOIN(true, true, $where);
         if ($custom_join)
             $custom_join['join'] .= $relate_link_join;
@@ -279,6 +280,7 @@ class Opportunity extends SugarBean {
         $temp_array = $this->get_list_view_array();
         $temp_array['SALES_STAGE'] = empty($temp_array['SALES_STAGE']) ? '' : $temp_array['SALES_STAGE'];
         $temp_array["ENCODED_NAME"] = $this->name;
+        $temp_array["COUNTRY_C"] = get_dd_detail('Country', $this->country_c);
         return $temp_array;
     }
 
