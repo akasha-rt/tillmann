@@ -107,6 +107,42 @@ class Opportunity extends SugarBean {
         return "$this->name";
     }
 
+    /**
+     * TO display single Opportunity if having multiple contacts related to it
+     * @param type $order_by
+     * @param type $where
+     * @param type $filter
+     * @param type $params
+     * @param type $show_deleted
+     * @param type $join_type
+     * @param type $return_array
+     * @param type $parentbean
+     * @param type $singleSelect
+     * @return type
+     * @author Dhaval Darji
+     */
+    function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
+        $query = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
+        $query[select] = str_replace("jtl0.contact_id", "contacts.contact_id", $query[select]);
+        $query[from] = str_replace("LEFT JOIN  opportunities_contacts jtl0 ON opportunities.id=jtl0.opportunity_id AND jtl0.deleted=0
+
+ LEFT JOIN  contacts contacts ON contacts.id=jtl0.contact_id AND contacts.deleted=0
+ AND contacts.deleted=0", "LEFT JOIN (SELECT
+               opportunities_contacts.opportunity_id,
+               opportunities_contacts.contact_id,
+               contacts.first_name,
+               contacts.last_name
+             FROM opportunities_contacts
+               INNER JOIN contacts
+                 ON opportunities_contacts.contact_id = contacts.id
+                   AND contacts.deleted = 0
+             WHERE opportunities_contacts.deleted = 0
+             GROUP BY opportunities_contacts.opportunity_id) AS contacts
+    ON contacts.opportunity_id = opportunities.id", $query[from]);
+
+        return $query;
+    }
+
     function create_list_query($order_by, $where, $show_deleted = 0) {
 
         $custom_join = $this->custom_fields->getJOIN();
