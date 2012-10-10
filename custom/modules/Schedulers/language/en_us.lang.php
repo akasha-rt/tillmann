@@ -9,4 +9,5 @@ if (!defined('sugarEntry') || !sugarEntry)
 
 //Define the Lable for the new job to display in the job dropdown
 $mod_strings ['LBL_CREATEOPPFROMCASE'] = 'createOppFromCase';
+$mod_strings ['LBL_CHECKOPPORTUNITYSALESDATA'] = 'checkOpportunitySalesData';
 ?>

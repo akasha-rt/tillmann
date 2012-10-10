@@ -225,3 +225,11 @@ INSERT INTO `bc_dropdown` (`id`, `dropdown_id`, `option_val`, `option_name`) VAL
 INSERT INTO `sugar_biorbyt`.`fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Opportunitiescountry_c', 'country_c', 'LBL_COUNTRY', NULL, NULL, 'Opportunities', 'varchar', '100', '0', NULL, '2012-10-06 00:00:00', '0', '0', '1', '1', '1', '1', NULL, NULL, NULL, NULL);
 
 ALTER TABLE  `opportunities_cstm` ADD  `country_c` VARCHAR( 100 ) NULL DEFAULT NULL
+
+@dhaval - 08_10_12
+For auto chase opportunity and send email
+
+ALTER TABLE  `opportunities_cstm` ADD `is_email_sent_c` INT( 11 ) NULL DEFAULT  '0'
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Opportunitiesis_email_sent_c', 'is_email_sent_c', 'LBL_IS_EMAIL_SENT', NULL, NULL, 'Opportunities', 'varchar', 100, 0, NULL, '2012-10-08 00:00:00', 0, 1, 1, 1, 1, 'true', NULL, NULL, NULL, NULL);

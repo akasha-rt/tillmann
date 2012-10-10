@@ -27,6 +27,7 @@ custom/application/Ext/*
 # Custom configuration should also be ignored.
 /config.php
 /config_override.php
+custom/include/magentoSoapIntegration/
 # The silent upgrade scripts aren't needed.
 silentUpgrade*.php
 # Logs files can safely be ignored.
