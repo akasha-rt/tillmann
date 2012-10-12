@@ -102,4 +102,4 @@ function createNotificationInstance() {
 //alert( "Please request permissions first." );
 }
 }
-setInterval(createNotificationInstance, 5000);
+setInterval(createNotificationInstance, 10000);

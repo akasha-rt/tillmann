@@ -2091,7 +2091,8 @@ YAHOO.widget.Node.prototype = {
             var sibs = this.getSiblings();
             for (var i=0; sibs && i<sibs.length; ++i) {
                 if (sibs[i] != this && sibs[i].expanded) {
-                    sibs[i].collapse();
+                    //sibs[i].collapse();
+                    sibs[i].expand();
                 }
             }
         }
@@ -2134,7 +2135,8 @@ YAHOO.widget.Node.prototype = {
             var type = "n";
             if (this.hasChildren(true) || (this.isDynamic() && !this.getIconMode())) {
             // if (this.hasChildren(true)) {
-                type = (this.expanded) ? "m" : "p";
+                //type = (this.expanded) ? "m" : "p";
+                type = (this.expanded) ? "m" : "m";
             }
 
             return "ygtv" + loc + type;
@@ -2274,7 +2276,8 @@ YAHOO.widget.Node.prototype = {
      */
     toggle: function() {
         if (!this.tree.locked && ( this.hasChildren(true) || this.isDynamic()) ) {
-            if (this.expanded) { this.collapse(); } else { this.expand(); }
+            //if (this.expanded) { this.collapse(); } else { this.expand(); }
+            if (this.expanded) { this.expand(); } else { this.expand(); }
         }
     },
 
@@ -2458,7 +2461,8 @@ YAHOO.widget.Node.prototype = {
         var sb = [];
 
         sb[sb.length] = '<table id="ygtvtableel' + this.index + '" border="0" cellpadding="0" cellspacing="0" class="ygtvtable ygtvdepth' + this.depth;
-        sb[sb.length] = ' ygtv-' + (this.expanded?'expanded':'collapsed');
+        //sb[sb.length] = ' ygtv-' + (this.expanded?'expanded':'collapsed');
+        sb[sb.length] = ' ygtv-' + (this.expanded?'expanded':'expanded');
         if (this.enableHighlight) {
             sb[sb.length] = ' ygtv-highlight' + this.highlightState;
         }
