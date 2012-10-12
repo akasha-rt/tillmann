@@ -159,7 +159,7 @@ class Account extends Company {
         return $this->get_linked_beans('contacts', 'Contact');
     }
 
-    function clear_account_case_relationship($account_id='', $case_id='') {
+    function clear_account_case_relationship($account_id = '', $case_id = '') {
         if (empty($case_id))
             $where = '';
         else
@@ -263,7 +263,7 @@ class Account extends Company {
         return $the_where;
     }
 
-    function create_export_query(&$order_by, &$where, $relate_link_join='') {
+    function create_export_query(&$order_by, &$where, $relate_link_join = '') {
         $custom_join = $this->custom_fields->getJOIN(true, true, $where);
         if ($custom_join)
             $custom_join['join'] .= $relate_link_join;
@@ -314,7 +314,7 @@ class Account extends Company {
         return false;
     }
 
-    function get_unlinked_email_query($type=array()) {
+    function get_unlinked_email_query($type = array()) {
 
         return get_unlinked_email_query($type, $this);
     }
@@ -342,7 +342,6 @@ class Account extends Company {
                           LEFT JOIN contacts contacts
                             ON (tasks.contact_id = contacts.id OR tasks.parent_id = contacts.id)
                               AND contacts.deleted = 0
-                           --   AND tasks.parent_type = 'Contacts'
                           LEFT JOIN users jt1
                             ON tasks.assigned_user_id = jt1.id
                               AND jt1.deleted = 0
@@ -387,7 +386,6 @@ class Account extends Company {
                               AND (meetings.parent_type = 'Accounts' OR meetings.parent_type = 'Contacts')
                           LEFT JOIN meetings_contacts
                             ON meetings.id = meetings_contacts.meeting_id
-                           --   AND meetings.parent_type = 'Contacts'
                               AND meetings_contacts.deleted = 0
                           LEFT JOIN accounts_contacts
                             ON (accounts_contacts.contact_id = meetings_contacts.contact_id
@@ -425,7 +423,6 @@ class Account extends Company {
                               AND (calls.parent_type = 'Accounts' OR calls.parent_type = 'Contacts')
                           LEFT JOIN calls_contacts
                             ON calls.id = calls_contacts.call_id
-                           --   AND calls.parent_type = 'Contacts'
                               AND calls_contacts.deleted = 0
                           LEFT JOIN accounts_contacts
                             ON (accounts_contacts.contact_id = calls_contacts.contact_id
@@ -468,16 +465,12 @@ class Account extends Company {
                           LEFT JOIN contacts contacts
                             ON (tasks.contact_id = contacts.id OR tasks.parent_id = contacts.id)
                               AND contacts.deleted = 0
-                              AND contacts.deleted = 0
-                           --   AND tasks.parent_type = 'Contacts'
                           LEFT JOIN users jt1
                             ON tasks.assigned_user_id = jt1.id
-                              AND jt1.deleted = 0
                               AND jt1.deleted = 0
                           LEFT JOIN accounts tasks_rel
                             ON tasks.parent_id = tasks_rel.id
                               AND tasks_rel.deleted = 0
-                              AND (tasks.parent_type = 'Accounts' OR tasks.parent_type = 'Contacts')
                           LEFT JOIN accounts_contacts
                             ON (accounts_contacts.contact_id = contacts.id
                                  OR accounts_contacts.account_id = tasks_rel.id)
@@ -486,7 +479,8 @@ class Account extends Company {
                                  OR accounts_contacts.account_id = '{$this->id}')
                                AND (tasks.status = 'Completed'
                                      OR tasks.status = 'Deferred'))
-                            AND tasks.deleted = 0)
+                            AND tasks.deleted = 0
+                            AND (tasks.parent_type = 'Accounts' OR tasks.parent_type = 'Contacts'))
                         UNION ALL 
                         (SELECT DISTINCT
                           meetings.id,
@@ -515,14 +509,11 @@ class Account extends Company {
                           LEFT JOIN users jt1
                             ON meetings.assigned_user_id = jt1.id
                               AND jt1.deleted = 0
-                              AND jt1.deleted = 0
                           LEFT JOIN accounts meetings_rel
                             ON meetings.parent_id = meetings_rel.id
                               AND meetings_rel.deleted = 0
-                              AND (meetings.parent_type = 'Accounts' OR meetings.parent_type = 'Contacts')
                           LEFT JOIN meetings_contacts
                             ON meetings.id = meetings_contacts.meeting_id
-                           --   AND meetings.parent_type = 'Contacts'
                               AND meetings_contacts.deleted = 0
                           LEFT JOIN accounts_contacts
                             ON (accounts_contacts.contact_id = meetings_contacts.contact_id
@@ -532,7 +523,8 @@ class Account extends Company {
                                  OR accounts_contacts.account_id = '{$this->id}')
                                AND (meetings.status = 'Held'
                                      OR meetings.status = 'Not Held'))
-                            AND meetings.deleted = 0) 
+                            AND meetings.deleted = 0
+                            AND (meetings.parent_type = 'Accounts' OR meetings.parent_type = 'Contacts')) 
                         UNION ALL 
                         (SELECT DISTINCT
                           calls.id,
@@ -561,14 +553,11 @@ class Account extends Company {
                           LEFT JOIN users jt1
                             ON calls.assigned_user_id = jt1.id
                               AND jt1.deleted = 0
-                              AND jt1.deleted = 0
                           LEFT JOIN accounts calls_rel
                             ON calls.parent_id = calls_rel.id
                               AND calls_rel.deleted = 0
-                              AND (calls.parent_type = 'Accounts' OR calls.parent_type = 'Contacts')
                           LEFT JOIN calls_contacts
                             ON calls.id = calls_contacts.call_id
-                           --   AND calls.parent_type = 'Contacts'
                               AND calls_contacts.deleted = 0
                           LEFT JOIN accounts_contacts
                             ON (accounts_contacts.contact_id = calls_contacts.contact_id
@@ -578,7 +567,8 @@ class Account extends Company {
                                  OR accounts_contacts.account_id = '{$this->id}')
                                AND (calls.status = 'Held'
                                      OR calls.status = 'Not Held'))
-                            AND calls.deleted = 0) 
+                            AND calls.deleted = 0
+                            AND (calls.parent_type = 'Accounts' OR calls.parent_type = 'Contacts')) 
                         UNION ALL 
                         (SELECT DISTINCT
                           notes.id,
@@ -608,15 +598,12 @@ class Account extends Company {
                             ON (notes.contact_id = contacts.id
                                  OR notes.parent_id = contacts.id)
                               AND contacts.deleted = 0
-                         --     AND notes.parent_type = 'Contacts'
                           LEFT JOIN users jt1
                             ON notes.assigned_user_id = jt1.id
-                              AND jt1.deleted = 0
                               AND jt1.deleted = 0
                           LEFT JOIN accounts notes_rel
                             ON notes.parent_id = notes_rel.id
                               AND notes_rel.deleted = 0
-                              AND (notes.parent_type = 'Accounts' OR notes.parent_type = 'Contacts')
                               AND notes_rel.id = '{$this->id}'
                           LEFT JOIN accounts_contacts
                             ON (accounts_contacts.contact_id = contacts.id
@@ -624,7 +611,8 @@ class Account extends Company {
                               AND accounts_contacts.deleted = 0
                         WHERE (notes.parent_id = '{$this->id}'
                                 OR accounts_contacts.account_id = '{$this->id}')
-                            AND notes.deleted = 0) 
+                            AND notes.deleted = 0                              
+                            AND (notes.parent_type = 'Accounts' OR notes.parent_type = 'Contacts')) 
                         UNION ALL 
                         (SELECT
                               emails.id,
