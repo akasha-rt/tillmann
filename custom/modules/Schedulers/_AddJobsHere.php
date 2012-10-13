@@ -61,6 +61,7 @@ function createOppFromCase() {
 function checkOpportunitySalesData() {
     $GLOBALS['log']->debug('Custom Scheduler : Starting checkOpportunitySalesData');
     require_once('modules/Emails/Email.php');
+    require_once('modules/Opportunities/Opportunity.php');
     global $db;
     $oppDataSql = $db->query("SELECT
                                     opp.id                      AS id,
@@ -124,16 +125,20 @@ function checkOpportunitySalesData() {
     //SOAP CALL END
     //SEND EMAIL START
     foreach ($oppSoapResponse as $oppId => $oppOrderStatus) {
+        //Create Opp object
+        $currentOpp = new Opportunity();
+        $currentOpp = $currentOpp->retrieve($oppId);
+
         $name = $contactData[$oppId]['Contact_name'];
         $assigned_user_name = $contactData[$oppId]['assigned_user_name'];
         $email_address = $contactData[$oppId]['email_address'];
         //$email_address = 'dhaval@india.biztechconsultancy.com';
         $emailtemplate = new EmailTemplate();
         if (count($oppOrderStatus) == 0) {
-
+            $currentOpp->sales_stage = "Closed Lost";
             $emailtemplate = $emailtemplate->retrieve('b60bf519-5c0d-c8f9-9884-5073e8ddc58a');
         } else {
-
+            $currentOpp->sales_stage = "Closed Won";
             $emailtemplate = $emailtemplate->retrieve('1798a89a-2995-0b03-f07a-5073e8e73554');
         }
 
@@ -186,6 +191,7 @@ function checkOpportunitySalesData() {
             $db->query("UPDATE opportunities_cstm
                             SET is_email_sent_c = 1
                         WHERE opportunities_cstm.id_c = '" . $oppId . "'");
+            $currentOpp->save();
         } else {
             $mail_msg = $mail->ErrorInfo;
             //echo "error sending " . $mail_msg;
