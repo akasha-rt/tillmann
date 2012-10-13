@@ -188,10 +188,11 @@ function checkOpportunitySalesData() {
             $emailObj->created_by = $user_id;
             $emailObj->status = 'sent';
             $emailObj->save();
-            $db->query("UPDATE opportunities_cstm
-                            SET is_email_sent_c = 1
-                        WHERE opportunities_cstm.id_c = '" . $oppId . "'");
+            $currentOpp->is_email_sent_c = 1;
             $currentOpp->save();
+            /* $db->query("UPDATE opportunities_cstm
+              SET is_email_sent_c = 1
+              WHERE opportunities_cstm.id_c = '" . $oppId . "'"); */
         } else {
             $mail_msg = $mail->ErrorInfo;
             //echo "error sending " . $mail_msg;
