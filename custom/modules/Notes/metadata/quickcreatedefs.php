@@ -57,12 +57,7 @@ array (
         2 => 
         array (
           0 => 'filename',
-          1 => 
-          array (
-            'name' => 'type_c',
-            'studio' => 'visible',
-            'label' => 'LBL_TYPE',
-          ),
+          1 => 'contact_name',
         ),
         3 => 
         array (
@@ -75,6 +70,12 @@ array (
               'rows' => 6,
               'cols' => 75,
             ),
+          ),
+          1 => 
+          array (
+            'name' => 'type_c',
+            'studio' => 'visible',
+            'label' => 'LBL_TYPE',
           ),
         ),
       ),

@@ -24,6 +24,20 @@ array (
       1 => 'parent_type',
     ),
   ),
+  'CONTACT_NAME' => 
+  array (
+    'width' => '20%',
+    'label' => 'LBL_LIST_CONTACT',
+    'link' => true,
+    'id' => 'CONTACT_ID',
+    'module' => 'Contacts',
+    'default' => true,
+    'ACLTag' => 'CONTACT',
+    'related_fields' => 
+    array (
+      0 => 'contact_id',
+    ),
+  ),
   'FILENAME' => 
   array (
     'width' => '20%',
@@ -72,20 +86,6 @@ array (
     'label' => 'LBL_DATE_MODIFIED',
     'link' => false,
     'default' => false,
-  ),
-  'CONTACT_NAME' => 
-  array (
-    'width' => '20%',
-    'label' => 'LBL_LIST_CONTACT',
-    'link' => true,
-    'id' => 'CONTACT_ID',
-    'module' => 'Contacts',
-    'default' => false,
-    'ACLTag' => 'CONTACT',
-    'related_fields' => 
-    array (
-      0 => 'contact_id',
-    ),
   ),
 );
 ?>

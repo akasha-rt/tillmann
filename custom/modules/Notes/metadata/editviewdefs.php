@@ -60,12 +60,7 @@ function deleteAttachmentCallBack(text)
         1 => 
         array (
           0 => 'filename',
-          1 => 
-          array (
-            'name' => 'type_c',
-            'studio' => 'visible',
-            'label' => 'LBL_TYPE',
-          ),
+          1 => 'contact_name',
         ),
         2 => 
         array (
@@ -73,6 +68,12 @@ function deleteAttachmentCallBack(text)
           array (
             'name' => 'description',
             'label' => 'LBL_NOTE_STATUS',
+          ),
+          1 => 
+          array (
+            'name' => 'type_c',
+            'studio' => 'visible',
+            'label' => 'LBL_TYPE',
           ),
         ),
       ),

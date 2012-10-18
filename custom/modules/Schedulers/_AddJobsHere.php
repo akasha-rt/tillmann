@@ -96,7 +96,7 @@ function checkOpportunitySalesData() {
                                                          AND email_addresses.deleted = 0
                                                          AND contacts.deleted = 0) contact_email
                                       ON contact_email.con_id = contacts.id
-                                  WHERE DATE_ADD(opp.date_entered,INTERVAL 7 DAY) <= NOW()
+                                  WHERE DATE_ADD(opp.date_entered,INTERVAL 1 HOUR) <= NOW()
                                       AND opp.sales_stage = 'Proposal/Price Quote'
                                       AND opp_c.product_c IS NOT NULL
                                       AND opp_c.product_c <> ''
@@ -148,8 +148,8 @@ function checkOpportunitySalesData() {
         $signature->retrieve_by_string_fields(array("user_id" => '1'));
 
         $email_body = $emailtemplate->body_html;
-        $email_body = str_replace('%first_name', $name, $email_body);
-        $email_body = str_replace('%Assigned_user_firstname', $assigned_user_name, $email_body);
+        $email_body = str_replace('$contact_first_name', $name, $email_body);
+        $email_body = str_replace('$contact_user_first_name', $assigned_user_name, $email_body);
         //add the signature
         $email_body = str_replace('[signature]', $signature->signature_html, $email_body);
         $mailSubject = $emailtemplate->subject;

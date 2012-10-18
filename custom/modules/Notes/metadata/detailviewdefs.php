@@ -44,12 +44,7 @@ array (
           array (
             'name' => 'filename',
           ),
-          1 => 
-          array (
-            'name' => 'type_c',
-            'studio' => 'visible',
-            'label' => 'LBL_TYPE',
-          ),
+          1 => 'contact_name',
         ),
         2 => 
         array (
@@ -57,6 +52,12 @@ array (
           array (
             'name' => 'description',
             'label' => 'LBL_NOTE_STATUS',
+          ),
+          1 => 
+          array (
+            'name' => 'type_c',
+            'studio' => 'visible',
+            'label' => 'LBL_TYPE',
           ),
         ),
       ),
