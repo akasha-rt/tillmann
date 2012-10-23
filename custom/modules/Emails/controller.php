@@ -67,7 +67,7 @@ class EmailsController extends SugarController {
             $tblname = lcfirst($rows['bean_module']);
 
             if ($tblname != "accounts")
-                $select = " CONCAT(IF({$tblname}.first_name IS NULL,'',{$tblname}.first_name),IF({$tblname}.last_name IS NULL,'',{$tblname}.last_name)) AS name ";
+                $select = " CONCAT(IF({$tblname}.first_name IS NULL,'',{$tblname}.first_name),' ',IF({$tblname}.last_name IS NULL,'',{$tblname}.last_name)) AS name ";
             else
                 $select = " IF({$tblname}.name IS NULL,'',{$tblname}.name) AS name ";
 
