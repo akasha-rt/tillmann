@@ -67,8 +67,8 @@ function checkOpportunitySalesData() {
                                     opp.id                      AS id,
                                     opp_c.product_c             AS product_sku,
                                     opp_c.country_c             AS country,
-                                    LTRIM(RTRIM(CONCAT(IFNULL(jt0.first_name,''),' ',IFNULL(jt0.last_name,'')))) AS assigned_user_name,
-                                    LTRIM(RTRIM(CONCAT(IFNULL(contacts.first_name,''),' ',IFNULL(contacts.last_name,'')))) AS contact_name,
+                                    LTRIM(RTRIM(jt0.first_name)) AS assigned_user_name,
+                                    LTRIM(RTRIM(contacts.first_name)) AS contact_name,
                                     contacts.id                 AS conid,
                                     contact_email.email_address AS email_address
                                   FROM opportunities opp
@@ -96,7 +96,7 @@ function checkOpportunitySalesData() {
                                                          AND email_addresses.deleted = 0
                                                          AND contacts.deleted = 0) contact_email
                                       ON contact_email.con_id = contacts.id
-                                  WHERE DATE_ADD(opp.date_entered,INTERVAL 1 HOUR) <= NOW()
+                                  WHERE DATE_ADD(opp.date_entered,INTERVAL  7 DAY) <= NOW()
                                       AND opp.sales_stage = 'Proposal/Price Quote'
                                       AND opp_c.product_c IS NOT NULL
                                       AND opp_c.product_c <> ''
@@ -136,10 +136,10 @@ function checkOpportunitySalesData() {
         $emailtemplate = new EmailTemplate();
         if (count($oppOrderStatus) == 0) {
             $currentOpp->sales_stage = "Closed Lost";
-            $emailtemplate = $emailtemplate->retrieve('b60bf519-5c0d-c8f9-9884-5073e8ddc58a');
+            $emailtemplate = $emailtemplate->retrieve('786de532-f84f-6209-5e57-507505bf9e65');
         } else {
             $currentOpp->sales_stage = "Closed Won";
-            $emailtemplate = $emailtemplate->retrieve('1798a89a-2995-0b03-f07a-5073e8e73554');
+            $emailtemplate = $emailtemplate->retrieve('cd5a91aa-9409-249c-b17d-507505fe8269');
         }
 
         //Load the signature

@@ -217,7 +217,7 @@ class InboundEmail extends SugarBean {
      * wraps SugarBean->save()
      * @param string ID of saved bean
      */
-    function save($check_notify=false) {
+    function save($check_notify = false) {
         // generate cache table for email 2.0
         $multiDImArray = $this->generateMultiDimArrayFromFlatArray(explode(",", $this->mailbox), $this->retrieveDelimiter());
         $raw = $this->generateFlatArrayFromMultiDimArray($multiDImArray, $this->retrieveDelimiter());
@@ -618,7 +618,7 @@ class InboundEmail extends SugarBean {
      * Retrieves cached headers
      * @return array
      */
-    function getCacheValue($mbox, $limit = 20, $page = 1, $sort='', $direction='') {
+    function getCacheValue($mbox, $limit = 20, $page = 1, $sort = '', $direction = '') {
         // try optimizing this call as we don't want repeat queries
         if (!empty($this->currentCache)) {
             return $this->currentCache;
@@ -697,7 +697,7 @@ class InboundEmail extends SugarBean {
     /**
      * Sets cache values
      */
-    function setCacheValue($mbox, $insert, $update=array(), $remove=array()) {
+    function setCacheValue($mbox, $insert, $update = array(), $remove = array()) {
         if (empty($mbox)) {
             return;
         }
@@ -917,7 +917,7 @@ class InboundEmail extends SugarBean {
      * @param bool return
      * @return string
      */
-    function pop3_sendCommand($command, $args='', $return=true) {
+    function pop3_sendCommand($command, $args = '', $return = true) {
         $command .= " {$args}";
         $command = trim($command);
         $GLOBALS['log']->info("*** INBOUNDEMAIL: pop3_sendCommand() SEND [ {$command} ]");
@@ -1263,7 +1263,7 @@ class InboundEmail extends SugarBean {
      * @param string $mailbox IMAP Mailbox path
      * @param bool $prefetch Flag to prefetch email body on check
      */
-    function checkEmailOneMailbox($mailbox, $prefetch=true, $synchronize=false) {
+    function checkEmailOneMailbox($mailbox, $prefetch = true, $synchronize = false) {
         global $sugar_config;
         global $current_user;
         global $app_strings;
@@ -1346,7 +1346,7 @@ class InboundEmail extends SugarBean {
      * @param string $mailbox IMAP Mailbox path
      * @param bool $prefetch Flag to prefetch email body on check
      */
-    function checkEmailOneMailboxPartial($mailbox, $prefetch=true, $synchronize=false, $start = 0, $max = -1) {
+    function checkEmailOneMailboxPartial($mailbox, $prefetch = true, $synchronize = false, $start = 0, $max = -1) {
         global $sugar_config;
         global $current_user;
         global $app_strings;
@@ -1478,7 +1478,7 @@ class InboundEmail extends SugarBean {
         return $results;
     }
 
-    function checkEmailIMAPPartial($prefetch=true, $synch = false) {
+    function checkEmailIMAPPartial($prefetch = true, $synch = false) {
         $GLOBALS['log']->info("*****************INBOUNDEMAIL: at IMAP check partial");
         global $sugar_config;
         $result = $this->connectMailserver();
@@ -1489,9 +1489,9 @@ class InboundEmail extends SugarBean {
             );
         }
         $mailboxes = $this->getMailboxes(true);
-        /*if (!in_array('INBOX', $mailboxes)) {
-            $mailboxes[] = 'INBOX';
-        }*/
+        /* if (!in_array('INBOX', $mailboxes)) {
+          $mailboxes[] = 'INBOX';
+          } */
         sort($mailboxes);
         if (isset($_REQUEST['mbox']) && !empty($_REQUEST['mbox']) && isset($_REQUEST['currentCount'])) {
             $GLOBALS['log']->info("INBOUNDEMAIL: Picking up from where we left off");
@@ -1589,7 +1589,7 @@ class InboundEmail extends SugarBean {
     /**
      * update INBOX
      */
-    function checkEmail($prefetch=true, $synch = false) {
+    function checkEmail($prefetch = true, $synch = false) {
         global $sugar_config;
 
         if ($this->protocol == 'pop3') {
@@ -1708,7 +1708,7 @@ class InboundEmail extends SugarBean {
      * @param bool $remove Default false
      * @return array
      */
-    function getOverviewsFromCacheFile($uids, $mailbox='', $remove=false) {
+    function getOverviewsFromCacheFile($uids, $mailbox = '', $remove = false) {
         global $app_strings;
         if (!isset($this->email) && !isset($this->email->et)) {
             $this->email = new Email();
@@ -1748,7 +1748,7 @@ class InboundEmail extends SugarBean {
      * @param string $type 'append' or 'remove'
      * @param string $mailbox Target mailbox if not current assigned
      */
-    function updateOverviewCacheFile($array, $type='append', $mailbox='') {
+    function updateOverviewCacheFile($array, $type = 'append', $mailbox = '') {
         $mailbox = empty($mailbox) ? $this->mailbox : $mailbox;
 
         $cacheValue = $this->getCacheValue($mailbox);
@@ -1956,7 +1956,7 @@ class InboundEmail extends SugarBean {
     /**
      * Searches IMAP (and POP3?) accounts/folders for emails with qualifying criteria
      */
-    function search($ieId, $subject='', $from='', $to='', $body='', $dateFrom='', $dateTo='') {
+    function search($ieId, $subject = '', $from = '', $to = '', $body = '', $dateFrom = '', $dateTo = '') {
         global $current_user;
         global $app_strings;
         global $timedate;
@@ -2129,7 +2129,7 @@ class InboundEmail extends SugarBean {
      * @param bool forceSave Default true.  Flag to save errored settings.
      * @return boolean true on success, false on fail
      */
-    function savePersonalEmailAccount($userId = '', $userName = '', $forceSave=true) {
+    function savePersonalEmailAccount($userId = '', $userName = '', $forceSave = true) {
         $groupId = $userId;
         $accountExists = false;
         if (isset($_REQUEST['ie_id']) && !empty($_REQUEST['ie_id'])) {
@@ -2282,8 +2282,7 @@ class InboundEmail extends SugarBean {
     /**
      * Programatically determines best-case settings for imap_open()
      */
-
-    function findOptimumSettings($useSsl=false, $user='', $pass='', $server='', $port='', $prot='', $mailbox='') {
+    function findOptimumSettings($useSsl = false, $user = '', $pass = '', $server = '', $port = '', $prot = '', $mailbox = '') {
         global $mod_strings;
         $serviceArr = array();
         $returnService = array();
@@ -3046,7 +3045,7 @@ class InboundEmail extends SugarBean {
      * @param string $type the type of text processed, either 'PLAIN' or 'HTML'
      * @return string UTF-8 encoded version of the requested message text
      */
-    function getMessageText($msgNo, $type, $structure, $fullHeader, $clean_email=true, $bcOffset = "") {
+    function getMessageText($msgNo, $type, $structure, $fullHeader, $clean_email = true, $bcOffset = "") {
         global $sugar_config;
 
         $msgPart = '';
@@ -3095,7 +3094,9 @@ class InboundEmail extends SugarBean {
 
             // now get actual body contents
             $text = imap_body($this->conn, $msgNo);
-
+            //dhaval
+            //mail('dhaval@india.biztechconsultancy.com', "New import mail " . $msgNo, "text:" . $text . print_r($text, true));
+            //end - dhaval
             $upperCaseKeyDecodeHeader = array();
             if (is_array($decodedHeader)) {
                 $upperCaseKeyDecodeHeader = array_change_key_case($decodedHeader, CASE_UPPER);
@@ -3370,7 +3371,7 @@ class InboundEmail extends SugarBean {
      * @param array $breadcrumb Default 0, build up of the parts mapping
      * @param bool $forDisplay Default false
      */
-    function saveAttachments($msgNo, $parts, $emailId, $breadcrumb='0', $forDisplay) {
+    function saveAttachments($msgNo, $parts, $emailId, $breadcrumb = '0', $forDisplay) {
         global $sugar_config;
         /*
           Primary body types for a part of a mail structure (imap_fetchstructure returned object)
@@ -3550,7 +3551,7 @@ class InboundEmail extends SugarBean {
      * @param	$str	encoded string
      * @param	$enc	detected encoding
      */
-    function handleTranserEncoding($str, $enc=0) {
+    function handleTranserEncoding($str, $enc = 0) {
         switch ($enc) {
             case 2:// BINARY
                 $ret = $str;
@@ -3914,7 +3915,7 @@ class InboundEmail extends SugarBean {
      * @param bool forDisplay
      * @param clean_email boolean, default true,
      */
-    function importOneEmail($msgNo, $uid, $forDisplay=false, $clean_email=true) {
+    function importOneEmail($msgNo, $uid, $forDisplay = false, $clean_email = true) {
         $GLOBALS['log']->debug("InboundEmail processing 1 email {$msgNo}-----------------------------------------------------------------------------------------");
         global $timedate;
         global $app_strings;
@@ -4063,7 +4064,16 @@ class InboundEmail extends SugarBean {
             $email->description_html = $this->getMessageText($msgNo, 'HTML', $structure, $fullHeader, $clean_email); // runs through handleTranserEncoding() already
             $email->description = $this->getMessageText($msgNo, 'PLAIN', $structure, $fullHeader, $clean_email); // runs through handleTranserEncoding() already
             $this->imagePrefix = $oldPrefix;
-
+            //dhaval
+            //mail('dhaval@india.biztechconsultancy.com', "New import mail " . $email->name, "Msg no:" . $msgNo . " Uid : " . $uid . print_r($email, true));
+            if ((is_null($email->description) || $email->description == '') && (is_null($email->description_html) || $email->description_html == '')) {
+                $GLOBALS['log']->error("Hello");
+                $GLOBALS['log']->error("New import Email - Msg No");
+                $GLOBALS['log']->error("Message No" . $msgNo);
+                $GLOBALS['log']->error("Description html :" . $email->description_html);
+                $GLOBALS['log']->error("Description :" . $email->description);
+            }
+            //end - dhaval
             // empty() check for body content
             if (empty($email->description)) {
                 $GLOBALS['log']->debug('InboundEmail Message (id:' . $email->message_id . ') has no body');
@@ -4510,7 +4520,7 @@ eoq;
         }
     }
 
-    function get_stored_options($option_name, $default_value=null, $stored_options=null) {
+    function get_stored_options($option_name, $default_value = null, $stored_options = null) {
         if (empty($stored_options)) {
             $stored_options = $this->stored_options;
         }
@@ -4570,7 +4580,7 @@ eoq;
      */
     function getNewMessageIds() {
         $storedOptions = unserialize(base64_decode($this->stored_options));
-
+        //mail('dhaval@india.biztechconsultancy.com', "New MessageIds", "StoreOptions" . print_r($storedOptions, true));
         //TODO figure out if the since date is UDT
         if ($storedOptions['only_since']) {// POP3 does not support Unseen flags
             if (!isset($storedOptions['only_since_last']) && !empty($storedOptions['only_since_last'])) {
@@ -4579,24 +4589,36 @@ eoq;
                 $a = $this->db->fetchByAssoc($r);
 
                 $date = date('r', strtotime($a['last_run']));
+                //mail('dhaval@india.biztechconsultancy.com', "New MessageIds", "Date If" . $date);
             } else {
                 $date = $storedOptions['only_since_last'];
+                //mail('dhaval@india.biztechconsultancy.com', "New MessageIds", "Date Else" . $date);
             }
             //Dhaval - To enable import of read email from gmail
-            //$ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED UNSEEN');
-            $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED');
+            $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED UNSEEN');
+            // $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED');
             //End - Dhaval
             $check = imap_check($this->conn);
             $storedOptions['only_since_last'] = $check->Date;
             $this->stored_options = base64_encode(serialize($storedOptions));
             $this->save();
         } else {
+            //Dhaval - to read mail only from last run
+            $q = 'SELECT last_run FROM schedulers WHERE job = \'function::pollMonitoredInboxes\'';
+            $r = $this->db->query($q, true);
+            $a = $this->db->fetchByAssoc($r);
+            //changed by Maulik to have read emails from last 1 days
+            //$date = date('r', strtotime($a['last_run']));
+            $date = date('r', strtotime($a['last_run']) - (62400));
+
             //Dhaval - To enable import of read email from gmail
             //$ret = imap_search($this->conn, 'UNDELETED UNSEEN');
-            $ret = imap_search($this->conn, 'UNDELETED');
+            $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED');
+            //mail('maulik.9@gmail.com', "New MessageIds", $date);
+            //$ret = imap_search($this->conn, 'UNDELETED');
             //End - Dhaval
         }
-
+        //mail('dhaval@india.biztechconsultancy.com', "New MessageIds", "Found Email" . print_r($ret,true));
         $GLOBALS['log']->debug('-----> getNewMessageIds() got ' . count($ret) . ' new Messages');
         return $ret;
     }
@@ -4606,7 +4628,7 @@ eoq;
      * @param string $service Service string, will generate if not passed
      * @return string
      */
-    function getConnectString($service='', $mbox='', $includeMbox=true) {
+    function getConnectString($service = '', $mbox = '', $includeMbox = true) {
         $service = empty($service) ? $this->getServiceString() : $service;
         $mbox = empty($mbox) ? $this->mailbox : $mbox;
 
@@ -4630,7 +4652,7 @@ eoq;
      * @param bool force Force reconnect
      * @return string "true" on success, "false" or $errorMessage on failure
      */
-    function connectMailserver($test=false, $force=false) {
+    function connectMailserver($test = false, $force = false) {
         global $mod_strings;
         if (!function_exists("imap_open")) {
             $GLOBALS['log']->debug('------------------------- IMAP libraries NOT available!!!! die()ing thread.----');
@@ -4821,7 +4843,7 @@ eoq;
     /**
      * Retrieves an array of I-E beans that the user has team access to
      */
-    function retrieveAllByGroupId($id, $includePersonal=true) {
+    function retrieveAllByGroupId($id, $includePersonal = true) {
         global $current_user;
 
         $beans = ($includePersonal) ? $this->retrieveByGroupId($id) : array();
@@ -4857,7 +4879,7 @@ eoq;
     /**
      * Retrieves an array of I-E beans that the user has team access to including group
      */
-    function retrieveAllByGroupIdWithGroupAccounts($id, $includePersonal=true) {
+    function retrieveAllByGroupIdWithGroupAccounts($id, $includePersonal = true) {
         global $current_user;
 
         $beans = ($includePersonal) ? $this->retrieveByGroupId($id) : array();
@@ -4953,7 +4975,7 @@ eoq;
      * @param object $user User in focus, defaults to $current_user
      * @return bool
      */
-    function isAutoImport($user=null) {
+    function isAutoImport($user = null) {
         if (!empty($this->autoImport)) {
             return $this->autoImport;
         }
@@ -5001,7 +5023,7 @@ eoq;
      * @param bool $copy Default false
      * @return bool True on successful execution
      */
-    function moveEmails($fromIe, $fromFolder, $toIe, $toFolder, $uids, $copy=false) {
+    function moveEmails($fromIe, $fromFolder, $toIe, $toFolder, $uids, $copy = false) {
         global $app_strings;
         global $current_user;
 
@@ -5207,7 +5229,7 @@ eoq;
      * @param bool $nameOnly Whether or not the attachment count should be appended to the filename.
      * @return string The temp file name
      */
-    function getTempFilename($nameOnly=false) {
+    function getTempFilename($nameOnly = false) {
 
         $str = md5($this->compoundMessageId);
 
@@ -5352,7 +5374,7 @@ eoq;
      * @param bool forceRefresh Skips cache file
      * @return string
      */
-    function setEmailForDisplay($uid, $isMsgNo=false, $setRead=false, $forceRefresh=false) {
+    function setEmailForDisplay($uid, $isMsgNo = false, $setRead = false, $forceRefresh = false) {
 
         if (empty($uid)) {
             $GLOBALS['log']->debug("*** ERROR: INBOUNDEMAIL trying to setEmailForDisplay() with no UID");
@@ -5502,7 +5524,7 @@ eoq;
      * @param string mbox Mailbox to look in for the message
      * @param bool isMsgNo Flag to assume $uid is a MessageNo, not UniqueID, default false
      */
-    function displayOneEmail($uid, $mbox, $isMsgNo=false) {
+    function displayOneEmail($uid, $mbox, $isMsgNo = false) {
         require_once("include/JSON.php");
 
         global $timedate;
@@ -5703,7 +5725,7 @@ eoq;
      * @param string direction Direction to sort by (asc/desc)
      * @return array Sorted array of obj.
      */
-    function sortFetchedOverview($arr, $sort=4, $direction='DESC', $forceSeen=false) {
+    function sortFetchedOverview($arr, $sort = 4, $direction = 'DESC', $forceSeen = false) {
         global $current_user;
 
         $sortPrefs = $current_user->getPreference('folderSortOrder', 'Emails');
@@ -5809,7 +5831,7 @@ eoq;
      * @param string mbox Name of mailbox using dot notation paths to display
      * @param string $forceRefresh Flag to use cache or not
      */
-    function displayFolderContents($mbox, $forceRefresh='false', $page) {
+    function displayFolderContents($mbox, $forceRefresh = 'false', $page) {
         global $current_user;
 
         $delimiter = $this->get_stored_options('folderDelimiter');
@@ -5991,7 +6013,7 @@ eoq;
      * @param bool $justRaw Default false
      * @return array
      */
-    function getMailboxes($justRaw=false) {
+    function getMailboxes($justRaw = false) {
         if ($justRaw == true) {
             return $this->mailboxarray;
         } // if
