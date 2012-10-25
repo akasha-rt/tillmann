@@ -47,6 +47,35 @@ array (
     'label' => 'LBL_TYPE',
     'width' => '10%',
   ),
+  'ACCOUNT_NAME' => 
+  array (
+    'width' => '10%',
+    'label' => 'LBL_LIST_ACCOUNT_NAME',
+    'module' => 'Accounts',
+    'id' => 'ACCOUNT_ID',
+    'link' => true,
+    'contextMenu' => 
+    array (
+      'objectType' => 'sugarAccount',
+      'metaData' => 
+      array (
+        'return_module' => 'Contacts',
+        'return_action' => 'ListView',
+        'module' => 'Accounts',
+        'parent_id' => '{$ACCOUNT_ID}',
+        'parent_name' => '{$ACCOUNT_NAME}',
+        'account_id' => '{$ACCOUNT_ID}',
+        'account_name' => '{$ACCOUNT_NAME}',
+      ),
+    ),
+    'default' => true,
+    'sortable' => true,
+    'ACLTag' => 'ACCOUNT',
+    'related_fields' => 
+    array (
+      0 => 'account_id',
+    ),
+  ),
   'EMAIL1' => 
   array (
     'width' => '15%',
@@ -75,35 +104,6 @@ array (
     'width' => '10%',
     'label' => 'LBL_DATE_ENTERED',
     'default' => true,
-  ),
-  'ACCOUNT_NAME' => 
-  array (
-    'width' => '34%',
-    'label' => 'LBL_LIST_ACCOUNT_NAME',
-    'module' => 'Accounts',
-    'id' => 'ACCOUNT_ID',
-    'link' => true,
-    'contextMenu' => 
-    array (
-      'objectType' => 'sugarAccount',
-      'metaData' => 
-      array (
-        'return_module' => 'Contacts',
-        'return_action' => 'ListView',
-        'module' => 'Accounts',
-        'parent_id' => '{$ACCOUNT_ID}',
-        'parent_name' => '{$ACCOUNT_NAME}',
-        'account_id' => '{$ACCOUNT_ID}',
-        'account_name' => '{$ACCOUNT_NAME}',
-      ),
-    ),
-    'default' => false,
-    'sortable' => true,
-    'ACLTag' => 'ACCOUNT',
-    'related_fields' => 
-    array (
-      0 => 'account_id',
-    ),
   ),
   'PHONE_WORK' => 
   array (
