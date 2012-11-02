@@ -1617,6 +1617,10 @@ SE.composeLayout = {
 
         signature = signature.replace(/&lt;/gi, '<');
         signature = signature.replace(/&gt;/gi, '>');
+        //Sugar2- Start (for Reducing Vertical Space in signature)
+        signature = signature.replace(/\r\n/g,'<br/>');
+        signature = signature.replace('</p><br/><p>','<br/>');
+        //sugar2 - End
 
         return signature;
     },
