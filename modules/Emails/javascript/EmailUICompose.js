@@ -1508,7 +1508,10 @@ SE.composeLayout = {
         }
 
         var openTag = '<div><span>&nbsp;</span>';
-        var closeTag = '<span>&nbsp;</span></div>';
+        //Sugar 2 Start --Remove two spaces from below signature
+       // var closeTag = '<span>&nbsp;</span></div>';
+        var closeTag = '</div>';
+        //Sugar 2 End --Remove two spaces from below signature
         var t = tinyMCE.getInstanceById('htmleditor' + idx);
         //IE 6 Hack
         if(typeof(t) != 'undefined')
@@ -1617,10 +1620,6 @@ SE.composeLayout = {
 
         signature = signature.replace(/&lt;/gi, '<');
         signature = signature.replace(/&gt;/gi, '>');
-        //Sugar2- Start (for Reducing Vertical Space in signature)
-        signature = signature.replace(/\r\n/g,'<br/>');
-        signature = signature.replace('</p><br/><p>','<br/>');
-        //sugar2 - End
 
         return signature;
     },
