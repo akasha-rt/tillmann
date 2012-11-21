@@ -233,3 +233,9 @@ ALTER TABLE  `opportunities_cstm` ADD `is_email_sent_c` INT( 11 ) NULL DEFAULT  
 
 INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
 ('Opportunitiesis_email_sent_c', 'is_email_sent_c', 'LBL_IS_EMAIL_SENT', NULL, NULL, 'Opportunities', 'varchar', 100, 0, NULL, '2012-10-08 00:00:00', 0, 1, 1, 1, 1, 'true', NULL, NULL, NULL, NULL);
+
+
+
+@dhaval - 21_11_12
+To convert country_c to enum - custom function dropdown
+UPDATE  `fields_meta_data` SET  `type` =  'enum' WHERE  `fields_meta_data`.`id` =  'Opportunitiescountry_c';

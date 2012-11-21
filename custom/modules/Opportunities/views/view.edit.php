@@ -15,7 +15,7 @@ class OpportunitiesViewEdit extends ViewEdit {
     }
 
     function display() {
-        $this->ss->assign('COUNTRY', '<select title="" size="1" id="country_c" name="country_c">' . get_dd_edit('Country', $this->bean->country_c) . '</select>');
+        //$this->ss->assign('COUNTRY', '<select title="" size="1" id="country_c" name="country_c">' . get_dd_edit('Country', $this->bean->country_c) . '</select>');
         parent::display();
     }
 

@@ -80,7 +80,7 @@ $viewdefs ['Opportunities'] =
                             1 => array(
                                 'name' => 'country_c',
                                 'label' => 'LBL_COUNTRY',
-                                'customCode' => '{$COUNTRY}'
+                                //'customCode' => '{$COUNTRY}'
                             ),
                         ),
                     ),

@@ -34,4 +34,17 @@ function get_dd_detail($dd_name = 'Country', $opt = '') {
     return $dd['ans'];
 }
 
+//Get value for Opp - country
+function getCountryForOpp($focus, $name, $value, $view) {
+    switch ($view) {
+        case 'EditView':
+        case 'QuickCreate':
+            return get_dd_edit('Country', $focus->$name);
+            break;
+        default :
+            return get_dd_detail('Country', $focus->$name);
+            break;
+    }
+}
+
 ?>
