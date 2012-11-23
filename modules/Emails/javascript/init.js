@@ -65,7 +65,9 @@ function email2init() {
 	 force_br_newlines : false,
          forced_root_block : '',
          force_p_newlines : false, 
-         directionality : (typeof(rtl) == "undefined") ? "ltr" : "rtl"
+         directionality : (typeof(rtl) == "undefined") ? "ltr" : "rtl",
+         //Enable Spell checker auto - dhaval
+         gecko_spellcheck : true
      });
     }
 
