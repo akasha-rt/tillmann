@@ -56,22 +56,22 @@ class SugarTinyMCE {
 	                    'buttonConfig2' => "cut,copy,paste,pastetext,pasteword,selectall,separator,search,replace,separator,bullist,numlist,separator,outdent,
 	                     					indent,separator,ltr,rtl,separator,undo,redo,separator, link,unlink,anchor,image,separator,sub,sup,separator,charmap,
 	                     					visualaid", 
-	                    'buttonConfig3' => "tablecontrols,separator,advhr,hr,removeformat,separator,insertdate,inserttime,separator,preview,spellchecker"),
+	                    'buttonConfig3' => "tablecontrols,separator,advhr,hr,removeformat,separator,insertdate,inserttime,separator,preview,spellchecker,link,unlink"),
 	        'email_compose' => array(
 						'buttonConfig' => "code,help,separator,bold,italic,underline,strikethrough,separator,bullist,numlist,separator,justifyleft,justifycenter,justifyright,
-	                     					justifyfull,separator,forecolor,backcolor,separator,spellchecker,separator,styleselect,formatselect,fontselect,fontsizeselect,removeformat,", 
+	                     					justifyfull,separator,forecolor,backcolor,separator,spellchecker,separator,styleselect,formatselect,fontselect,fontsizeselect,removeformat,link,unlink,", 
 	                    'buttonConfig2' => "", 
 	                    'buttonConfig3' => ""),
 	        'email_compose_light' => array(
 						'buttonConfig' => "code,help,separator,bold,italic,underline,strikethrough,separator,bullist,numlist,separator,justifyleft,justifycenter,justifyright,
-	                     					justifyfull,separator,forecolor,backcolor,separator,spellchecker,separator,styleselect,formatselect,fontselect,fontsizeselect,removeformat,", 
+	                     					justifyfull,separator,forecolor,backcolor,separator,spellchecker,separator,styleselect,formatselect,fontselect,fontsizeselect,removeformat,link,unlink,", 
 	                    'buttonConfig2' => "", 
 	                    'buttonConfig3' => ""),
 	);
 	
 	var $pluginsConfig = array(
-	    'email_compose_light' => 'insertdatetime,paste,directionality,safari,spellchecker',
-        'email_compose' => 'advhr,insertdatetime,table,preview,paste,searchreplace,directionality,fullpage,spellchecker',
+	    'email_compose_light' => 'insertdatetime,paste,directionality,safari,spellchecker,advlink',
+        'email_compose' => 'advhr,insertdatetime,table,preview,paste,searchreplace,directionality,fullpage,spellchecker,advlink',
 	);
 	
 	var $defaultConfig = array(
