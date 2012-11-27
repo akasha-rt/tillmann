@@ -216,9 +216,19 @@ class Account extends Company {
         }
     }
 
+    function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
+        $query = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
+        $query[select].= " ,'' AS item_history ";
+        return $query;
+    }
+
     function get_list_view_data() {
         global $system_config, $current_user;
         $temp_array = $this->get_list_view_array();
+
+        $temp_array['ITEM_HISTORY'] = '<img style="cursor: pointer;" 
+            onclick="showItemHistoryChart(\'' . $temp_array['ID'] . '\',\'' . $temp_array['NAME'] . '\');" 
+            src="custom/include/images/chart.png"/>';
         $temp_array["ENCODED_NAME"] = $this->name;
 //		$temp_array["ENCODED_NAME"]=htmlspecialchars($this->name, ENT_QUOTES);
         if (!empty($this->billing_address_state)) {
