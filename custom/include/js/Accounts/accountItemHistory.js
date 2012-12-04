@@ -1,8 +1,7 @@
-
 function showItemHistoryChart(id,accName){
     var data = 'module=Accounts&action=getItemHistoryChart&id='+id + '&accName='+accName;
-    $('body').append('<div id="historydetail_div" style="display:none" ></div>'); 
-    $('body').append('<div id="backgroundpopup" style="display:none"></div>');             
+    $('body').append('<div id="backgroundpopup" style="display:none"></div>');
+    $('body').append('<div id="historydetail_div" style="display:none" ></div>');
     $('#backgroundpopup').css({
         'background': 'none repeat scroll 0 0 #000000',
         'border': '1px solid #CECECE',                                                                        
@@ -11,22 +10,37 @@ function showItemHistoryChart(id,accName){
         'top': '0',
         'width': '100%',
         'height': '100%',
-        'opacity': '0.8',
+        'opacity': '0.25',
         'z-index': '1'                                                                         
-    });                                
+    });
     $.ajax({                
         url: "index.php",	
         type: "POST",
+        
         data: data,
-        success: function (result) {  
-            $('#historydetail_div').html(result);  
+        beforeSend: function() {  
+            $('#ajaxloading_c').css({
+                'visibility': 'visible',
+                'display' :'block',
+            });
             $('#backgroundpopup').show();
+        },
+        complete: function() {
+            $('#ajaxloading_c').css({
+                'visibility': 'hidden',
+                'display' :'none',
+            });
+        },
+        success: function (result) { 
+            
+            $('#historydetail_div').html(result);              
             $('#historydetail_div').show();
-            $('#historydetail_div').css("top",( $(window).height() - $('#historydetail').height() ) / (2+$(window).scrollTop()) + "px");
-            $('#historydetail_div').css("left",( $(window).width() - $('#historydetail').width() ) / (2+$(window).scrollLeft()) + "px");
-            $('#historydetail_div').css("position", "absolute");
+            $('#historydetail_div').css("top","25%");
+            $('#historydetail_div').css("left","50%");
+            $('#historydetail_div').css("margin-left",'-'+($('#historydetail').width()/2)+'px');           
+            $('#historydetail_div').css("position", "fixed");
             $('#historydetail_div').css("height", "auto"); 
-            $('#historydetail_div').css("z-index", "5000"); 
+            $('#historydetail_div').css("z-index", "10000"); 
         }
     });  
 
