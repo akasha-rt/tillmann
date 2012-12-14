@@ -115,6 +115,12 @@ function gridInit() {
 						resizeable: true,
 						key: 'subject'
 					}, 
+                                        {
+						label: "Case", 
+						width: widths[5], 												
+						resizeable: true,						
+			key: 'caseflag'
+					},
 					{
 						label: mod_strings.LBL_LIST_DATE,
 						width: widths[4], 
@@ -135,13 +141,7 @@ function gridInit() {
 						sortable: true,
 						resizeable: true,
                         key: 'emailstatus'
-					}, 
-                                        {
-						label: "Case", 
-						width: widths[5], 												
-						resizeable: true,						
-			key: 'caseflag'
-					},
+					},                                         
                                         {
 						label: "Contact", 
 						width: widths[5], 												
@@ -182,7 +182,7 @@ function gridInit() {
 				responseType: YAHOO.util.DataSource.TYPE_JSON,
 				responseSchema: {
 				    resultsList: 'Email',
-		            fields: ['flagged', 'status', 'from', 'subject', 'date','to_addrs','emailstatus','caseflag','contactflag', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
+		            fields: ['flagged', 'status', 'from', 'subject', 'caseflag','date','to_addrs','emailstatus','contactflag', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
 		            metaFields: {total: 'TotalCount', unread:"UnreadCount", fromCache: "FromCache"}
 				}
 		    });
