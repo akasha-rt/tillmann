@@ -317,7 +317,16 @@ class SugarFolder {
 
 		$sort = (empty($sort)) ? $this->defaultSort : $sort;
         $direction = (empty($direction)) ? $this->defaultDirection : $direction;
-        $order = " ORDER BY {$this->hrSortLocal[$sort]} {$direction}";
+        //Dhaval - query was failing due to no order by col set
+        if(!isset($this->hrSortLocal[$sort]) || $this->hrSortLocal[$sort] == ''){
+            $orderBy = 'date_sent';
+        }  else {
+            $orderBy = $this->hrSortLocal[$sort] ;
+        }
+        
+        //$order = " ORDER BY {$this->hrSortLocal[$sort]} {$direction}";
+        $order = " ORDER BY {$orderBy} {$direction}";
+        //End - Dhaval
 
 		if($this->is_dynamic) {
 			$r = $this->db->limitQuery(from_html($this->generateSugarsDynamicFolderQuery() . $order), $start, $pageSize);
