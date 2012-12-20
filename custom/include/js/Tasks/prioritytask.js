@@ -132,7 +132,7 @@ tab += '<tr id="TR_weekly" style="visibility:hidden;"><td width="25%">On :</td>'
 tab += '<td width="50%">';
 
 tab += 'Sun <input type="checkbox" style="margin-right: 10px;" name="repeat_dow[sun]" id="repeat_dow_0">'; 	
-tab += 'Mon <input type="checkbox" style="margin-right: 10px;" name="repeat_dow[mod]" id="repeat_dow_1">'; 	
+tab += 'Mon <input type="checkbox" style="margin-right: 10px;" name="repeat_dow[mon]" id="repeat_dow_1">'; 	
 tab += 'Tue <input type="checkbox" style="margin-right: 10px;" name="repeat_dow[tue]" id="repeat_dow_2">'; 	
 tab += 'Wed <input type="checkbox" style="margin-right: 10px;" name="repeat_dow[wed]" id="repeat_dow_3">'; 	
 tab += 'Thu <input type="checkbox" style="margin-right: 10px;" name="repeat_dow[thur]" id="repeat_dow_4">'; 	

@@ -253,7 +253,7 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 ALTER TABLE  `tasks_cstm` ADD  `is_recursive_c` INT( 11 ) NULL DEFAULT  '0'
 ALTER TABLE  `tasks_cstm` ADD  `repeat_type_c` VARCHAR( 36 ) NULL DEFAULT NULL
 ALTER TABLE  `tasks_cstm` ADD  `repeat_interval_c` INT( 3 ) NULL DEFAULT  '1'
-ALTER TABLE  `tasks_cstm` ADD  `repeat_dow_c` VARCHAR( 7 ) NULL DEFAULT NULL
+ALTER TABLE  `tasks_cstm` ADD  `repeat_dow_c` VARCHAR( 255 ) NULL DEFAULT NULL
 ALTER TABLE  `tasks_cstm` ADD  `repeat_until_c` DATE NULL DEFAULT NULL
 ALTER TABLE  `tasks_cstm` ADD  `repeat_count_c` INT( 7 ) NULL DEFAULT NULL
 ALTER TABLE  `tasks_cstm` ADD  `repeat_parent_id_c` CHAR( 36 ) NULL DEFAULT NULL

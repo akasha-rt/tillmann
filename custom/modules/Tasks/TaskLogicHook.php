@@ -27,7 +27,7 @@ class TaskLogicHook {
         require_once("modules/Calendar/CalendarUtils.php");
         global $db;
         if ($bean->is_recursive_c == 1) {
-            $days = array('sun', 'mod', 'tue', 'wed', 'thur', 'fri', 'sat',);
+            $days = array('sun', 'mon', 'tue', 'wed', 'thur', 'fri', 'sat',);
             $repeat_type = $_REQUEST['repeat_type'];
             $repeat_delay = $_REQUEST['repeat_delay'];
             $repeat_count = $_REQUEST['repeat_count'];
@@ -151,7 +151,8 @@ class TaskLogicHook {
                                                      repeat_count_c,
                                                      repeat_parent_id_c,
                                                      recurring_source_c,
-                                                     repeat_dow_c) 
+                                                     repeat_dow_c,
+                                                     is_priority_c) 
                                               VALUES ('{$R_task_id}',
                                                  1,
                                                 '{$clone->repeat_type}',
@@ -160,7 +161,8 @@ class TaskLogicHook {
                                                 '{$clone->repeat_count}',
                                                 '{$clone->repeat_parent_id}',
                                                 '{$clone->recurring_source}',
-                                                '{$clone->repeat_dow_c}')";
+                                                '{$clone->repeat_dow_c}',
+                                                '{$clone->is_priority_c}')";
 
                     $db->query($R_task_sql);
                     $db->query($R_task_sql_cstm);

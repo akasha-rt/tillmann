@@ -57,7 +57,7 @@ class TasksViewEdit extends ViewEdit {
           $this->ev->display(); */
         if ($this->ev->fieldDefs['is_priority_c']['value'] == "1") {
             echo "<script>
-            window.onload=function(){
+            $(document).ready(function(){
             if(document.getElementById('is_priority_c').checked){
             document.getElementById('is_priority_c').disabled = true;
             document.getElementById('date_due_date').disabled = true;
@@ -69,7 +69,7 @@ class TasksViewEdit extends ViewEdit {
             var val1 = $('#is_priority_c').val();
             $('input[name=is_priority_c]').val(val1);
             }
-            }</script>";
+            });</script>";
         }
         if ($this->ev->fieldDefs['is_recursive_c']['value'] == "1") {
 
@@ -79,9 +79,9 @@ class TasksViewEdit extends ViewEdit {
             $rpt_until = $this->ev->fieldDefs['repeat_until_c']['value'];
             $rpt_dow = $this->ev->fieldDefs['repeat_dow_c']['value'];
             echo "<script>
-            window.onload=function(){            
+            $(document).ready(function(){            
            init_recursive('" . $rpt_type . "','" . $rpt_delay . "','" . $rpt_count . "','" . $rpt_until . "','" . $rpt_dow . "');               
-            }</script>";
+            });</script>";
         }
         //init_recursive(" . $rpt_type . "," . $rpt_delay . "," . $rpt_count . "," . $rpt_until . ',' . $rpt_dow . ");
     }
