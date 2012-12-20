@@ -8,4 +8,7 @@ $hook_array = Array();
 
 $hook_array['before_save'] = Array();
 $hook_array['before_save'][] = Array(1, 'Queue Notification', 'custom/modules/Tasks/TaskLogicHook.php', 'TaskLogicHook', 'queueNotification');
+
+$hook_array['after_save'] = Array();
+$hook_array['after_save'][] = Array(1, 'Recursive Task', 'custom/modules/Tasks/logic_hooks.php', 'TaskLogicHook', 'recursiveTask');
 ?>

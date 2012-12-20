@@ -775,7 +775,9 @@ EOHTML;
             echo getVersionedScript('custom/include/js/unserialize.js');   
             echo getVersionedScript('custom/include/js/notification.js');      
             //End - Notification
-
+            //@niranjan-Start For Priority Task
+            echo getVersionedScript('custom/include/js/Tasks/prioritytask.js');
+            //@niranjan-End - Priority Task
             // output necessary config js in the top of the page
             $config_js = $this->getSugarConfigJS();
             if(!empty($config_js)){
@@ -913,6 +915,11 @@ EOHTML;
         // End Required Image
         $ss->assign('COPYRIGHT',$copyright);
         $ss->display(SugarThemeRegistry::current()->getTemplate('footer.tpl'));
+        
+        //@niranjan Start Get Prior Tasks
+        require_once 'custom/include/function/utilFunctions.php';
+        getPrioritytasks();
+        //@niranjan End
     }
 
     /**

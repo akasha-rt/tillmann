@@ -239,3 +239,37 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 @dhaval - 21_11_12
 To convert country_c to enum - custom function dropdown
 UPDATE  `fields_meta_data` SET  `type` =  'enum' WHERE  `fields_meta_data`.`id` =  'Opportunitiescountry_c';
+
+@dhaval - 01_12_12
+For priority task
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Tasksis_priority_c', 'is_priority_c', 'LBL_IS_PRIORITY', '', '', 'Tasks', 'bool', 255, 0, '0', '2012-11-06 06:37:09', 0, 0, 0, 1, 1, 'true', '', '', '', '');
+
+ALTER TABLE  `tasks_cstm` ADD  `is_priority_c` TINYINT( 1 ) NULL DEFAULT  '0'
+
+for recursive tasks
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksis_recursive_c', 'is_recursive_c', 'LBL_IS_RECURSIVE_C', NULL, NULL, 'Tasks', 'bool', '255', '0', NULL, NULL, '0', '0', '0', '0', '1', NULL, NULL, NULL, NULL, NULL);
+
+ALTER TABLE  `tasks_cstm` ADD  `is_recursive_c` INT( 11 ) NULL DEFAULT  '0'
+ALTER TABLE  `tasks_cstm` ADD  `repeat_type_c` VARCHAR( 36 ) NULL DEFAULT NULL
+ALTER TABLE  `tasks_cstm` ADD  `repeat_interval_c` INT( 3 ) NULL DEFAULT  '1'
+ALTER TABLE  `tasks_cstm` ADD  `repeat_dow_c` VARCHAR( 7 ) NULL DEFAULT NULL
+ALTER TABLE  `tasks_cstm` ADD  `repeat_until_c` DATE NULL DEFAULT NULL
+ALTER TABLE  `tasks_cstm` ADD  `repeat_count_c` INT( 7 ) NULL DEFAULT NULL
+ALTER TABLE  `tasks_cstm` ADD  `repeat_parent_id_c` CHAR( 36 ) NULL DEFAULT NULL
+ALTER TABLE  `tasks_cstm` ADD  `recurring_source_c` VARCHAR( 36 ) NULL DEFAULT NULL
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrepeat_type_c', 'repeat_type_c', 'LBL_REPEAT_TYPE', NULL, NULL, 'Tasks', 'varchar', '255', '0', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrepeat_interval_c', 'repeat_interval_c', 'LBL_REPEAT_INTERVAL', NULL, NULL, 'Tasks', 'int', '3', '1', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrepeat_dow_c', 'repeat_dow_c', 'LBL_REPEAT_DOW', NULL, NULL, 'Tasks', 'varchar', '255', '0', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrepeat_until_c', 'repeat_until_c', 'LBL_REPEAT_UNTIL', NULL, NULL, 'Tasks', 'varchar', '255', '0', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrepeat_count_c', 'repeat_count_c', 'LBL_REPEAT_COUNT', NULL, NULL, 'Tasks', 'int', '7', '0', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrepeat_parent_id_c', 'repeat_parent_id_c', 'LBL_REPEAT_PARENT_ID', NULL, NULL, 'Tasks', 'varchar', '255', '0', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrecurring_source_c', 'recurring_source_c', 'LBL_RECURRING_SOURCE', NULL, NULL, 'Tasks', 'varchar', '255', '0', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+

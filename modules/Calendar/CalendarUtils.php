@@ -121,4 +121,108 @@ class CalendarUtils {
 					
 					return $arr;
 	}
+        
+        /**
+     * Build array of datetimes for recurring meetings
+     * @param string $date_start
+     * @param array $params
+     * @return array
+     */
+    static function build_repeat_sequence($date_start, $params) {
+
+        $arr = array();
+
+        $type = $params['type'];
+        $interval = intval($params['interval']);
+        if ($interval < 1)
+            $interval = 1;
+
+        if (!empty($params['count'])) {
+            $count = $params['count'];
+            if ($count < 1)
+                $count = 1;
+        }else
+            $count = 0;
+
+        if (!empty($params['until'])) {
+            $until = $params['until'];
+        }else
+            $until = $date_start;
+
+        if ($type == "Weekly") {
+            $dow = $params['dow'];
+            if ($dow == "") {
+                return array();
+            }
+        }
+
+        /**
+         * @var SugarDateTime $start Recurrence start date.
+         */
+        $start = SugarDateTime::createFromFormat($GLOBALS['timedate']->get_date_time_format(), $date_start);
+        /**
+         * @var SugarDateTime $end Recurrence end date. Used if recurrence ends by date.
+         */
+        if (!empty($params['until'])) {
+            $end = SugarDateTime::createFromFormat($GLOBALS['timedate']->get_date_format(), $until);
+            $end->modify("+1 Day");
+        } else {
+            $end = $start;
+        }
+        $current = clone $start;
+
+        $i = 1; // skip the first iteration
+        $w = $interval; // for week iteration
+        $last_dow = $start->format("w");
+
+        $limit = SugarConfig::getInstance()->get('calendar.max_repeat_count', 1000);
+
+        while ($i < $count || ($count == 0 && $current->format("U") < $end->format("U"))) {
+            $skip = false;
+            switch ($type) {
+                case "Daily":
+                    $current->modify("+{$interval} Days");
+                    break;
+                case "Weekly":
+                    $day_index = $last_dow;
+                    for ($d = $last_dow + 1; $d <= $last_dow + 7; $d++) {
+                        $day_index = $d % 7;
+                        if (strpos($dow, (string) ($day_index)) !== false) {
+                            break;
+                        }
+                    }
+                    $step = $day_index - $last_dow;
+                    $last_dow = $day_index;
+                    if ($step <= 0) {
+                        $step += 7;
+                        $w++;
+                    }
+                    if ($w % $interval != 0)
+                        $skip = true;
+
+                    $current->modify("+{$step} Days");
+                    break;
+                case "Monthly":
+                    $current->modify("+{$interval} Months");
+                    break;
+                case "Yearly":
+                    $current->modify("+{$interval} Years");
+                    break;
+                default:
+                    return array();
+            }
+
+            if ($skip)
+                continue;
+
+            if (($i < $count || $count == 0 && $current->format("U") < $end->format("U"))) {
+                $arr[] = $current->format($GLOBALS['timedate']->get_date_time_format());
+            }
+            $i++;
+
+            if ($i > $limit + 100)
+                break;
+        }
+        return $arr;
+    }
 }

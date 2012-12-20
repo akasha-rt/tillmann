@@ -219,6 +219,16 @@ class HomeController extends SugarController {
         exit;
     }
 
+//  @niranjan-Start 24/11/2012 for  Priority Task   
+    public function action_updatetask() {
+        $tasks = new Task();
+        $tasks = $tasks->retrieve($_REQUEST['record']);
+        $tasks->status = 'Completed';
+        $tasks->save();
+        exit;
+    }
+
+//  @niranjan-End 
 }
 
 ?>
