@@ -250,14 +250,14 @@ ALTER TABLE  `tasks_cstm` ADD  `is_priority_c` TINYINT( 1 ) NULL DEFAULT  '0'
 for recursive tasks
 INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksis_recursive_c', 'is_recursive_c', 'LBL_IS_RECURSIVE_C', NULL, NULL, 'Tasks', 'bool', '255', '0', NULL, NULL, '0', '0', '0', '0', '1', NULL, NULL, NULL, NULL, NULL);
 
-ALTER TABLE  `tasks_cstm` ADD  `is_recursive_c` INT( 11 ) NULL DEFAULT  '0'
-ALTER TABLE  `tasks_cstm` ADD  `repeat_type_c` VARCHAR( 36 ) NULL DEFAULT NULL
-ALTER TABLE  `tasks_cstm` ADD  `repeat_interval_c` INT( 3 ) NULL DEFAULT  '1'
-ALTER TABLE  `tasks_cstm` ADD  `repeat_dow_c` VARCHAR( 255 ) NULL DEFAULT NULL
-ALTER TABLE  `tasks_cstm` ADD  `repeat_until_c` DATE NULL DEFAULT NULL
-ALTER TABLE  `tasks_cstm` ADD  `repeat_count_c` INT( 7 ) NULL DEFAULT NULL
-ALTER TABLE  `tasks_cstm` ADD  `repeat_parent_id_c` CHAR( 36 ) NULL DEFAULT NULL
-ALTER TABLE  `tasks_cstm` ADD  `recurring_source_c` VARCHAR( 36 ) NULL DEFAULT NULL
+ALTER TABLE  `tasks_cstm` ADD  `is_recursive_c` INT( 11 ) NULL DEFAULT  '0';
+ALTER TABLE  `tasks_cstm` ADD  `repeat_type_c` VARCHAR( 36 ) NULL DEFAULT NULL;
+ALTER TABLE  `tasks_cstm` ADD  `repeat_interval_c` INT( 3 ) NULL DEFAULT  '1';
+ALTER TABLE  `tasks_cstm` ADD  `repeat_dow_c` VARCHAR( 255 ) NULL DEFAULT NULL;
+ALTER TABLE  `tasks_cstm` ADD  `repeat_until_c` DATE NULL DEFAULT NULL;
+ALTER TABLE  `tasks_cstm` ADD  `repeat_count_c` INT( 7 ) NULL DEFAULT NULL;
+ALTER TABLE  `tasks_cstm` ADD  `repeat_parent_id_c` CHAR( 36 ) NULL DEFAULT NULL;
+ALTER TABLE  `tasks_cstm` ADD  `recurring_source_c` VARCHAR( 36 ) NULL DEFAULT NULL;
 
 INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Tasksrepeat_type_c', 'repeat_type_c', 'LBL_REPEAT_TYPE', NULL, NULL, 'Tasks', 'varchar', '255', '0', NULL, '2012-12-17 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
 

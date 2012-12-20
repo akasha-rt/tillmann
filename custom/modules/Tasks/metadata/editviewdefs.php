@@ -137,6 +137,11 @@ $viewdefs ['Tasks'] =
                     array(
                         0 =>
                         array(
+                            0 => 'orderid_c',
+                            1 => 'created_by_name'
+                        ),
+                        1 =>
+                        array(
                             0 => 'assigned_user_name',
                         ),
                     ),
