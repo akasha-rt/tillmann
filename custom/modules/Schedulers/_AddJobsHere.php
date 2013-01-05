@@ -10,6 +10,7 @@ if (!defined('sugarEntry') || !sugarEntry)
 //Add the new job type to the Option in the job dropdown in scheduler
 $job_strings[] = 'createOppFromCase';
 $job_strings[] = 'checkOpportunitySalesData';
+$job_strings[] = 'processOverDueCase';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -200,6 +201,107 @@ function checkOpportunitySalesData() {
     }
 
     //Return true to notify the successfull execution of the job
+    return true;
+}
+
+/**
+ * TO process Overdue payment Cases
+ * @global type $sugar_config
+ * @global type $db
+ * @return boolean
+ */
+function processOverDueCase() {
+    $GLOBALS['log']->debug('Custom Scheduler : Starting processOverDueCase');
+    global $sugar_config;
+    global $db;
+
+    require_once 'modules/Cases/Case.php';
+    require_once 'modules/EmailTemplates/EmailTemplate.php';
+    require_once 'modules/Emails/Email.php';
+    require_once 'include/SugarPHPMailer.php';
+    require_once 'modules/Notes/Note.php';
+
+    $sql = "SELECT id,overdue_payment_c,customer_name_c,invoice_no_c,customer_email_c 
+                FROM cases LEFT JOIN cases_cstm 
+                    ON cases.id = cases_cstm.id_c
+            WHERE cases.deleted=0 AND cases_cstm.overdue_payment_c = 'true'";
+    $result = $db->query($sql);
+    while ($overDueCase = $db->fetchByAssoc($result)) {
+
+        $bean = new aCase();
+        $bean->retrieve($overDueCase['id']);
+        $bean->overdue_payment_c = $overDueCase['overdue_payment_c'];
+        $bean->customer_name_c = $overDueCase['customer_name_c'];
+        $bean->invoice_no_c = $overDueCase['invoice_no_c'];
+        $bean->customer_email_c = $overDueCase['customer_email_c'];
+
+        //Send email
+        $emailtemplate = new EmailTemplate();
+        $emailtemplate = $emailtemplate->retrieve('36223cdd-e360-6a60-dee0-50e6aa2550b0');
+
+        $email_body = $emailtemplate->body_html;
+        $email_body = str_replace('$customer_name_c', $bean->customer_name_c, $email_body);
+        $email_body = str_replace('$invoice_no_c', $bean->invoice_no_c, $email_body);
+
+        //Correct the subject
+        $mailSubject = $emailtemplate->subject;
+        $mailSubject = str_replace('$invoice_no_c', $bean->invoice_no_c, $mailSubject);
+
+        //$bean->customer_email_c = 'dhaval@india.biztechconsultancy.com';
+        $email_address = $bean->customer_email_c;
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = from_html($email_body);
+
+        //For attachment
+        $bean->load_relationship('notes');
+        foreach ($bean->notes->getBeans(new Note()) as $note) {
+            $noteId = $note->id;
+        }
+        $filename_attach = 'Invoice-' . $bean->invoice_no_c . '_' . date('Ymd') . '.pdf';
+        $file_location = $sugar_config['upload_dir'] . $noteId;
+        $mime_type = 'application/pdf';
+        $mail->AddAttachment($file_location, $filename_attach, 'base64', $mime_type); //Attach each file to message
+        //End - attachment
+        $mail->prepForOutbound();
+        $address = $email_address;
+        $mail->AddAddress($email_address);
+
+        if ($mail->Send()) {
+            $emailObj->to_addrs = $address;
+            $emailObj->type = 'out';
+            $emailObj->deleted = '0';
+            $emailObj->name = $subject;
+            $emailObj->description = null;
+            $emailObj->description_html = from_html($email_body);
+            $emailObj->from_addr = $defaults['email'];
+            $emailObj->parent_type = 'Cases';
+            $emailObj->parent_id = $bean->id;
+            $emailObj->attachments = $mail->attachment;
+            $user_id = 'c01295a1-6e11-1c36-099b-4fe99aef1381';
+            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+            $emailObj->assigned_user_id = $user_id;
+            $emailObj->modified_user_id = $user_id;
+            $emailObj->created_by = $user_id;
+            $emailObj->status = 'sent';
+            $emailObj->save();
+            //Save case and reset flag
+            $bean->overdue_payment_c = '';
+            $bean->save();
+        } else {
+            $mail_msg = $mail->ErrorInfo;
+        }
+    }
     return true;
 }
 
