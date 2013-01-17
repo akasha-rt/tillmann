@@ -9,10 +9,9 @@ class AccountsController extends SugarController {
         $id = $_REQUEST['id'];
         $accName = $_REQUEST['accName'];
         require_once "custom/modules/Accounts/chart/Includes/FusionCharts.php";
-
-        $sql = "SELECT MONTH(date_entered) AS res_month,COUNT(id) res_count FROM ((SELECT DISTINCT
-                          tasks.id,
-                          tasks.date_entered AS date_entered
+        $sql_task = "SELECT DISTINCT
+                          COUNT(tasks.id) AS res_count,
+                          MONTH(tasks.date_entered) AS res_month
                         FROM tasks
                           INNER JOIN contacts contacts
                             ON (tasks.contact_id = contacts.id OR tasks.parent_id = contacts.id)
@@ -29,11 +28,19 @@ class AccountsController extends SugarController {
                                AND (tasks.status = 'Completed'
                                      OR tasks.status = 'Deferred'))
                             AND tasks.deleted = 0
-                            AND (tasks.parent_type = 'Accounts' OR tasks.parent_type = 'Contacts'))
-                        UNION ALL 
-                        (SELECT DISTINCT
-                          meetings.id,
-                          meetings.date_entered AS date_entered
+                            AND (tasks.parent_type = 'Accounts' OR tasks.parent_type = 'Contacts')
+                            AND YEAR(tasks.date_entered)=YEAR(CURDATE())
+                            GROUP BY MONTH(tasks.date_entered)";
+        $result_task = $db->query($sql_task);
+        $task = array();
+        while ($row_task = $db->fetchByAssoc($result_task)) {
+            $task[$row_task['res_month']] = $row_task['res_count'];
+        }
+
+
+        $sql_meeting = "SELECT DISTINCT
+                          COUNT(meetings.id) AS res_count,
+                          MONTH(meetings.date_entered) AS res_month
                         FROM meetings
                           INNER JOIN accounts meetings_rel
                             ON meetings.parent_id = meetings_rel.id
@@ -50,11 +57,19 @@ class AccountsController extends SugarController {
                                AND (meetings.status = 'Held'
                                      OR meetings.status = 'Not Held'))
                             AND meetings.deleted = 0
-                            AND (meetings.parent_type = 'Accounts' OR meetings.parent_type = 'Contacts')) 
-                        UNION ALL 
-                        (SELECT DISTINCT
-                          calls.id,
-                          calls.date_entered AS date_entered
+                            AND (meetings.parent_type = 'Accounts' OR meetings.parent_type = 'Contacts')
+                            AND YEAR(meetings.date_entered)=YEAR(CURDATE())
+                            GROUP BY MONTH(meetings.date_entered)";
+        $result_meeting = $db->query($sql_meeting);
+        $meeting = array();
+        while ($row_meeting = $db->fetchByAssoc($result_meeting)) {
+            $meeting[$row_meeting['res_month']] = $row_meeting['res_count'];
+        }
+
+
+        $sql_call = "SELECT DISTINCT
+                          COUNT(calls.id) AS res_count,
+                          MONTH(calls.date_entered) AS res_month
                         FROM calls
                          INNER JOIN accounts calls_rel
                             ON calls.parent_id = calls_rel.id
@@ -71,11 +86,18 @@ class AccountsController extends SugarController {
                                AND (calls.status = 'Held'
                                      OR calls.status = 'Not Held'))
                             AND calls.deleted = 0
-                            AND (calls.parent_type = 'Accounts' OR calls.parent_type = 'Contacts')) 
-                        UNION ALL 
-                        (SELECT DISTINCT
-                          notes.id,
-                          notes.date_entered AS date_entered
+                            AND (calls.parent_type = 'Accounts' OR calls.parent_type = 'Contacts')
+                            AND YEAR(calls.date_entered)=YEAR(CURDATE())
+                            GROUP BY MONTH(calls.date_entered)";
+        $result_call = $db->query($sql_call);
+        $call = array();
+        while ($row_call = $db->fetchByAssoc($result_call)) {
+            $call[$row_call['res_month']] = $row_call['res_count'];
+        }
+
+        $sql_note = "SELECT DISTINCT
+                          COUNT(notes.id) AS res_count,
+                          MONTH(notes.date_entered) AS res_month
                         FROM notes
                           INNER JOIN contacts contacts
                             ON (notes.contact_id = contacts.id
@@ -92,11 +114,19 @@ class AccountsController extends SugarController {
                         WHERE (notes.parent_id = '{$id}'
                                 OR accounts_contacts.account_id = '{$id}')
                             AND notes.deleted = 0                              
-                            AND (notes.parent_type = 'Accounts' OR notes.parent_type = 'Contacts')) 
-                        UNION ALL 
-                        (SELECT
-                              emails.id,
-                          emails.date_entered AS date_entered
+                            AND (notes.parent_type = 'Accounts' OR notes.parent_type = 'Contacts')
+                            AND YEAR(notes.date_entered)=YEAR(CURDATE())
+                            GROUP BY MONTH(notes.date_entered)";
+        $result_note = $db->query($sql_note);
+        $note = array();
+        while ($row_note = $db->fetchByAssoc($result_note)) {
+            $note[$row_note['res_month']] = $row_note['res_count'];
+        }
+
+
+        $sql_email = "SELECT
+                              COUNT(emails.id) AS res_count,
+                          MONTH(emails.date_entered) AS res_month
                             FROM emails 
                               LEFT JOIN contacts
                               ON emails.parent_id = contacts.id
@@ -124,11 +154,17 @@ class AccountsController extends SugarController {
                     ON contacts.id = accounts_contacts.contact_id
                     WHERE contacts.deleted = 0
                     AND accounts.deleted = 0
-                    AND accounts.id = '{$id}'))) 
-                                         UNION ALL 
-                                         (SELECT
-                                           emails.id,
-                                       emails.date_entered AS date_entered
+                    AND accounts.id = '{$id}'))
+                    AND YEAR(emails.date_entered)=YEAR(CURDATE())
+                    GROUP BY MONTH(emails.date_entered)";
+        $result_email = $db->query($sql_email);
+        $email = array();
+        while ($row_email = $db->fetchByAssoc($result_email)) {
+            $email[$row_email['res_month']] = $row_email['res_count'];
+        }
+        $sql_email1 = "   SELECT            
+                                    MONTH(emails.date_entered) AS res_month, 
+                                           COUNT(emails.id) AS res_count
                                          FROM emails
                                            JOIN (SELECT DISTINCT
                                                    email_id
@@ -152,10 +188,21 @@ class AccountsController extends SugarController {
                                                  WHERE eear.deleted = 0
                                          ) derivedemails
                                              ON derivedemails.email_id = emails.id
-                                         WHERE emails.deleted = 0)) history WHERE YEAR(date_entered)=YEAR(CURDATE()) GROUP BY MONTH(date_entered) ORDER BY date_entered";
-        $result = $db->query($sql);
-
-
+                                         WHERE emails.deleted = 0
+                                         AND YEAR(emails.date_entered)=YEAR(CURDATE())
+                                         GROUP BY MONTH(emails.date_entered)";
+        $result_email1 = $db->query($sql_email1);
+        $email1 = array();
+        while ($row_email1 = $db->fetchByAssoc($result_email1)) {
+            $email1[$row_email1['res_month']] = $row_email1['res_count'];
+        }
+        $resultant_array = array($task, $meeting, $call, $note, $email, $email1);
+        $sumArray = array();
+        foreach ($resultant_array as $k => $subArray) {
+            foreach ($subArray as $id => $value) {
+                $sumArray[$id]+=$value;
+            }
+        }
         echo'<script type="text/javascript">
             function closeItemHistoryChart(){                    
                 $("#historydetail_div").fadeOut("slow");
@@ -184,10 +231,10 @@ class AccountsController extends SugarController {
         $status = array();
         $i = 1;
         $sum = 0;
-        while ($row = $db->fetchByAssoc($result)) {
-            $status[$i]['name'] = $row['res_month'];
-            $status[$i]['value'] = $row['res_count'];
-            $sum = $sum + $row['res_count'];
+        foreach ($sumArray as $month => $count) {
+            $status[$i]['name'] = $month;
+            $status[$i]['value'] = $count;
+            $sum = $sum + $count;
             $i++;
         }
         echo '<fieldset><legend><strong>Account History Item Detail</strong></legend>';
