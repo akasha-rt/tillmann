@@ -20,27 +20,28 @@ function createOppFromCase() {
 
     global $db;
     $case_list = $db->query("SELECT
-                              c.id,
-                              c.name,
-                              c.description,
-                              c.assigned_user_id,
-                              c.case_number,
-                              c_c.contact_id
-                            FROM cases c
-                              LEFT JOIN contacts_cases c_c
-                                ON c.id = c_c.case_id
-                            WHERE DATE_ADD(c.date_modified,INTERVAL 14 DAY) <= NOW()
-                                AND c.status = 'Closed'
-                                AND c.convertedtoopp = '0'
-                                AND c.deleted = 0
-                                AND c_c.deleted = 0
-                                AND c.id IN(SELECT
-                                                c_a.parent_id
-                                            FROM cases_audit c_a
-                                            WHERE (c_a.before_value_string != 'PO'
-                                                   AND c_a.after_value_string != 'PO')
-                                                AND c_a.field_name = 'status')
-                                 GROUP By c.id");
+                                c.id,
+                                c.name,
+                                c.description,
+                                c.assigned_user_id,
+                                c.case_number,
+                                c_c.contact_id
+                              FROM cases c
+                                INNER JOIN contacts_cases c_c
+                                  ON c.id = c_c.case_id
+                                    AND c_c.deleted = 0
+                                INNER JOIN cases_audit c_adt
+                                  ON c_adt.parent_id = c.id
+                                    AND c_adt.before_value_string != 'PO'
+                                    AND c_adt.after_value_string != 'PO'
+                                    AND c_adt.field_name = 'status'
+                                    AND c_adt.after_value_string = 'Closed'
+                              WHERE DATE_ADD(c_adt.date_created,INTERVAL 7 DAY) <= NOW()
+                                  AND c.status = 'Closed'
+                                  AND c.convertedtoopp = '0'
+                                  AND c.deleted = 0
+                                  AND c_c.deleted = 0
+                              GROUP BY c.id");
     while ($case = $db->fetchByAssoc($case_list)) {
         //$op->id = create_guid();  //if id is set save() will update the record if not then will insert new row
         $op->name = $case['name'];
