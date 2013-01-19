@@ -2580,6 +2580,14 @@ eoq;
                 "{$ret['name']} ({$ret['email']}){$myAccountString}");
         }
 
+        //change by bc - Put Personal-settign First in FromAddress DropDown -19/01/2013
+        foreach($ieAccountsFrom as $index =>$setArr){
+            if(strpos($setArr['text'],$current_user->full_name)!== FALSE && strpos($setArr['text'],$current_user->email1)!== FALSE){
+                unset($ieAccountsFrom[$index]);
+                array_unshift($ieAccountsFrom, $setArr);
+            }
+        }
+        //End - bc
         return $ieAccountsFrom;
     }
 
