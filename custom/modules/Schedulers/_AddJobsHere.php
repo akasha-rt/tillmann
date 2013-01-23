@@ -368,7 +368,7 @@ function processPOAndVATCases() {
             continue;
         }
 
-        $bean->customer_email_c = 'dhaval@india.biztechconsultancy.com';
+        //$bean->customer_email_c = 'dhaval@india.biztechconsultancy.com';
         $email_address = $bean->customer_email_c;
 
         $emailObj = new Email();
