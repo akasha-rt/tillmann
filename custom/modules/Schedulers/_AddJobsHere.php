@@ -11,6 +11,7 @@ if (!defined('sugarEntry') || !sugarEntry)
 $job_strings[] = 'createOppFromCase';
 $job_strings[] = 'checkOpportunitySalesData';
 $job_strings[] = 'processOverDueCase';
+$job_strings[] = 'processPOAndVATCases';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -238,7 +239,7 @@ function processOverDueCase() {
 
         //Send email
         $emailtemplate = new EmailTemplate();
-        $emailtemplate = $emailtemplate->retrieve('36223cdd-e360-6a60-dee0-50e6aa2550b0');
+        $emailtemplate = $emailtemplate->retrieve('34565e1a-257d-c1af-0eba-50e7a45b7b60');
 
         $email_body = $emailtemplate->body_html;
         $email_body = str_replace('$customer_name_c', $bean->customer_name_c, $email_body);
@@ -298,6 +299,114 @@ function processOverDueCase() {
             $emailObj->save();
             //Save case and reset flag
             $bean->overdue_payment_c = '';
+            $bean->save();
+        } else {
+            $mail_msg = $mail->ErrorInfo;
+        }
+    }
+    return true;
+}
+
+function processPOAndVATCases() {
+    $GLOBALS['log']->debug('Custom Scheduler : Starting processPOAndVATCases');
+    global $db;
+
+    require_once 'modules/Cases/Case.php';
+    require_once 'modules/EmailTemplates/EmailTemplate.php';
+    require_once 'modules/Emails/Email.php';
+    require_once 'include/SugarPHPMailer.php';
+    require_once 'modules/Notes/Note.php';
+
+    $sql = "SELECT
+            cases.id                    AS id,
+            cases_cstm.customer_name_c  AS customer_name,
+            cases_cstm.customer_email_c AS customer_email,
+            cases_cstm.po_number_c      AS po_number,
+            cases_cstm.vat_number_c     AS vat_number,
+            cases_cstm.order_number_c   AS order_number,
+            cases.case_number           AS case_number
+          FROM cases cases
+            LEFT JOIN cases_cstm cases_cstm
+              ON cases.id = cases_cstm.id_c
+          WHERE cases.deleted = 0
+              AND ((cases_cstm.po_number_c != ''
+                    AND cases_cstm.po_number_c IS NOT NULL)
+                    OR (cases_cstm.vat_number_c != ''
+                        AND cases_cstm.vat_number_c IS NOT NULL))";
+    $result = $db->query($sql);
+    while ($PO_VAT_Case = $db->fetchByAssoc($result)) {
+
+        $bean = new aCase();
+        $bean->retrieve($PO_VAT_Case['id']);
+        $bean->customer_name_c = $PO_VAT_Case['customer_name'];
+        $bean->customer_email_c = $PO_VAT_Case['customer_email'];
+        $bean->customer_po_number_c = $PO_VAT_Case['po_number'];
+        $bean->customer_vat_number_c = $PO_VAT_Case['vat_number'];
+        $bean->customer_order_number_c = $PO_VAT_Case['order_number'];
+        $bean->customer_case_number = $PO_VAT_Case['case_number'];
+
+        //Send email
+        $emailtemplate = new EmailTemplate();
+        if (!is_null($PO_VAT_Case['po_number']) && $PO_VAT_Case['po_number'] != "") {
+            $emailtemplate = $emailtemplate->retrieve('9a5243cf-982c-3c64-bd3c-50ff8ee7171f');
+            $email_body = $emailtemplate->body_html;
+            $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
+            $email_body = str_replace('$po_number', $bean->customer_po_number_c, $email_body);
+            $email_body = str_replace('$order_number', $bean->customer_order_number_c, $email_body);
+            $email_body = str_replace('$case_No', $bean->customer_case_number, $email_body);
+            $mailSubject = $emailtemplate->subject;
+            $mailSubject = str_replace('$order_number', $bean->customer_order_number_c, $mailSubject);
+        } elseif (!is_null($PO_VAT_Case['vat_number']) && $PO_VAT_Case['vat_number'] != "") {
+            $emailtemplate = $emailtemplate->retrieve('47062b68-ad29-beb2-454c-50ff8e5e4572');
+            $email_body = $emailtemplate->body_html;
+            $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
+            $email_body = str_replace('$order_number', $bean->customer_order_number_c, $email_body);
+            $email_body = str_replace('$case_No', $bean->customer_case_number, $email_body);
+            $mailSubject = $emailtemplate->subject;
+            $mailSubject = str_replace('$order_number', $bean->customer_order_number_c, $mailSubject);
+        } else {
+            continue;
+        }
+
+        $bean->customer_email_c = 'dhaval@india.biztechconsultancy.com';
+        $email_address = $bean->customer_email_c;
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = from_html($email_body);
+
+        $mail->prepForOutbound();
+        $address = $email_address;
+        $mail->AddAddress($email_address);
+
+        if ($mail->Send()) {
+            $emailObj->to_addrs = $address;
+            $emailObj->type = 'out';
+            $emailObj->deleted = '0';
+            $emailObj->name = $subject;
+            $emailObj->description = null;
+            $emailObj->description_html = from_html($email_body);
+            $emailObj->from_addr = $defaults['email'];
+            $emailObj->parent_type = 'Cases';
+            $emailObj->parent_id = $bean->id;
+            $user_id = 'c01295a1-6e11-1c36-099b-4fe99aef1381';
+            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+            $emailObj->assigned_user_id = $user_id;
+            $emailObj->modified_user_id = $user_id;
+            $emailObj->created_by = $user_id;
+            $emailObj->status = 'sent';
+            $emailObj->save();
+            $bean->customer_po_number_c = NULL;
+            $bean->customer_vat_number_c = NULL;
             $bean->save();
         } else {
             $mail_msg = $mail->ErrorInfo;

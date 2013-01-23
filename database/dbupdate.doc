@@ -288,3 +288,14 @@ ADD  `customer_name_c` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci
 INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
 ('Casescustomer_name_c', 'customer_name_c', 'LBL_CUSTOMER_NAME', '', '', 'Cases', 'varchar', 255, 0, '', '2013-01-04 10:03:11', 0, 0, 0, 0, 1, 'true', '', '', '', ''),
 ('Casesinvoice_no_c', 'invoice_no_c', 'LBL_INVOICE_NO', '', '', 'Cases', 'varchar', 255, 0, '', '2013-01-04 10:02:33', 0, 0, 0, 0, 1, 'true', '', '', '', '');
+
+
+@dhaval - 23_1_13
+Handle po and vat cases email
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Casespo_number_c', 'po_number_c', 'LBL_PO_NUMBER', NULL, NULL, 'Cases', 'varchar', '255', '0', NULL, '2013-01-22 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Casesorder_number_c', 'order_number_c', 'LBL_ORDER_NUMBER', NULL, NULL, 'Cases', 'varchar', '255', '0', NULL, '2013-01-22 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Casesvat_number_c', 'vat_number_c', 'LBL_VAT_NUMBER', NULL, NULL, 'Cases', 'varchar', '255', '0', NULL, '2013-01-22 00:00:00', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+
+ALTER TABLE  `cases_cstm` ADD  `po_number_c` VARCHAR( 255 ) NULL DEFAULT NULL;
+ALTER TABLE  `cases_cstm` ADD  `order_number_c` VARCHAR( 255 ) NULL DEFAULT NULL;
+ALTER TABLE  `cases_cstm` ADD  `vat_number_c` VARCHAR( 255 ) NULL DEFAULT NULL;
