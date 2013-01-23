@@ -405,8 +405,8 @@ function processPOAndVATCases() {
             $emailObj->created_by = $user_id;
             $emailObj->status = 'sent';
             $emailObj->save();
-            $bean->customer_po_number_c = NULL;
-            $bean->customer_vat_number_c = NULL;
+            $bean->customer_po_number_c = '';
+            $bean->customer_vat_number_c = '';
             $bean->save();
         } else {
             $mail_msg = $mail->ErrorInfo;
