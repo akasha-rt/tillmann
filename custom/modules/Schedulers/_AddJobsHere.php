@@ -340,10 +340,10 @@ function processPOAndVATCases() {
         $bean->retrieve($PO_VAT_Case['id']);
         $bean->customer_name_c = $PO_VAT_Case['customer_name'];
         $bean->customer_email_c = $PO_VAT_Case['customer_email'];
-        $bean->customer_po_number_c = $PO_VAT_Case['po_number'];
-        $bean->customer_vat_number_c = $PO_VAT_Case['vat_number'];
-        $bean->customer_order_number_c = $PO_VAT_Case['order_number'];
-        $bean->customer_case_number = $PO_VAT_Case['case_number'];
+        $bean->po_number_c = $PO_VAT_Case['po_number'];
+        $bean->vat_number_c = $PO_VAT_Case['vat_number'];
+        $bean->order_number_c = $PO_VAT_Case['order_number'];
+        $bean->case_number = $PO_VAT_Case['case_number'];
 
         //Send email
         $emailtemplate = new EmailTemplate();
@@ -351,19 +351,19 @@ function processPOAndVATCases() {
             $emailtemplate = $emailtemplate->retrieve('9a5243cf-982c-3c64-bd3c-50ff8ee7171f');
             $email_body = $emailtemplate->body_html;
             $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
-            $email_body = str_replace('$po_number', $bean->customer_po_number_c, $email_body);
-            $email_body = str_replace('$order_number', $bean->customer_order_number_c, $email_body);
-            $email_body = str_replace('$case_No', $bean->customer_case_number, $email_body);
+            $email_body = str_replace('$po_number', $bean->po_number_c, $email_body);
+            $email_body = str_replace('$order_number', $bean->order_number_c, $email_body);
+            $email_body = str_replace('$case_No', $bean->case_number, $email_body);
             $mailSubject = $emailtemplate->subject;
-            $mailSubject = str_replace('$order_number', $bean->customer_order_number_c, $mailSubject);
+            $mailSubject = str_replace('$order_number', $bean->order_number_c, $mailSubject);
         } elseif (!is_null($PO_VAT_Case['vat_number']) && $PO_VAT_Case['vat_number'] != "") {
             $emailtemplate = $emailtemplate->retrieve('47062b68-ad29-beb2-454c-50ff8e5e4572');
             $email_body = $emailtemplate->body_html;
             $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
-            $email_body = str_replace('$order_number', $bean->customer_order_number_c, $email_body);
-            $email_body = str_replace('$case_No', $bean->customer_case_number, $email_body);
+            $email_body = str_replace('$order_number', $bean->order_number_c, $email_body);
+            $email_body = str_replace('$case_No', $bean->case_number, $email_body);
             $mailSubject = $emailtemplate->subject;
-            $mailSubject = str_replace('$order_number', $bean->customer_order_number_c, $mailSubject);
+            $mailSubject = str_replace('$order_number', $bean->order_number_c, $mailSubject);
         } else {
             continue;
         }
@@ -405,8 +405,8 @@ function processPOAndVATCases() {
             $emailObj->created_by = $user_id;
             $emailObj->status = 'sent';
             $emailObj->save();
-            $bean->customer_po_number_c = '';
-            $bean->customer_vat_number_c = '';
+            $bean->po_number_c = '';
+            $bean->vat_number_c = '';
             $bean->save();
         } else {
             $mail_msg = $mail->ErrorInfo;
