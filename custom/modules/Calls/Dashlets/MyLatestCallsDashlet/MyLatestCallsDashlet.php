@@ -80,8 +80,8 @@ class MyLatestCallsDashlet extends DashletGeneric {
         $this->myItemsOnly = false;
         //query needs to be distinct to avoid multiple records being returned for the same meeting (one for each invited user), 
         //so we need to make sure date entered is also set so the sort can work with the group by
-        $lvsParams['custom_select'] = ', calls.date_start ';
-        $lvsParams['custom_where'] = ' And calls.date_start > DATE_SUB(Now(),INTERVAL 24 HOUR)';
+        $lvsParams['custom_select'] .= ', calls.date_start ';
+        $lvsParams['custom_where'] .= ' And (calls.date_start > DATE_SUB(Now(),INTERVAL 24 HOUR))';
 
         $lvsParams['distinct'] = true;
 
