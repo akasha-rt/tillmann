@@ -120,7 +120,8 @@ class CasesViewPopup extends ViewPopup {
             }
             $popup->storeQuery = new StoreQuery();
             if (!isset($_REQUEST['query'])) {
-                $popup->storeQuery->loadQuery($popup->module);
+                $popup->storeQuery->loadQuery($popup->module);                
+                unset($popup->storeQuery->query['request_data']);
                 $popup->storeQuery->populateRequest();
             } else {
                 $popup->storeQuery->saveFromRequest($popup->module);
