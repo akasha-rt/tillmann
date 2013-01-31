@@ -129,7 +129,7 @@ class CRMSummary extends DashletGenericBarChart {
     }
 
     protected function getNumberOfCallsQuery() {
-        return "SELECT COUNT(id) AS cnt_call FROM calls WHERE ({$this->where}) AND deleted = 0";
+        return "SELECT COUNT(id) AS cnt_call FROM calls WHERE ({$this->where}) AND deleted = 0 And (calls.date_start > DATE_SUB(Now(),INTERVAL 24 HOUR))";
     }
 
 }
