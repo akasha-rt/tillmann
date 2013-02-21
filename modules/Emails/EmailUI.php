@@ -1388,10 +1388,10 @@ eoq;
         $smarty->assign("userId", $email->assigned_user_id);
         $smarty->assign("userName", $email->assigned_user_name);
         $parent_types = $app_list_strings['record_type_display'];
-        if($_REQUEST['emailUIAction'] == 'getRelateForm'){
+        if ($_REQUEST['emailUIAction'] == 'getRelateForm') {
             $smarty->assign('parentOptions', get_select_options_with_id($parent_types, 'Cases'));
-        }else{
-        $smarty->assign('parentOptions', get_select_options_with_id($parent_types, $email->parent_type));
+        } else {
+            $smarty->assign('parentOptions', get_select_options_with_id($parent_types, $email->parent_type));
         }
 
         $quicksearch_js = '<script type="text/javascript" language="javascript">sqs_objects = ' . json_encode($sqs_objects) . '</script>';
@@ -2108,8 +2108,12 @@ eoq;
                     if ($myCase->id == NULL) {
                         $email->parent_type = '';
                     } else {
-                        $email->description_html .= str_replace('%1', $myCase->case_number, $myCaseMacro);
-                        $email->description .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                        //dhaval - if case ref already there then do not add
+                        if (!strpos($email->description_html, str_replace('%1', $myCase->case_number, $myCaseMacro))) {
+                            $email->description_html .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                            $email->description .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                        }
+                        //End - dhaval
                     }
                 }
                 //END - Dhaval
@@ -2581,8 +2585,8 @@ eoq;
         }
 
         //change by bc - Put Personal-settign First in FromAddress DropDown -19/01/2013
-        foreach($ieAccountsFrom as $index =>$setArr){
-            if(strpos($setArr['text'],$current_user->full_name)!== FALSE && strpos($setArr['text'],$current_user->email1)!== FALSE){
+        foreach ($ieAccountsFrom as $index => $setArr) {
+            if (strpos($setArr['text'], $current_user->full_name) !== FALSE && strpos($setArr['text'], $current_user->email1) !== FALSE) {
                 unset($ieAccountsFrom[$index]);
                 array_unshift($ieAccountsFrom, $setArr);
             }
