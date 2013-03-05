@@ -14,6 +14,10 @@ $viewdefs ['Cases'] =
                             1 => 'DUPLICATE',
                             2 => 'DELETE',
                             3 => 'FIND_DUPLICATES',
+                            4 =>
+                            array(
+                                'customCode' => '{if $fields.status.value != "Closed"} <input type="hidden" name="status" value=""><input type="hidden" name="isSave" value="false">  <input title="{$APP.LBL_CLOSE_BUTTON_TITLE}"  accesskey="{$APP.LBL_CLOSE_BUTTON_KEY}"  class="button"  onclick="this.form.status.value=\'Closed\'; this.form.action.value=\'Save\';this.form.return_module.value=\'Home\';this.form.isSave.value=true;this.form.return_action.value=\'index\'; this.form.return_id.value=\'{$fields.id.value}\'"  name="button1"  value="{$APP.LBL_CLOSE_BUTTON_TITLE}"  type="submit">{/if}',
+                            ),
                         ),
                     ),
                     'maxColumns' => '2',
@@ -54,7 +58,11 @@ $viewdefs ['Cases'] =
                         ),
                         1 =>
                         array(
-                            0 => 'status',
+                            0 =>
+                            array(
+                                'name' => 'status',
+                                'customCode' => '{$fields.status.value}',
+                            ),
                             1 => 'type',
                         ),
                         2 =>
