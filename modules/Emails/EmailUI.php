@@ -2109,7 +2109,7 @@ eoq;
                         $email->parent_type = '';
                     } else {
                         //dhaval - if case ref already there then do not add
-                        if (!strpos($email->description_html, str_replace('%1', $myCase->case_number, $myCaseMacro))) {
+                        if (!strpos($email->description, str_replace('%1', $myCase->case_number, $myCaseMacro)) && !strpos($email->description_html, str_replace('%1', $myCase->case_number, $myCaseMacro))) {
                             $email->description_html .= str_replace('%1', $myCase->case_number, $myCaseMacro);
                             $email->description .= str_replace('%1', $myCase->case_number, $myCaseMacro);
                         }
