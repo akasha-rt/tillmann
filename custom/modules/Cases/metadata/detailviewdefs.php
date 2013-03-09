@@ -75,7 +75,10 @@ $viewdefs ['Cases'] =
                         ),
                         3 =>
                         array(
-                            0 => 'description',
+                            0 => array(
+                                'name' => 'description',
+                                'customCode' => '{$DESCRIPTION}'
+                            ),
                         ),
                         4 =>
                         array(
