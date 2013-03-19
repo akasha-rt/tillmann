@@ -253,6 +253,13 @@ class Employee extends Person {
         }else{
             $where .= ' and users.portal_only = 0 ';
         }
+        if ($_REQUEST['action'] == 'Popup') {
+            if (empty($where)) {
+                $where = '  users.employee_status != "Terminated"';
+            } else {
+                $where .= ' and users.employee_status != "Terminated" ';
+            }
+        }
 
         //return parent method, specifying for array to be returned
         return parent::create_new_list_query($order_by, $where, $filter,$params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
