@@ -163,18 +163,19 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
             'to_email_addrs' => $namePlusEmail,
             'parent_type' => $data['parent_type'],
             'parent_id' => $data['parent_id'],
-            'cc_addrs'=>$data['cc_addrs'],
-            'bcc_addrs'=>$data['bcc_addrs'],
+            'cc_addrs' => $data['cc_addrs'],
+            'bcc_addrs' => $data['bcc_addrs'],
             //'parent_name' => $parentName,
             //'subject' => $subject,
             //'body' => $body,
             'parent_name' => ($data['parent_name']) ? $data['parent_name'] : $parentName,
-            'subject' => ($data['subject']) ? $data['subject'] : $subject,            
+            'subject' => ($data['subject']) ? $data['subject'] : $subject,
             'body' => ($body) ? $body : $data['body'],
             'attachments' => $attachments,
             'email_id' => $email_id,
         );
-    } else if (empty($data['parent_type']) && empty($data['parent_name'])) {        
+    } //change by bc - to correctly add original email body when mail is forwarded
+    else if (empty($data['parent_type']) && empty($data['parent_name']) && !($data['replyForward'])) {
         $namePlusEmail = '';
         if (isset($data['to_email_addrs'])) {
             $namePlusEmail = $data['to_email_addrs'];
@@ -188,15 +189,13 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
         }
         $ret = array(
             'to_email_addrs' => $namePlusEmail,
-            'subject' => ($data['subject']) ? $data['subject'] : $subject,    
-            'cc_addrs'=>$data['cc_addrs'],
-            'bcc_addrs'=>$data['bcc_addrs'],
-            'body' => ($body) ? $body : $data['body'],            
+            'subject' => ($data['subject']) ? $data['subject'] : $subject,
+            'cc_addrs' => $data['cc_addrs'],
+            'bcc_addrs' => $data['bcc_addrs'],
+            'body' => ($body) ? $body : $data['body'],
             'email_id' => $email_id,
         );
-        
-    }
-    else if (isset($_REQUEST['ListView'])) {
+    } else if (isset($_REQUEST['ListView'])) {
 
         $email = new Email();
         $namePlusEmail = $email->getNamePlusEmailAddressesForCompose($_REQUEST['action_module'], (explode(",", $_REQUEST['uid'])));
