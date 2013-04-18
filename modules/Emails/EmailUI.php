@@ -2110,8 +2110,10 @@ eoq;
                     } else {
                         //dhaval - if case ref already there then do not add
                         if (!strpos($email->description, str_replace('%1', $myCase->case_number, $myCaseMacro)) && !strpos($email->description_html, str_replace('%1', $myCase->case_number, $myCaseMacro))) {
-                            $email->description_html .= str_replace('%1', $myCase->case_number, $myCaseMacro);
-                            $email->description .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                            if(!is_null($email->description_html)) 
+                                $email->description_html .= str_replace('%1', $myCase->case_number, $myCaseMacro);
+                            if(!is_null($email->description))
+                                $email->description .= str_replace('%1', $myCase->case_number, $myCaseMacro);
                         }
                         //End - dhaval
                     }
