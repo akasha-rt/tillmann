@@ -16,15 +16,40 @@ $viewdefs ['Cases'] =
                             3 => 'FIND_DUPLICATES',
                             4 =>
                             array(
-                                'customCode' => '{if $fields.status.value != "Closed"} <input type="hidden" name="status" value=""><input type="hidden" name="isSave" value="false">  <input title="{$APP.LBL_CLOSE_BUTTON_TITLE}"  accesskey="{$APP.LBL_CLOSE_BUTTON_KEY}"  class="button"  onclick="this.form.status.value=\'Closed\'; this.form.action.value=\'Save\';this.form.return_module.value=\'Home\';this.form.isSave.value=true;this.form.return_action.value=\'index\'; this.form.return_id.value=\'{$fields.id.value}\'"  name="button1"  value="{$APP.LBL_CLOSE_BUTTON_TITLE}"  type="submit">{/if}',
+                                'customCode' => '
+                                    <input type="hidden" name="status" value="">
+                                    <input type="hidden" name="isSave" value="false">  
+                                    
+                                    {if $fields.status.value != "Closed"} 
+                                    <input title="{$APP.LBL_CLOSE_BUTTON_TITLE}"  accesskey="{$APP.LBL_CLOSE_BUTTON_KEY}"  
+                                        class="button"  onclick="this.form.status.value=\'Closed\'; 
+                                            this.form.action.value=\'Save\';
+                                            this.form.return_module.value=\'Home\';
+                                            this.form.return_action.value=\'index\';"  
+                                            name="button1"  value="{$APP.LBL_CLOSE_BUTTON_TITLE}"  type="submit">
+                                            {/if}',
                             ),
                             5 =>
                             array(
-                                'customCode' => '{if $fields.status.value != "pending_customer"} <input type="hidden" name="status" value="pending_customer"><input type="hidden" name="isSave" value="false">  <input title="{$APP.LBL_PENDING_CUSTOMER_BUTTON_TITLE}"  accesskey="{$APP.LBL_PENDING_CUSTOMER_BUTTON_TITLE}"  class="button"  onclick="this.form.status.value=\'pending_customer\'; this.form.action.value=\'Save\';this.form.return_module.value=\'Home\';this.form.return_action.value=\'index\';"  name="button2"  value="{$APP.LBL_PENDING_CUSTOMER_BUTTON_TITLE}"  type="submit">{/if}',
+                                'customCode' => '{if $fields.status.value != "pending_customer"} 
+                                    <input title="{$APP.LBL_PENDING_CUSTOMER_BUTTON_TITLE}"  accesskey="{$APP.LBL_PENDING_CUSTOMER_BUTTON_TITLE}"  
+                                        class="button"  onclick="this.form.status.value=\'pending_customer\'; 
+                                            this.form.action.value=\'Save\';
+                                            this.form.return_module.value=\'Home\';
+                                            this.form.return_action.value=\'index\';"  
+                                            name="button2"  value="{$APP.LBL_PENDING_CUSTOMER_BUTTON_TITLE}"  type="submit">
+                                            {/if}',
                             ),
                             6 =>
                             array(
-                                'customCode' => '{if $fields.status.value != "pending_supplier"} <input type="hidden" name="status" value="pending_supplier"><input type="hidden" name="isSave" value="false">  <input title="{$APP.LBL_PENDING_SUPPLIER_BUTTON_TITLE}"  accesskey="{$APP.LBL_PENDING_SUPPLIER_BUTTON_TITLE}"  class="button"  onclick="this.form.status.value=\'pending_supplier\'; this.form.action.value=\'Save\';this.form.return_module.value=\'Home\';this.form.return_action.value=\'index\';"  name="button3"  value="{$APP.LBL_PENDING_SUPPLIER_BUTTON_TITLE}"  type="submit">{/if}',
+                                'customCode' => '{if $fields.status.value != "pending_supplier"} 
+                                    <input title="{$APP.LBL_PENDING_SUPPLIER_BUTTON_TITLE}"  accesskey="{$APP.LBL_PENDING_SUPPLIER_BUTTON_TITLE}"  
+                                        class="button"  onclick="this.form.status.value=\'pending_supplier\'; 
+                                            this.form.action.value=\'Save\';
+                                            this.form.return_module.value=\'Home\';
+                                            this.form.return_action.value=\'index\';"  
+                                            name="button3"  value="{$APP.LBL_PENDING_SUPPLIER_BUTTON_TITLE}"  type="submit">
+                                            {/if}',
                             ),
                         ),
                     ),
@@ -69,7 +94,7 @@ $viewdefs ['Cases'] =
                             0 =>
                             array(
                                 'name' => 'status',
-                                //'customCode' => '{$fields.status.value}',
+                            //'customCode' => '{$fields.status.value}',
                             ),
                             1 => 'type',
                         ),
