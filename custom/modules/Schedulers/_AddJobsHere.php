@@ -244,6 +244,7 @@ function processOverDueCase() {
         $email_body = $emailtemplate->body_html;
         $email_body = str_replace('$customer_name_c', $bean->customer_name_c, $email_body);
         $email_body = str_replace('$invoice_no_c', $bean->invoice_no_c, $email_body);
+        $email_body = str_replace('$invoice_no_body_c', $bean->invoice_no_body_c, $email_body);
 
         //Correct the subject
         $mailSubject = $emailtemplate->subject;

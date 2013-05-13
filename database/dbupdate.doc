@@ -299,3 +299,9 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 ALTER TABLE  `cases_cstm` ADD  `po_number_c` VARCHAR( 255 ) NULL DEFAULT NULL;
 ALTER TABLE  `cases_cstm` ADD  `order_number_c` VARCHAR( 255 ) NULL DEFAULT NULL;
 ALTER TABLE  `cases_cstm` ADD  `vat_number_c` VARCHAR( 255 ) NULL DEFAULT NULL;
+
+
+@dhaval - 13_05_13
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Casesinvoice_no_body_c', 'invoice_no_body_c', 'LBL_INVOICE_NO_BODY_C', '', '', 'Cases', 'varchar', 255, 0, '', '2013-05-13 11:10:38', 0, 0, 0, 0, 1, 'true', '', '', '', '');
+ALTER TABLE  `cases_cstm` ADD `invoice_no_body_c` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL
