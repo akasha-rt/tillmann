@@ -151,6 +151,7 @@ function checkOpportunitySalesData() {
         $signature->retrieve_by_string_fields(array("user_id" => '1'));
 
         $email_body = $emailtemplate->body_html;
+        $email_body_plain = $emailtemplate->body;
         $email_body = str_replace('$contact_first_name', $name, $email_body);
         $email_body = str_replace('$contact_user_first_name', $assigned_user_name, $email_body);
         //add the signature
@@ -169,7 +170,7 @@ function checkOpportunitySalesData() {
         $subject = $mailSubject;
         $mail->Subject = $subject;
         $mail->Body = from_html($email_body);
-        $mail->AltBody = from_html($email_body);
+        $mail->AltBody = $email_body_plain;
         $mail->prepForOutbound();
         $address = $email_address;
         $mail->AddAddress($email_address);
@@ -179,7 +180,7 @@ function checkOpportunitySalesData() {
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
             $emailObj->name = $subject;
-            $emailObj->description = null;
+            $emailObj->description = $email_body_plain;
             $emailObj->description_html = from_html($email_body);
             $emailObj->from_addr = $defaults['email'];
             $emailObj->parent_type = 'Opportunities';
@@ -242,6 +243,8 @@ function processOverDueCase() {
         $emailtemplate = $emailtemplate->retrieve('34565e1a-257d-c1af-0eba-50e7a45b7b60');
 
         $email_body = $emailtemplate->body_html;
+        //for plain text supported email client
+        $email_body_plain = $emailtemplate->body;
         $email_body = str_replace('$customer_name_c', $bean->customer_name_c, $email_body);
         $email_body = str_replace('$invoice_no_c', $bean->invoice_no_c, $email_body);
         $email_body = str_replace('$invoice_no_body_c', $bean->invoice_no_body_c, $email_body);
@@ -265,8 +268,7 @@ function processOverDueCase() {
         $subject = $mailSubject;
         $mail->Subject = $subject;
         $mail->Body = from_html($email_body);
-        $mail->AltBody = from_html($email_body);
-
+        $mail->AltBody = $email_body_plain; //Sets the text-only body of the message.
         //For attachment
         $bean->load_relationship('notes');
         foreach ($bean->notes->getBeans(new Note()) as $note) {
@@ -286,7 +288,7 @@ function processOverDueCase() {
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
             $emailObj->name = $subject;
-            $emailObj->description = null;
+            $emailObj->description = $email_body_plain; //Sets the text-only body of the message.
             $emailObj->description_html = from_html($email_body);
             $emailObj->from_addr = $defaults['email'];
             $emailObj->parent_type = 'Cases';
@@ -352,6 +354,7 @@ function processPOAndVATCases() {
         if (!is_null($PO_VAT_Case['po_number']) && $PO_VAT_Case['po_number'] != "") {
             $emailtemplate = $emailtemplate->retrieve('9a5243cf-982c-3c64-bd3c-50ff8ee7171f');
             $email_body = $emailtemplate->body_html;
+            $email_body_plain = $emailtemplate->body;
             $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
             $email_body = str_replace('$po_number', $bean->po_number_c, $email_body);
             $email_body = str_replace('$order_number', $bean->order_number_c, $email_body);
@@ -361,6 +364,7 @@ function processPOAndVATCases() {
         } elseif (!is_null($PO_VAT_Case['vat_number']) && $PO_VAT_Case['vat_number'] != "") {
             $emailtemplate = $emailtemplate->retrieve('47062b68-ad29-beb2-454c-50ff8e5e4572');
             $email_body = $emailtemplate->body_html;
+            $email_body_plain = $emailtemplate->body;
             $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
             $email_body = str_replace('$order_number', $bean->order_number_c, $email_body);
             $email_body = str_replace('$case_No', $bean->case_number, $email_body);
@@ -384,7 +388,7 @@ function processPOAndVATCases() {
         $subject = $mailSubject;
         $mail->Subject = $subject;
         $mail->Body = from_html($email_body);
-        $mail->AltBody = from_html($email_body);
+        $mail->AltBody = $email_body_plain;
 
         $mail->prepForOutbound();
         $address = $email_address;
@@ -395,7 +399,7 @@ function processPOAndVATCases() {
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
             $emailObj->name = $subject;
-            $emailObj->description = null;
+            $emailObj->description = $email_body_plain;
             $emailObj->description_html = from_html($email_body);
             $emailObj->from_addr = $defaults['email'];
             $emailObj->parent_type = 'Cases';
