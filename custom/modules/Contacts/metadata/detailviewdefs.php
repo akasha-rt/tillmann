@@ -113,6 +113,7 @@ array (
             'name' => 'description',
             'comment' => 'Full text of the note',
             'label' => 'LBL_DESCRIPTION',
+            'customCode' => '{$DESCRIPTION}',
           ),
           1 => 
           array (
