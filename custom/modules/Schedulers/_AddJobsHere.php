@@ -12,6 +12,7 @@ $job_strings[] = 'createOppFromCase';
 $job_strings[] = 'checkOpportunitySalesData';
 $job_strings[] = 'processOverDueCase';
 $job_strings[] = 'processPOAndVATCases';
+$job_strings[] = 'updateCaseStatusOnModification';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -417,6 +418,23 @@ function processPOAndVATCases() {
         } else {
             $mail_msg = $mail->ErrorInfo;
         }
+    }
+    return true;
+}
+
+function updateCaseStatusOnModification() {
+    global $db;
+    $query = "SELECT id
+              FROM cases
+              WHERE 5 * ( DATEDIFF( DATE( NOW( ) ) , date_modified ) 
+              DIV 7 ) + MID(  '0123444401233334012222340111123400012345001234550', 7 * WEEKDAY( date_modified ) + 
+              WEEKDAY( NOW( ) ) +1, 1 )  > 2 AND status IN('Pending Input','pending_customer','pending_supplier') AND deleted = 0";
+    $result = $db->query($query);
+    $case = new aCase();
+    while ($row_case = $db->fetchByAssoc($result)) {
+        $case->retrieve($row_case['id']);
+        $case->status = "Open";
+        $case->save();
     }
     return true;
 }

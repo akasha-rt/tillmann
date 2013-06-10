@@ -12,4 +12,5 @@ $mod_strings ['LBL_CREATEOPPFROMCASE'] = 'createOppFromCase';
 $mod_strings ['LBL_CHECKOPPORTUNITYSALESDATA'] = 'checkOpportunitySalesData';
 $mod_strings ['LBL_PROCESSOVERDUECASE'] = 'processOverDueCase';
 $mod_strings ['LBL_PROCESSPOANDVATCASES'] = 'processPOAndVATCases';
+$mod_strings ['LBL_UPDATECASESTATUSONMODIFICATION'] = 'updateCaseStatusOnModification';
 ?>
