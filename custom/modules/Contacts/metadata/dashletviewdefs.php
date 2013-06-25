@@ -8,6 +8,10 @@ $dashletData['ContactsDashlet']['searchFields'] = array (
   array (
     'default' => '',
   ),
+  'primary_address_state' => 
+  array (
+    'default' => '',
+  ),
   'date_entered' => 
   array (
     'default' => '',
@@ -39,6 +43,14 @@ $dashletData['ContactsDashlet']['columns'] = array (
     'width' => '10%',
     'default' => true,
     'name' => 'department',
+  ),
+  'primary_address_state' => 
+  array (
+    'type' => 'varchar',
+    'label' => 'LBL_PRIMARY_ADDRESS_STATE',
+    'width' => '10%',
+    'default' => true,
+    'name' => 'primary_address_state',
   ),
   'type_c' => 
   array (
