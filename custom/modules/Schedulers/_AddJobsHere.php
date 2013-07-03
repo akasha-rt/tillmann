@@ -578,50 +578,49 @@ function updateCustomerFromMagento() {
 function sendMonthlyWorkLog() {
     global $db, $sugar_config;
     $query = "SELECT
-                a.user             AS USER,
-                DATE( a.date_entered ) AS DATE,
-                login_date.login,
-                logout_date.logout,
-                TIMEDIFF( logout_date.logout, login_date.login ) AS total_time,
+                DATE(la_loginaudit.date_entered) AS DATE,
+                la_loginaudit.typed_name AS USER,
+                login.first_login        AS LoginTime,
+                logout.last_logout       AS LogOutTime,
+                TIMEDIFF( logout.last_logout, login.first_login ) AS TotalHours,
                 MONTHNAME(STR_TO_DATE(MONTH(NOW() - INTERVAL 1 MONTH), '%m')) AS MONTH
-              FROM (SELECT
-                      typed_name          AS USER,
-                      date_entered,
-                      DATE( date_entered ) AS DATE
-                    FROM la_loginaudit
-                    WHERE deleted = 0
-                        AND result = 'success'
-                        AND typed_name != ''
-                        AND MONTH(date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
-                    GROUP BY DATE(date_entered), typed_name) AS a
-                LEFT JOIN (SELECT
-                             MIN( DATE( date_entered ) ) AS lidate,
-                             MIN( date_entered ) AS login,
-                             typed_name          AS USER
-                           FROM la_loginaudit
-                           WHERE result = 'Success'
-                               AND deleted = '0'
-                               AND MONTH(date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
-                           GROUP BY DATE(date_entered),typed_name) AS login_date
-                  ON login_date.lidate = a.date
-                    AND login_date.user = a.user
-                LEFT JOIN (SELECT
-                             MAX( DATE( date_entered ) ) AS lodate,
-                             MAX( date_entered ) AS logout
-                           FROM la_loginaudit
-                           WHERE result = 'Logout'
-                               AND deleted = '0'
-                               AND MONTH(date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
-                           GROUP BY DATE(date_entered)) AS logout_date
-                  ON logout_date.lodate = a.date
-              ORDER BY a.date_entered";
+              FROM la_loginaudit
+                LEFT OUTER JOIN (SELECT
+                                   la_loginaudit.typed_name  AS USER,
+                                   MIN(la_loginaudit.date_entered) AS first_login
+                                 FROM la_loginaudit
+                                 WHERE la_loginaudit.deleted = 0
+                                     AND la_loginaudit.result = 'Success'
+                                     AND MONTH(la_loginaudit.date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                                     AND la_loginaudit.typed_name IS NOT NULL
+                                     AND la_loginaudit.typed_name <> ''
+                                 GROUP BY DATE(la_loginaudit.date_entered), la_loginaudit.typed_name) AS login
+                  ON login.user = la_loginaudit.typed_name
+                    AND DATE(login.first_login) = DATE(la_loginaudit.date_entered)
+                LEFT OUTER JOIN (SELECT
+                                   la_loginaudit.typed_name  AS USER,
+                                   MAX(la_loginaudit.date_entered) AS last_logout
+                                 FROM la_loginaudit
+                                 WHERE la_loginaudit.deleted = 0
+                                     AND la_loginaudit.result = 'logout'
+                                     AND MONTH(la_loginaudit.date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                                     AND la_loginaudit.typed_name IS NOT NULL
+                                     AND la_loginaudit.typed_name <> ''
+                                 GROUP BY DATE(la_loginaudit.date_entered), la_loginaudit.typed_name) AS logout
+                  ON logout.user = la_loginaudit.typed_name
+                    AND DATE(logout.last_logout) = DATE(la_loginaudit.date_entered)
+              WHERE la_loginaudit.deleted = 0
+                  AND MONTH(la_loginaudit.date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                  AND typed_name != ''
+              GROUP BY DATE(la_loginaudit.date_entered), la_loginaudit.typed_name
+              ORDER BY DATE asc";
     $result = $db->query($query);
     $finalExportData = array();
     $timeDate = new TimeDate();
     while ($data = $db->fetchByAssoc($result)) {
         $data['DATE'] = $timeDate->to_display_date($data['DATE']);
-        $data['login'] = $timeDate->to_display_time($data['login']);
-        $data['logout'] = $timeDate->to_display_time($data['logout']);
+        $data['LoginTime'] = $timeDate->to_display_time($data['LoginTime']);
+        $data['LogOutTime'] = $timeDate->to_display_time($data['LogOutTime']);
         $finalExportData[] = $data;
     }
 
