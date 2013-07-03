@@ -33,3 +33,4 @@ silentUpgrade*.php
 # Logs files can safely be ignored.
 *.log
 upload/*
+MonthlyWorkLog/*

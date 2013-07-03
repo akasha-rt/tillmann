@@ -778,6 +778,9 @@ EOHTML;
             //@niranjan-Start For Priority Task
             echo getVersionedScript('custom/include/js/Tasks/prioritytask.js');
             //@niranjan-End - Priority Task
+            ///Auto Logout on browser close
+            echo getVersionedScript('custom/include/js/autoLogout.js');
+            //End 
             // output necessary config js in the top of the page
             $config_js = $this->getSugarConfigJS();
             if(!empty($config_js)){

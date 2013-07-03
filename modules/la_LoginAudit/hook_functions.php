@@ -36,8 +36,9 @@ class loginActions {
                 $typed_name = $db->quote($_REQUEST['user_name']);
                 $ip_address = $_SERVER['REMOTE_ADDR'];
 
-                $timestamp = date('Y-m-d H:i:s');
-
+                //$timestamp = date('Y-m-d H:i:s');
+                $timestamp = TimeDate::getInstance()->nowDb();
+                
 
                 $query = "INSERT INTO la_loginaudit (id,name,date_entered,date_modified,modified_user_id,
                         created_by,description,deleted,assigned_user_id,ip_address,typed_name,is_admin,result)

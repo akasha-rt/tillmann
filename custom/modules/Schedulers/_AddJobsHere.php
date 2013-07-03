@@ -617,7 +617,11 @@ function sendMonthlyWorkLog() {
               ORDER BY a.date_entered";
     $result = $db->query($query);
     $finalExportData = array();
+    $timeDate = new TimeDate();
     while ($data = $db->fetchByAssoc($result)) {
+        $data['DATE'] = $timeDate->to_display_date($data['DATE']);
+        $data['login'] = $timeDate->to_display_time($data['login']);
+        $data['logout'] = $timeDate->to_display_time($data['logout']);
         $finalExportData[] = $data;
     }
 
