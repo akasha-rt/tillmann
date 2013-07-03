@@ -33,7 +33,8 @@ class loginActions {
                 }
 
                 $uuid = create_guid();
-                $typed_name = $db->quote($_REQUEST['user_name']);
+                //$typed_name = $db->quote($_REQUEST['user_name']);
+                $typed_name = $current_user->user_name;
                 $ip_address = $_SERVER['REMOTE_ADDR'];
 
                 //$timestamp = date('Y-m-d H:i:s');
