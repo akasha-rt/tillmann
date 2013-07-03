@@ -1,5 +1,5 @@
 <?php
-// created: 2012-05-01 08:35:28
+// created: 2013-06-18 17:28:00
 $searchFields['Contacts'] = array (
   'first_name' => 
   array (
@@ -169,6 +169,24 @@ $searchFields['Contacts'] = array (
     'is_date_field' => true,
   ),
   'end_range_date_modified' => 
+  array (
+    'query_type' => 'default',
+    'enable_range_search' => true,
+    'is_date_field' => true,
+  ),
+  'range_last_shipment_date' => 
+  array (
+    'query_type' => 'default',
+    'enable_range_search' => true,
+    'is_date_field' => true,
+  ),
+  'start_range_last_shipment_date' => 
+  array (
+    'query_type' => 'default',
+    'enable_range_search' => true,
+    'is_date_field' => true,
+  ),
+  'end_range_last_shipment_date' => 
   array (
     'query_type' => 'default',
     'enable_range_search' => true,

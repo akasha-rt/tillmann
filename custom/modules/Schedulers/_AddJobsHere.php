@@ -13,6 +13,8 @@ $job_strings[] = 'checkOpportunitySalesData';
 $job_strings[] = 'processOverDueCase';
 $job_strings[] = 'processPOAndVATCases';
 $job_strings[] = 'updateCaseStatusOnModification';
+$job_strings[] = 'updateCustomerFromMagento';
+$job_strings[] = 'sendMonthlyWorkLog';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -436,6 +438,241 @@ function updateCaseStatusOnModification() {
         $case->status = "Open";
         $case->save();
     }
+    return true;
+}
+
+function updateCustomerFromMagento() {
+    global $db, $sugar_config;
+    //retrive last customer created/updated dates from sugar config
+    $configQuery = 'SELECT
+                        NAME,
+                        VALUE
+                      FROM config
+                      WHERE category = "MagentoData"
+                          AND NAME IN("customerCreatedDate","lastShipmentDate")';
+    $configResult = $db->query($configQuery);
+    while ($configData = $db->fetchByAssoc($configResult)) {
+        if ($configData['NAME'] == 'customerCreatedDate') {
+            $created_date = $configData['NAME'];
+            $customerCreatedDate = $configData['VALUE'];
+        } else {
+            $lastship_date = $configData['NAME'];
+            $lastShipmentDate = $configData['VALUE'];
+        }
+    }
+    $limitRecords = '';
+    $firstTime = false;
+    if (isset($created_date) && isset($lastship_date)) {
+        $limitRecords .= " WHERE (created_at > '{$customerCreatedDate}' OR t.date > '{$lastShipmentDate}') ";
+        $maxCreatedDate = $customerCreatedDate;
+        $maxShipDate = $lastShipmentDate;
+    } else {
+        $firstTime = true;
+        $maxCreatedDate = '1970-01-01 00:00:00';
+        $maxShipDate = '1970-01-01 00:00:00';
+    }
+    //Load contact email addresses from sugar
+    $sugar_email_query = "SELECT
+                    contacts.id                   AS contact_id,
+                    email_addresses.email_address AS email
+                  FROM contacts
+                    LEFT JOIN email_addr_bean_rel
+                      ON contacts.id = email_addr_bean_rel.bean_id
+                    LEFT JOIN email_addresses
+                      ON email_addresses.id = email_addr_bean_rel.email_address_id
+                  WHERE contacts.deleted = 0
+                      AND email_addr_bean_rel.deleted = 0
+                      AND email_addresses.deleted = 0
+                      AND email_addr_bean_rel.primary_address = 1";
+    $sql_email_result = $db->query($sugar_email_query);
+    $sugar_email_list = array();
+    while ($sugar_email_data = $db->fetchByAssoc($sql_email_result)) {
+        $sugar_email_list[$sugar_email_data['email']] = $sugar_email_data['contact_id'];
+    }
+    //End - contact email loading
+    mysql_connect($sugar_config['magento_config']['host'], $sugar_config['magento_config']['db_user'], $sugar_config['magento_config']['db_password']);
+    mysql_select_db($sugar_config['magento_config']['database']);
+
+    $query = "SELECT
+                    customer_entity.entity_id,
+                    customer_entity.created_at,
+                    customer_entity.email,
+                    cev1.value                 AS first_name,
+                    cev2.value                 AS last_name,
+                    ceav1.value                AS phone,
+                    ceav2.value                AS country_id,
+                    t.date                     AS last_ship_date
+                  FROM customer_entity
+                    LEFT JOIN customer_entity_varchar cev1
+                      ON cev1.entity_id = customer_entity.entity_id
+                        AND cev1.attribute_id = 5
+                    LEFT JOIN customer_entity_varchar cev2
+                      ON cev2.entity_id = customer_entity.entity_id
+                        AND cev2.attribute_id = 7
+                    LEFT JOIN customer_entity_int
+                      ON customer_entity.entity_id = customer_entity_int.entity_id
+                        AND customer_entity_int.attribute_id = 13
+                    LEFT JOIN customer_address_entity_varchar ceav1
+                      ON ceav1.entity_id = customer_entity_int.value
+                        AND ceav1.attribute_id = 29
+                    LEFT JOIN customer_address_entity_varchar ceav2
+                      ON ceav2.entity_id = customer_entity_int.value
+                        AND ceav2.attribute_id = 25
+                    LEFT JOIN (SELECT
+                                 customer_id,
+                                 MAX( created_at )           AS DATE
+                               FROM sales_flat_shipment
+                               WHERE customer_id IS NOT NULL
+                               GROUP BY customer_id) AS t
+                      ON t.customer_id = customer_entity.entity_id
+                      {$limitRecords} 
+                      ORDER BY created_at asc,t.date asc";
+    $result = mysql_query($query);
+    while ($data = mysql_fetch_array($result)) {
+        //existing customer
+        if (isset($sugar_email_list[$data['email']])) {
+            $contacts = new Contact();
+            $contacts->retrieve($sugar_email_list[$data['email']]);
+            if ($contacts->type_c == 'Enquiry') {
+                $contacts->type_c = 'One_time_customer';
+                $contacts->last_shipment_date_c = $data['last_ship_date'];
+                $contacts->save();
+            } else if ($contacts->type_c == 'One_time_customer') {
+                $contacts->type_c = 'Regular_Customer';
+                $contacts->last_shipment_date_c = $data['last_ship_date'];
+                $contacts->save();
+            }
+        } else {
+            //new customer
+            $contacts = new Contact();
+            $contacts->first_name = $data['first_name'];
+            $contacts->last_name = $data['last_name'];
+            $contacts->email1 = $data['email'];
+            $contacts->phone_mobile = $data['phone'];
+            $contacts->primary_address_country = $data['country_id'];
+            $contacts->type_c = 'Magento';
+            $contacts->last_shipment_date_c = $data['last_ship_date'];
+            $contacts->save();
+        }
+
+        if ($data['created_at'] > $maxCreatedDate) {
+            $maxCreatedDate = $data['created_at'];
+        }
+        if ($data['last_ship_date'] > $maxShipDate) {
+            $maxShipDate = $data['last_ship_date'];
+        }
+    }
+    if ($firstTime) {
+        $insertConfig = "Insert into config (category,name,value) Values ('MagentoData', 'customerCreatedDate' ,'{$maxCreatedDate}'),
+            ('MagentoData', 'lastShipmentDate' ,'{$maxShipDate}')";
+        $db->query($insertConfig);
+    } else {
+        $updateConfig = "UPDATE config set value = '{$maxCreatedDate}' where name = 'customerCreatedDate'";
+        $db->query($updateConfig);
+        $updateConfig = "UPDATE config set value = '{$maxShipDate}' where name = 'lastShipmentDate'";
+        $db->query($updateConfig);
+    }
+    return true;
+}
+
+function sendMonthlyWorkLog() {
+    global $db, $sugar_config;
+    $query = "SELECT
+                a.user             AS USER,
+                DATE( a.date_entered ) AS DATE,
+                login_date.login,
+                logout_date.logout,
+                TIMEDIFF( logout_date.logout, login_date.login ) AS total_time,
+                MONTHNAME(STR_TO_DATE(MONTH(NOW() - INTERVAL 1 MONTH), '%m')) AS MONTH
+              FROM (SELECT
+                      typed_name          AS USER,
+                      date_entered,
+                      DATE( date_entered ) AS DATE
+                    FROM la_loginaudit
+                    WHERE deleted = 0
+                        AND result = 'success'
+                        AND typed_name != ''
+                        AND MONTH(date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                    GROUP BY DATE(date_entered), typed_name) AS a
+                LEFT JOIN (SELECT
+                             MIN( DATE( date_entered ) ) AS lidate,
+                             MIN( date_entered ) AS login,
+                             typed_name          AS USER
+                           FROM la_loginaudit
+                           WHERE result = 'Success'
+                               AND deleted = '0'
+                               AND MONTH(date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                           GROUP BY DATE(date_entered),typed_name) AS login_date
+                  ON login_date.lidate = a.date
+                    AND login_date.user = a.user
+                LEFT JOIN (SELECT
+                             MAX( DATE( date_entered ) ) AS lodate,
+                             MAX( date_entered ) AS logout
+                           FROM la_loginaudit
+                           WHERE result = 'Logout'
+                               AND deleted = '0'
+                               AND MONTH(date_entered) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                           GROUP BY DATE(date_entered)) AS logout_date
+                  ON logout_date.lodate = a.date
+              ORDER BY a.date_entered";
+    $result = $db->query($query);
+    $finalExportData = array();
+    while ($data = $db->fetchByAssoc($result)) {
+        $finalExportData[] = $data;
+    }
+
+    function cleanData(&$str) {
+        $str = preg_replace("/\t/", "\\t", $str);
+        $str = preg_replace("/\r?\n/", "\\n", $str);
+        $str = preg_replace("/&nbsp;/", "", $str);
+        if (strstr($str, '"'))
+            $str = '"' . str_replace('"', '""', $str) . '"';
+    }
+
+    $flag = false;
+    $exceldata = '';
+    foreach ($finalExportData as $row) {
+        if (!$flag) {
+            // display field/column names as first row
+            $exceldata = implode("\t", array_keys($row)) . "\r\n";
+            $flag = true;
+        }
+        array_walk($row, 'cleanData');
+        $exceldata .= implode("\t", array_values($row)) . "\r\n";
+    }
+    $filename = "WorkLog: " . $row['MONTH'] . " Month";
+    $File = "MonthlyWorkLog/{$filename}.xls";
+    $Handle = fopen($File, 'w+');
+    $Data = $exceldata;
+    fwrite($Handle, $Data);
+    //Send email
+    $email_body = "Dear Admin,<br />
+        Please find the attached spreadsheet, containing monthly worklog of {$row['MONTH']} month.";
+    $mailSubject = "Monthly {$filename}";
+
+    $emailObj = new Email();
+    $defaults = $emailObj->getSystemDefaultEmail();
+    $mail = new SugarPHPMailer();
+    $mail->setMailerForSystem();
+    $mail->ClearAllRecipients();
+    $mail->ClearReplyTos();
+    $mail->From = $defaults['email'];
+    $mail->FromName = $defaults['name'];
+    $mail->Subject = $mailSubject;
+    $mail->Body = from_html($email_body);
+    $mail->AltBody = from_html($email_body);
+
+    //For attachment
+    $filename_attach = "{$filename}.xls";
+    $file_location = $File;
+    $mime_type = 'application/vnd.ms-excel';
+    $mail->AddAttachment($file_location, $filename_attach, 'base64', $mime_type); //Attach each file to message
+
+    $mail->prepForOutbound();
+    foreach ($sugar_config['worklog_emails'] as $email_address) {
+        $mail->AddAddress($email_address);
+    }
+    $mail->Send();
     return true;
 }
 
