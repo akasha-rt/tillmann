@@ -1,0 +1,32 @@
+<!-- BEGIN: main -->
+<table cellpadding="0" cellspacing="0" width="100%" border="0" class="list view">
+<!-- BEGIN: list_nav_row -->
+{PAGINATION}
+<!-- END: list_nav_row -->
+
+	<tr height="20">
+		<td scope="col" class="listViewThS1" NOWRAP>&nbsp;</td>
+		<td scope="col" width="35%" class="listViewThS1"><slot>{MOD.LBL_TITLE}</slot></td>
+		<td scope="col" width="25%" class="listViewThS1"><slot>{MOD.LBL_RECENT_THREAD_TITLE}</a></slot></td>
+		<td scope="col" width="15%" class="listViewThS1"><slot>{MOD.LBL_RECENT_THREAD_MODIFIED_NAME}</a></slot></td>
+	    <td scope="col" width="15%" class="listViewThS1"><slot>{MOD.LBL_LAST_POST_TIME}</slot></td>
+	    <td scope="col" width="5%" class="listViewThS1"><slot><class='listViewThLinkS1'>{MOD.LBL_THREAD_COUNT}</a></slot></td>
+	    <td scope="col" width="5%" class="listViewThS1"><slot><class='listViewThLinkS1'>{MOD.LBL_POST_COUNT}</a></slot></td>
+	  
+	  </tr>
+<!-- BEGIN: row -->
+<tr height="20"  onmouseover="setPointer(this, '{FORUM.ID}', 'over', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');" onmouseout="setPointer(this, '{FORUM.ID}', 'out', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');" onmousedown="setPointer(this, '{THREAD.ID}', 'click', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');">
+		<td class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" valign='top'>{PREROW}</td>
+ 			<td scope='row' valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}"><slot><a href="{URL_PREFIX}index.php?action=DetailView&module=Forums&record={FORUM.ID}"  class="listViewTdLinkS1">{FORUM.TITLE}</a></slot></td>
+ 			<td scope='row' valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}"><slot><a href="{URL_PREFIX}index.php?action=DetailView&module=Threads&record={FORUM.RECENT_THREAD_ID}"  class="listViewTdLinkS1">{FORUM.RECENT_THREAD_TITLE}</a></slot></td>
+ 			<td scope='row' valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}"><slot><a href="{URL_PREFIX}index.php?action=DetailView&module=Employees&record={FORUM.RECENT_THREAD_MODIFIED_ID}"  class="listViewTdLinkS1">{FORUM.RECENT_THREAD_MODIFIED_NAME}</a></slot></td>
+		    <td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" nowrap><slot>{FORUM.DATE_MODIFIED}</slot></td>
+		    <td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" nowrap><slot>{FORUM.THREADCOUNT}</slot></td>
+		    <td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" nowrap><slot>{FORUM.THREADANDPOSTCOUNT}</slot></td>
+			
+</tr>
+<tr><td colspan="20" class="listViewHRS1"></td></tr>
+<!-- END: row -->
+{PAGINATION}
+</table>
+<!-- END: main -->

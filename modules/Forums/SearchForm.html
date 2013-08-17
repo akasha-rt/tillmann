@@ -1,0 +1,56 @@
+<!-- BEGIN: main -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%" class="tabForm">
+<tr><td>
+	<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+<form>
+	<td class="dataLabel"><slot>{MOD.LBL_TITLE}</slot>&nbsp;&nbsp;
+	<slot><input type=text size="30" name="title" class=dataField value="{TITLE}"></slot></td>
+		<td align="right"><input type="hidden" name="action" value="index"/>
+			<input type="hidden" name="query" value="true"/>
+			<input type="hidden" name="module" value="Forums" />
+			<input title="{APP.LBL_SEARCH_BUTTON_TITLE}" accessKey="{APP.LBL_SEARCH_BUTTON_KEY}" class="button" type="submit" name="button" value="{APP.LBL_SEARCH_BUTTON_LABEL}"/>
+			<input title="{APP.LBL_CLEAR_BUTTON_TITLE}" accessKey="{APP.LBL_CLEAR_BUTTON_KEY}" onclick="clear_form(this.form);" class="button" type="button" name="clear" value=" {APP.LBL_CLEAR_BUTTON_LABEL} "/><br>
+			<a href='index.php?module=Forums&action=index&advanced=true' class="tabFormAdvLink">{ADVANCED_SEARCH_PNG}</a>&nbsp;<a href='index.php?module=Forums&action=index&advanced=true' class="tabFormAdvLink">{APP.LNK_ADVANCED_SEARCH}</a>
+		</td>
+	</tr>
+</form>
+	</table>
+
+</td></tr>
+</tr></table>
+
+{JAVASCRIPT}
+<!-- END: main -->
+
+<!-- BEGIN: advanced -->
+<table width="100%" border="0" cellspacing="0" cellpadding="0"  class="tabForm">
+<form>
+<tr>
+<td>
+	<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	
+	<tr>
+	<td class="dataLabel"><slot>{MOD.LBL_TITLE}</slot>&nbsp;&nbsp;
+	<slot><input type=text size="30" name="title" class=dataField value="{TITLE}"></slot></td>
+	<td width="10%" rowspan="8" nowrap align="right" valign="top">
+	<input type="hidden" name="action" value="ListView"/>
+		<input type="hidden" name="query" value="true"/>
+		<input type="hidden" name="advanced" value="true"/>
+		<input type="hidden" name="module" value="Forums" />
+		<input title="{APP.LBL_SEARCH_BUTTON_TITLE}" accessKey="{APP.LBL_SEARCH_BUTTON_KEY}" class="button" type="submit" name="button" value="{APP.LBL_SEARCH_BUTTON_LABEL}"/>
+		<input title="{APP.LBL_CLEAR_BUTTON_TITLE}" accessKey="{APP.LBL_CLEAR_BUTTON_KEY}" onclick="clear_form(this.form);" class="button" type="button" name="clear" value=" {APP.LBL_CLEAR_BUTTON_LABEL} "/>
+		<br>
+		<a href='index.php?module=Forums&action=index&query=true' class="tabFormAdvLink">{BASIC_SEARCH_PNG}</a>&nbsp;<a href='index.php?module=Forums&action=index&query=true' class="tabFormAdvLink">{APP.LNK_BASIC_SEARCH}</a></slot></td>
+	</tr>
+	
+	<tr>
+	</tr>
+	
+	</table>
+</td>
+</tr>
+</table>
+</form>
+{JAVASCRIPT}
+<!-- END: advanced -->

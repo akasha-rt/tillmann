@@ -1,0 +1,29 @@
+<!-- BEGIN: main -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%" class="tabForm">
+<tr><td>
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+<form name='ForumsSearch'>
+  <td class="dataLabel"><slot>{MOD.LBL_THREAD_SEARCH_TITLE}</slot>&nbsp;&nbsp;</td>
+  <td class="dataField"><slot><input type="text" class="dataField" value="{QUERY_STRING_TITLE}" name="query_string_title" id="query_string_title" size="25"></slot></td>
+<!-- BEGIN: include_body_search -->
+  <td class="dataLabel"><slot>{MOD.LBL_THREAD_SEARCH_BODY}</slot>&nbsp;&nbsp;</td>
+  <td class="dataField"><slot><input type="text" class="dataField" value="{QUERY_STRING_BODY}" name="query_string_body" id="query_string_body" size="25"></slot></td>
+<!-- END: include_body_search -->
+  <td class="dataLabel"><slot>{MOD.LBL_THREAD_SEARCH_USER}</slot>&nbsp;&nbsp;</td>
+  <td class="dataField"><select size="3" name='query_string_user[]' tabindex='1' multiple="multiple">{QUERY_STRING_USER}</select></slot></td>
+  <td align="right">
+  <input type="hidden" name="action" value="ForumsSearch">
+  <input type="hidden" name="module" value="Forums">
+  <input type="hidden" name="search_form" value="false">
+  <input title="{APP.LBL_SEARCH_BUTTON_TITLE}" accessKey="{APP.LBL_SEARCH_BUTTON_KEY}" class="button" type="submit" name="button" value="{APP.LBL_SEARCH_BUTTON_LABEL}"/>
+<tr>
+    </tr>
+    <tr>
+    </tr>
+    </table>
+</td>
+</tr>
+</table>
+</form>
+<!-- END: main -->

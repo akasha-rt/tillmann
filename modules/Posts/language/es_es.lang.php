@@ -1,0 +1,37 @@
+<?php
+if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
+
+$mod_strings = array (
+	'LBL_MODULE_NAME'=>'Publicaciones',
+	'LBL_MODULE_TITLE'=>'Publicaciones: Inicio',
+	'LBL_ID' => 'Publicaci&oacute;n ID',
+	'LBL_DATE_ENTERED'=>'Fecha de creaci&oacute;n',
+	'LBL_CREATED_BY'=>'Creado por',
+	'LBL_DATE_MODIFIED'=>'Fecha de modificaci&oacute;n',
+	'LBL_MODIFIED_USER_ID'=>'Modificado por',
+	'LBL_DELETED'=>'Borrado',
+	'LBL_TITLE'=>'T&iacute;tulo',
+    'LBL_BODY' => 'Cuerpo',
+    'LNK_NEW_POST' => 'Crear publicaci&oacute;n',
+    'LNK_POST_LIST' => 'Publicaciones',
+	'LBL_DEFAULT_SUBPANEL_TITLE'=>'Publicaciones',
+	'LBL_LIST_FORM_TITLE' => 'Lista de Publicaciones',
+    'LBL_SEARCH_FORM_TITLE' => 'Buscar publicaci&oacute;n',
+    'LBL_LIST_BODY' => 'Cuerpo Publicaci&oacute;n',
+    'LBL_REPLY_TO_POST' => 'Respuesta',
+    'LBL_REPLY_BUTTON_KEY' => 'R',
+    'LBL_CREATED_BY_USER' => 'Creada por el usuario',
+    'LBL_THREAD_ID' => 'Hilo padre ID',
+    'LBL_THREAD_NAME' => 'Hilo padre',
+    'LBL_QUOTE_POST' => 'Cita',
+    'LBL_QUOTE_BUTTON_KEY' => 'Q',
+    'LBL_BACK_PARENT_THREAD' => 'Regresar al Hilo padre',
+    'LNK_FORUM_LIST' => 'Foros',
+    'LNK_NEW_FORUM' => 'Crear un foro',
+    'LBL_DELETE_BUTTON_POST_TITLE' => 'Borrar publicaci&oacute;n',
+    'LBL_TEXT_USER' => 'Usuario',
+    'LBL_TEXT_SAID' => 'said',
+	'LBL_CREATED_POST'=>'publicaci&oacute;n creada',
+	'LBL_UPDATED_POST'=>'publicaci&oacute;n actualizada',
+);
+?>

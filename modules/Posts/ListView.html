@@ -1,0 +1,28 @@
+<!-- BEGIN: main -->
+<table cellpadding="0" cellspacing="0" width="100%" border="0" class="list view">
+<!-- BEGIN: list_nav_row -->
+{PAGINATION}
+<!-- END: list_nav_row -->
+	<tr height="20">
+		<td scope="col" class="listViewThS1" NOWRAP>{CHECKALL}</td>
+		<td scope="col" width="35%" class="listViewThS1"><slot><a href="{ORDER_BY}title" class="listViewThLinkS1">{MOD.LBL_TITLE}{arrow_start}{title_arrow}{arrow_end}</a></slot></td>
+        <td scope="col" width="35%" class="listViewThS1"><slot>{MOD.LBL_THREAD_NAME}</slot></td>
+    <td scope="col" width="10%" class="listViewThS1"><slot><a href='{ORDER_BY}posts.created_by' class='listViewThLinkS1'>{MOD.LBL_CREATED_BY}{arrow_start}{posts_created_by_arrow}{arrow_end}</a></slot></td>
+    <td scope="col" width="10%" class="listViewThS1"><slot><a href='{ORDER_BY}posts.modified_user_id' class='listViewThLinkS1'>{MOD.LBL_MODIFIED_USER_ID}{arrow_start}{posts_modified_user_id_arrow}{arrow_end}</a></slot></td>
+    <td scope="col" width="20%" class="listViewThS1"><slot><a href='{ORDER_BY}posts.date_modified' class='listViewThLinkS1'>{MOD.LBL_DATE_MODIFIED}{arrow_start}{posts_date_modified_arrow}{arrow_end}</a></slot></td>
+    </tr>
+
+<!-- BEGIN: row -->
+<tr height="20"  onmouseover="setPointer(this, '{POST.ID}', 'over', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');" onmouseout="setPointer(this, '{POST.ID}', 'out', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');" onmousedown="setPointer(this, '{POST.ID}', 'click', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');">
+		<td class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" valign='top'>{PREROW}</td>
+   			<td scope='row' valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}"><slot><a href="{URL_PREFIX}index.php?action=DetailView&module=Posts&record={POST.ID}"  class="listViewTdLinkS1">{POST.TITLE}</a></slot></td>
+            <td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" nowrap><slot><a href="{URL_PREFIX}index.php?action=DetailView&module=Threads&record={POST.THREAD_ID}" class="listViewTdLinkS1">{POST.THREAD_NAME}</a></slot></td>
+			<td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" nowrap><slot><a href="{URL_PREFIX}index.php?action=DetailView&module=Employees&record={POST.CREATED_BY}" class="listViewTdLinkS1">{POST.CREATED_BY_USER}</a></slot></td>
+      <td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" nowrap><slot><a href="{URL_PREFIX}index.php?action=DetailView&module=Employees&record={POST.MODIFIED_USER_ID}" class="listViewTdLinkS1">{POST.MODIFIED_BY_USER}</a></slot></td>
+      <td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}" nowrap><slot>{POST.DATE_MODIFIED}</slot></td>
+</tr>
+<tr><td colspan="20" class="listViewHRS1"></td></tr>
+<!-- END: row -->
+{PAGINATION}
+</table>
+<!-- END: main -->

@@ -1,0 +1,51 @@
+<!-- BEGIN: main -->
+<script type="text/javascript" src="include/javascript/popup_parent_helper.js"></script>
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr>
+	<td style="padding-bottom: 2px;">
+			<form name="EditView" method="POST" action="index.php">
+			<input type="hidden" name="bug_id" value="{BUG_ID}">
+			<input type="hidden" name="account_id" value="{ACCOUNT_ID}">
+			<input type="hidden" name="module" value="Forums">
+			<input type="hidden" name="record" value="{ID}">
+			<input type="hidden" name="action">
+			<input type="hidden" name="return_module" value="{RETURN_MODULE}">
+			<input type="hidden" name="return_id" value="{RETURN_ID}">
+			<input type="hidden" name="return_action" value="{RETURN_ACTION}">
+		<input title="{APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{APP.LBL_SAVE_BUTTON_KEY}" class="button" onclick="this.form.action.value='Save';" type="submit" name="button" value="  {APP.LBL_SAVE_BUTTON_LABEL}  " {SAVE_DISABLED}>
+    <input title="{APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="this.form.action.value='{RETURN_ACTION}'; this.form.module.value='{RETURN_MODULE}'; this.form.record.value='{RETURN_ID}'" type="submit" name="button" value="  {APP.LBL_CANCEL_BUTTON_LABEL}  "></td>
+	<td align="right" nowrap><span  class="required">{APP.LBL_REQUIRED_SYMBOL}</span> {APP.NTC_REQUIRED}</td>
+	<td align='right'>{ADMIN_EDIT}</td>
+</tr>
+</table>
+{CREATE_FORUM_TOPIC}
+<table width="100%" border="0" cellspacing="0" cellpadding="0"  class="tabForm">
+  <tr>
+	<td width="15%" class="dataLabel"><slot>{MOD.LBL_TITLE} <span class="required">{APP.LBL_REQUIRED_SYMBOL}</span></slot></td>
+	<td width="50%" class="dataField"><slot><input name='title' type="text" tabindex='1' size='50' maxlength='100' value="{TITLE}"></slot></td>
+	<td width="15%" class="dataLabel"><slot>{MOD.LBL_CATEGORY}</slot></td>
+	<td width="20%" class="dataField"><slot><select tabindex='1' name='category'>{CATEGORY_OPTIONS}</select></slot>&nbsp;&nbsp;<a href="index.php?module=ForumTopics&action=index">{MOD.LBL_CREATE_FORUM_TOPIC}</a></td>
+  </tr>
+  <!-- BEGIN: pro -->
+  <tr>
+    <td class="dataLabel"><slot>{APP.LBL_TEAM} <span class="required">{APP.LBL_REQUIRED_SYMBOL}</span></slot></td>
+    <td class="dataField"><slot><input class="sqsEnabled" tabindex="1" autocomplete="off" id="team_name" name='team_name' type="text" value="{TEAM_NAME}"><input id='team_id' name='team_id' type="hidden" value="{TEAM_ID}" />
+    <input title="{APP.LBL_SELECT_BUTTON_TITLE}" accessKey="{APP.LBL_SELECT_BUTTON_KEY}" type="button" tabindex='1' class="button" value='{APP.LBL_SELECT_BUTTON_LABEL}' name=btn1
+      onclick='open_popup("Teams", 600, 400, "", true, false, {encoded_team_popup_request_data});' /></slot>
+    </td>
+    <td  class="dataLabel"><slot>&nbsp;</slot></td>
+    <td class="dataField"><slot>&nbsp;</slot></td>  
+  </tr>
+  <!-- END: pro -->
+  <tr>
+    <td valign="top" class="dataLabel"><slot>{MOD.LBL_DESCRIPTION}</slot></td>
+    <td colspan="4"><slot><textarea name='description' tabindex='3' cols="80" rows="8">{DESCRIPTION}</textarea></slot></td>
+  </tr>
+</table>
+<div style="padding-top:2px;">
+		<input title="{APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{APP.LBL_SAVE_BUTTON_KEY}" class="button" onclick="this.form.action.value='Save';" type="submit" name="button" value="  {APP.LBL_SAVE_BUTTON_LABEL}  " {SAVE_DISABLED}>
+    <input title="{APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="this.form.action.value='{RETURN_ACTION}'; this.form.module.value='{RETURN_MODULE}'; this.form.record.value='{RETURN_ID}'" type="submit" name="button" value="  {APP.LBL_CANCEL_BUTTON_LABEL}  ">
+</div>
+</form>
+{JAVASCRIPT}
+<!-- END: main -->

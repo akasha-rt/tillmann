@@ -1,0 +1,23 @@
+<!-- BEGIN: main -->
+<table cellpadding="0" cellspacing="0" width="100%" border="0" class="list view">
+<!-- BEGIN: list_nav_row -->
+{PAGINATION}
+<!-- END: list_nav_row -->
+	<tr height="20">
+		<td scope="col" width="72%" class="listViewThS1"><slot><a href="{ORDER_BY}name" class="listViewThLinkS1">{MOD.LBL_LIST_NAME}{arrow_start}{name_arrow}{arrow_end}</a></slot></td>
+		<td scope="col" width="20%" class="listViewThS1" nowrap><slot><a href="{ORDER_BY}list_order" class="listViewThLinkS1">{MOD.LBL_LIST_LIST_ORDER}{arrow_start}{list_order_arrow}{arrow_end}</a></slot></td>
+		<td scope="col" width="8%" class="listViewThS1" ><slot>&nbsp;</slot></td>
+	  </tr>
+
+<!-- BEGIN: row -->
+<tr height="20"  onmouseover="setPointer(this, '{FORUMTOPIC.ID}', 'over', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');" onmouseout="setPointer(this, '{FORUMTOPIC.ID}', 'out', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');" onmousedown="setPointer(this, '{FORUMTOPIC.ID}', 'click', '{BG_COLOR}', '{BG_HILITE}', '{BG_CLICK}');">
+    			<td scope="row" valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}"><slot><a href="{URL_PREFIX}index.php?action=index&module=ForumTopics&record={FORUMTOPIC.ID}" class="listViewTdLinkS1">{FORUMTOPIC.NAME}</a></slot></td>
+    			<td valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}"><slot>{FORUMTOPIC.LIST_ORDER}</slot></td>
+    			<td nowrap align="center" valign=TOP class="{ROW_COLOR}S1" bgcolor="{BG_COLOR}"><slot><a class="listViewTdToolsS1" onclick="return confirm('{MOD.NTC_DELETE_CONFIRMATION}')" href="{URL_PREFIX}index.php?action=Delete&module=ForumTopics&record={FORUMTOPIC.ID}&return_module=ForumTopics&return_action=index&return_id=">{DELETE_INLINE_PNG}</a>&nbsp;<a class="listViewTdToolsS1" onclick="return confirm('{MOD.NTC_DELETE_CONFIRMATION}')" href="{URL_PREFIX}index.php?action=Delete&module=ForumTopics&record={FORUMTOPIC.ID}&return_module=ForumTopics&return_action=index&return_id=">{APP.LNK_DELETE}</a></slot></td>
+
+</tr>
+<tr><td colspan="20" class="listViewHRS1"></td></tr>
+<!-- END: row -->
+
+	</table>
+<!-- END: main -->
