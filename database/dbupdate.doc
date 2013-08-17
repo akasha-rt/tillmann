@@ -312,3 +312,7 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 ('Contactslast_shipment_date_c', 'last_shipment_date_c', 'LBL_LAST_SHIPMENT_DATE', '', '', 'Contacts', 'date', NULL, 0, '', '2013-06-18 11:58:00', 0, 1, 0, 0, 1, 'true', '', '', '', '');
 
 ALTER TABLE  `contacts_cstm` ADD  `last_shipment_date_c` DATE NULL DEFAULT NULL;
+
+@dhaval - 26_07_13
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES ('Casespermit_flag_c', 'permit_flag_c', 'LBL_PARMIT_FLAG', NULL, NULL, 'Cases', 'varchar', '255', '0', NULL, '2013-07-20 14:38:41', '0', '0', '0', '0', '1', 'true', NULL, NULL, NULL, NULL);
+ALTER TABLE `cases_cstm` ADD `permit_flag_c` VARCHAR( 255 ) NULL DEFAULT NULL AFTER `invoice_no_body_c` ;

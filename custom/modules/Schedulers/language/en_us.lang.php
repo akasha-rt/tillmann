@@ -15,4 +15,5 @@ $mod_strings ['LBL_PROCESSPOANDVATCASES'] = 'processPOAndVATCases';
 $mod_strings ['LBL_UPDATECASESTATUSONMODIFICATION'] = 'updateCaseStatusOnModification';
 $mod_strings ['LBL_UPDATECUSTOMERFROMMAGENTO'] = 'updateCustomerFromMagento';
 $mod_strings ['LBL_SENDMONTHLYWORKLOG'] = 'sendMonthlyWorkLog';
+$mod_strings ['LBL_PROCESSUPLOADIMPORTPERMITCASE'] = 'processUploadImportPermitCase';
 ?>
