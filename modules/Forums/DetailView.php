@@ -119,7 +119,7 @@ if($num_rows == 0)
   $xtpl->parse("main.can_delete");
 }
 
-if(is_admin($current_user))
+if(is_admin($current_user) || $current_user->id == $focus->created_by)
 {
   $xtpl->parse("main");
   $xtpl->out("main");

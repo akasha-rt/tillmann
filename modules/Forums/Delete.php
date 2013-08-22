@@ -10,7 +10,7 @@ $focus = new Forum();
 if(!isset($_REQUEST['record']))
 	sugar_die("A record number must be specified to delete the forum.");
 
-if(!is_admin($current_user))
+if(!is_admin($current_user) && $current_user->id != $focus->created_by)
 {
 	die('Only administrators can delete a Forum');
 }

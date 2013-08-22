@@ -15,13 +15,13 @@ if(!ACLController::checkAccess('Posts', 'delete', true)){
     ACLController::displayNoAccess(false);
     sugar_cleanup(true);
 }
-
+global $current_user;
 $focus = new Post();
 
 if(!isset($_REQUEST['record']))
 	sugar_die("A record number must be specified to delete the post.");
 
-if(!is_admin($current_user))
+if(!is_admin($current_user) && $current_user->id != $focus->created_by)
 {
 	die('Only administrators can delete a Post');
 }

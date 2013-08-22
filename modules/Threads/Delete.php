@@ -20,11 +20,11 @@ $focus = new Thread();
 
 // creating the forum
 $focusParentForum = new Forum();
-
+global $current_user;
 if(!isset($_REQUEST['record']))
 	sugar_die("A record number must be specified to delete the thread.");
 
-if(!is_admin($current_user))
+if(!is_admin($current_user) && $current_user->id != $focus->created_by)
 {
 	die('Only administrators can delete a Thread');
 }

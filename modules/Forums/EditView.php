@@ -29,10 +29,10 @@ if(!ACLController::checkAccess('Forums', 'edit', true)){
     sugar_cleanup(true);
 }
 
-if(!is_admin($current_user))
+/*if(!is_admin($current_user))
 {
 	die('Only administrators can create/edit forums');
-}
+}*/
 
 //if duplicate record request then clear the Primary key(id) value.
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == '1') {
