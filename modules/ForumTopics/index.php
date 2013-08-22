@@ -26,7 +26,7 @@ if(!empty($_REQUEST['record'])) {
 if(isset($_REQUEST['edit']) && $_REQUEST['edit']=='true') {
 	$is_edit=true;
 	//Only allow admins to enter this screen
-	if (!is_admin($current_user) || $current_user->id != $focus->created_by) {
+	if (!is_admin($current_user) && $current_user->id != $focus->created_by && !empty($_REQUEST['record'])) {
 		$GLOBALS['log']->error("Non-admin user ($current_user->user_name) attempted to enter the ForumTopics edit screen");
 		session_destroy();
 		include('modules/Users/Logout.php');
