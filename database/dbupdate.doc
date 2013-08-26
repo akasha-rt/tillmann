@@ -312,3 +312,15 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 ('Contactslast_shipment_date_c', 'last_shipment_date_c', 'LBL_LAST_SHIPMENT_DATE', '', '', 'Contacts', 'date', NULL, 0, '', '2013-06-18 11:58:00', 0, 1, 0, 0, 1, 'true', '', '', '', '');
 
 ALTER TABLE  `contacts_cstm` ADD  `last_shipment_date_c` DATE NULL DEFAULT NULL;
+
+@dhaval - 26_08_13
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Usersoverdue_email_sent_c', 'overdue_email_sent_c', 'LBL_OVERDUE_EMAIL_SENT', '', '', 'Users', 'date', NULL, 0, '', '2013-08-26 06:30:34', 0, 0, 0, 0, 1, 'true', '', '', '', ''),
+('Usersprivate_email_c', 'private_email_c', 'LBL_PRIVATE_EMAIL', '', 'Personal email', 'Users', 'varchar', 255, 0, '', '2013-08-17 10:03:04', 0, 1, 0, 0, 1, 'true', '', '', '', '');
+
+CREATE TABLE IF NOT EXISTS `users_cstm` (
+  `id_c` char(36) NOT NULL,
+  `private_email_c` varchar(255) DEFAULT NULL,
+  `overdue_email_sent_c` date DEFAULT NULL,
+  PRIMARY KEY (`id_c`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

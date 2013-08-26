@@ -15,6 +15,7 @@ $job_strings[] = 'processPOAndVATCases';
 $job_strings[] = 'updateCaseStatusOnModification';
 $job_strings[] = 'updateCustomerFromMagento';
 $job_strings[] = 'sendMonthlyWorkLog';
+$job_strings[] = 'sendDailyCaseOverDueTaskEmail';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -497,36 +498,79 @@ function updateCustomerFromMagento() {
                     customer_entity.entity_id,
                     customer_entity.created_at,
                     customer_entity.email,
-                    cev1.value                 AS first_name,
-                    cev2.value                 AS last_name,
-                    ceav1.value                AS phone,
-                    ceav2.value                AS country_id,
-                    t.date                     AS last_ship_date
+                    cev1.value AS first_name,
+                    cev2.value AS last_name,
+                    ceav1.value AS phone,
+                    t.date AS last_ship_date,
+                    caet1.value AS street,
+                    ceav3.value AS city,
+                    ceav4.value AS state,
+                    ceav5.value AS postal,
+                    ceav2.value AS country_id
                   FROM customer_entity
                     LEFT JOIN customer_entity_varchar cev1
                       ON cev1.entity_id = customer_entity.entity_id
                         AND cev1.attribute_id = 5
+
                     LEFT JOIN customer_entity_varchar cev2
                       ON cev2.entity_id = customer_entity.entity_id
                         AND cev2.attribute_id = 7
+
                     LEFT JOIN customer_entity_int
                       ON customer_entity.entity_id = customer_entity_int.entity_id
-                        AND customer_entity_int.attribute_id = 13
+                    AND customer_entity_int.attribute_id = 14
+
+                    LEFT JOIN
+                    (
+                    SELECT MIN(entity_id) AS entity_id,
+                    parent_id
+                    FROM
+                    customer_address_entity
+                    GROUP BY parent_id
+                    ) AS a ON a.parent_id = customer_entity.entity_id
+
                     LEFT JOIN customer_address_entity_varchar ceav1
-                      ON ceav1.entity_id = customer_entity_int.value
+                    ON ceav1.entity_id = IF(customer_entity_int.value IS NULL,a.entity_id,customer_entity_int.value)
+
                         AND ceav1.attribute_id = 29
+
+                    LEFT JOIN customer_address_entity_text caet1
+                    ON caet1.entity_id = IF(customer_entity_int.value IS NULL,a.entity_id,customer_entity_int.value)
+
+                    AND caet1.attribute_id = 23
+
+                    LEFT JOIN customer_address_entity_varchar ceav3
+                    ON ceav3.entity_id = IF(customer_entity_int.value IS NULL,a.entity_id,customer_entity_int.value)
+
+                    AND ceav3.attribute_id = 24
+
+                    LEFT JOIN customer_address_entity_varchar ceav4
+                    ON ceav4.entity_id = IF(customer_entity_int.value IS NULL,a.entity_id,customer_entity_int.value)
+
+                    AND ceav4.attribute_id = 26
+
+                    LEFT JOIN customer_address_entity_varchar ceav5
+                    ON ceav5.entity_id = IF(customer_entity_int.value IS NULL,a.entity_id,customer_entity_int.value)
+
+                    AND ceav5.attribute_id = 28
+
                     LEFT JOIN customer_address_entity_varchar ceav2
-                      ON ceav2.entity_id = customer_entity_int.value
+                    ON ceav2.entity_id = IF(customer_entity_int.value IS NULL,a.entity_id,customer_entity_int.value)
+
+
                         AND ceav2.attribute_id = 25
+
+
                     LEFT JOIN (SELECT
                                  customer_id,
-                                 MAX( created_at )           AS DATE
+                    MAX( created_at ) AS DATE
                                FROM sales_flat_shipment
                                WHERE customer_id IS NOT NULL
                                GROUP BY customer_id) AS t
                       ON t.customer_id = customer_entity.entity_id
+
                       {$limitRecords} 
-                      ORDER BY created_at asc,t.date asc";
+                    ORDER BY created_at ASC,t.date asc";
     $result = mysql_query($query);
     while ($data = mysql_fetch_array($result)) {
         //existing customer
@@ -536,10 +580,20 @@ function updateCustomerFromMagento() {
             if ($contacts->type_c == 'Enquiry') {
                 $contacts->type_c = 'One_time_customer';
                 $contacts->last_shipment_date_c = $data['last_ship_date'];
+                $contacts->primary_address_street = $data['street'];
+                $contacts->primary_address_city = $data['city'];
+                $contacts->primary_address_state = $data['state'];
+                $contacts->primary_address_postalcode = $data['postal'];
+                $contacts->primary_address_country = $data['country_id'];
                 $contacts->save();
             } else if ($contacts->type_c == 'One_time_customer') {
                 $contacts->type_c = 'Regular_Customer';
                 $contacts->last_shipment_date_c = $data['last_ship_date'];
+                $contacts->primary_address_street = $data['street'];
+                $contacts->primary_address_city = $data['city'];
+                $contacts->primary_address_state = $data['state'];
+                $contacts->primary_address_postalcode = $data['postal'];
+                $contacts->primary_address_country = $data['country_id'];
                 $contacts->save();
             }
         } else {
@@ -549,6 +603,10 @@ function updateCustomerFromMagento() {
             $contacts->last_name = $data['last_name'];
             $contacts->email1 = $data['email'];
             $contacts->phone_mobile = $data['phone'];
+            $contacts->primary_address_street = $data['street'];
+            $contacts->primary_address_city = $data['city'];
+            $contacts->primary_address_state = $data['state'];
+            $contacts->primary_address_postalcode = $data['postal'];
             $contacts->primary_address_country = $data['country_id'];
             $contacts->type_c = 'Magento';
             $contacts->last_shipment_date_c = $data['last_ship_date'];
@@ -676,6 +734,103 @@ function sendMonthlyWorkLog() {
         $mail->AddAddress($email_address);
     }
     $mail->Send();
+    return true;
+}
+
+function sendDailyCaseOverDueTaskEmail() {
+    global $db, $sugar_config;
+    $gloablUserData = array();
+    $openCaseQuery = "SELECT
+                    COUNT(cases.id)        AS open_case,
+                    cases.assigned_user_id AS User_id
+                  FROM cases
+                    LEFT JOIN users
+                      ON cases.assigned_user_id = users.id
+                        AND users.deleted = 0
+                  WHERE cases.deleted = 0
+                      AND users.deleted = 0
+                      AND cases.status = 'Open'
+                  GROUP BY User_id";
+    $openCaseResult = $db->query($openCaseQuery);
+    while ($openCaseData = $db->fetchByAssoc($openCaseResult)) {
+        $gloablUserData[$openCaseData['User_id']]['open_case'] = $openCaseData['open_case'];
+    }
+    $newCaseQuery = "SELECT
+                    COUNT(cases.id)        AS new_case,
+                    cases.assigned_user_id AS User_id
+                  FROM cases
+                    LEFT JOIN users
+                      ON cases.assigned_user_id = users.id
+                        AND users.deleted = 0
+                  WHERE cases.deleted = 0
+                      AND users.deleted = 0
+                      AND cases.status = 'New'
+                  GROUP BY User_id";
+    $newCaseResult = $db->query($newCaseQuery);
+    while ($newCaseData = $db->fetchByAssoc($newCaseResult)) {
+        $gloablUserData[$newCaseData['User_id']]['new_case'] = $newCaseData['new_case'];
+    }
+    $overDueTaskQuery = "SELECT
+                    COUNT(tasks.id) AS overdue_task,
+                    tasks.assigned_user_id AS User_id
+                  FROM tasks
+                    LEFT JOIN users
+                      ON tasks.assigned_user_id = users.id
+                      AND users.deleted = 0
+                  WHERE tasks.deleted = 0
+                      AND users.deleted = 0
+                      AND tasks.date_due > '" . TimeDate::getInstance()->nowDb() . "'
+                      AND tasks.status = 'Not Started'
+                  GROUP BY User_id";
+    $overDueTaskResult = $db->query($overDueTaskQuery);
+    while ($overDueTaskData = $db->fetchByAssoc($overDueTaskResult)) {
+        $gloablUserData[$overDueTaskData['User_id']]['overdue_task'] = $overDueTaskData['overdue_task'];
+    }
+    foreach ($gloablUserData as $userID => $dailyDigestData) {
+        $user_Obj = new User();
+        $user_Obj->retrieve($userID);
+        $user_gmtoffset = $user_Obj->getUserDateTimePreferences();
+        $userTZ = explode(' ', $user_gmtoffset['userGmt']);
+        date_default_timezone_set($userTZ[0]);
+
+        $UserTime = strtotime(date("h:i A"));
+        if ($UserTime >= strtotime('06:00 PM') && $user_Obj->overdue_email_sent_c != TimeDate::getInstance()->nowDate() && $user_Obj->status == 'Active') {
+            $emailtemplate = new EmailTemplate();
+            $emailtemplate->retrieve('e5cbcb63-4de7-8c36-4d50-521b04b3c6cd');
+            $email_body = $emailtemplate->body_html;
+            $email_body_plain = $emailtemplate->body;
+            $email_body = str_replace('$user_first_name', (empty($user_Obj->first_name)) ? $user_Obj->last_name : $user_Obj->first_name, $email_body);
+            $email_body = str_replace('$openCaseCount', (empty($dailyDigestData['open_case'])) ? 0 : $dailyDigestData['open_case'], $email_body);
+            $email_body = str_replace('$newCaseCount', (empty($dailyDigestData['new_case'])) ? 0 : $dailyDigestData['new_case'], $email_body);
+            $email_body = str_replace('$overdueTaskCount', (empty($dailyDigestData['overdue_task'])) ? 0 : $dailyDigestData['overdue_task'], $email_body);
+            $mailSubject = $emailtemplate->subject;
+            $emailObj = new Email();
+            $defaults = $emailObj->getSystemDefaultEmail();
+            $mail = new SugarPHPMailer();
+            $mail->setMailerForSystem();
+            $mail->ClearAllRecipients();
+            $mail->ClearReplyTos();
+            $mail->From = $defaults['email'];
+            $mail->FromName = $defaults['name'];
+            $subject = $mailSubject;
+            $mail->Subject = $subject;
+            $mail->Body = from_html($email_body);
+            $mail->AltBody = $email_body_plain;
+            $mail->prepForOutbound();
+            if (isset($user_Obj->private_email_c) && $user_Obj->private_email_c != '' && !is_null($user_Obj->private_email_c)) {
+                //$mail->AddAddress($user_Obj->private_email_c);
+                foreach ($sugar_config['dail_work_digest_cc'] as $email) {
+                    $mail->AddAddress($email);
+                }
+                if ($mail->Send()) {
+                    $user_Obj->overdue_email_sent_c = TimeDate::getInstance()->nowDate();
+                    $user_Obj->save();
+                }
+            }
+
+            // END
+        }
+    }
     return true;
 }
 
