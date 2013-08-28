@@ -858,9 +858,11 @@ function processUploadImportPermitCase() {
 
         $email_body = str_replace('$customerName', $result['customer_name'], $email_body);
         $email_body = str_replace('$order_number', $result['order_number'], $email_body);
+        $email_body = str_replace('$case_No', $result['case_number'], $email_body);
 
         $email_body_plain = str_replace('$customerName', $result['customer_name'], $email_body_plain);
         $email_body_plain = str_replace('$order_number', $result['order_number'], $email_body_plain);
+        $email_body_plain = str_replace('$case_No', $result['case_number'], $email_body_plain);
 
         $mailSubject = str_replace('$order_number', $result['order_number'], $mailSubject);
 
