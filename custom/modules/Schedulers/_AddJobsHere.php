@@ -883,6 +883,9 @@ function processUploadImportPermitCase() {
         $mail->prepForOutbound();
         $mail->AddAddress($email_address);
         $mail->Send();
+        //update permit flag to 0
+        $query = "UPDATE cases_cstm SET permit_flag_c = 0 WHERE id_c = '{$result['id']}' ";
+        $db->query($query);
     }
     return true;
 }
