@@ -16,6 +16,7 @@ $job_strings[] = 'updateCaseStatusOnModification';
 $job_strings[] = 'updateCustomerFromMagento';
 $job_strings[] = 'sendMonthlyWorkLog';
 $job_strings[] = 'sendDailyCaseOverDueTaskEmail';
+$job_strings[] = 'processUploadImportPermitCase';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -830,6 +831,56 @@ function sendDailyCaseOverDueTaskEmail() {
 
             // END
         }
+    }
+    return true;
+}
+
+function processUploadImportPermitCase() {
+    global $db;
+    $select = "SELECT
+                cases.id                    AS id,
+                cases_cstm.customer_name_c  AS customer_name,
+                cases_cstm.customer_email_c AS customer_email,
+                cases_cstm.order_number_c   AS order_number,
+                cases.case_number           AS case_number
+              FROM cases_cstm
+                LEFT JOIN cases
+                  ON cases.id = cases_cstm.id_c
+              WHERE cases.deleted = 0
+                  AND cases_cstm.permit_flag_c = 1";
+    $query = $db->query($select);
+    $emailtemplate = new EmailTemplate();
+    $emailtemplate = $emailtemplate->retrieve('9037075d-ab4d-56fe-01a9-521daf3b43d4');
+    while ($result = $db->fetchByAssoc($query)) {
+        $email_body = $emailtemplate->body_html;
+        $email_body_plain = $emailtemplate->body;
+        $mailSubject = $emailtemplate->subject;
+
+        $email_body = str_replace('$customerName', $result['customer_name'], $email_body);
+        $email_body = str_replace('$order_number', $result['order_number'], $email_body);
+
+        $email_body_plain = str_replace('$customerName', $result['customer_name'], $email_body_plain);
+        $email_body_plain = str_replace('$order_number', $result['order_number'], $email_body_plain);
+
+        $mailSubject = str_replace('$order_number', $result['order_number'], $mailSubject);
+
+        $email_address = $result['customer_email'];
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = $email_body_plain;
+        $mail->prepForOutbound();
+        $mail->AddAddress($email_address);
+        $mail->Send();
     }
     return true;
 }
