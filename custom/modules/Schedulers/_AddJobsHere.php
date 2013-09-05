@@ -790,9 +790,14 @@ function sendDailyCaseOverDueTaskEmail() {
     foreach ($gloablUserData as $userID => $dailyDigestData) {
         $user_Obj = new User();
         $user_Obj->retrieve($userID);
-        $user_gmtoffset = $user_Obj->getUserDateTimePreferences();
-        $userTZ = explode(' ', $user_gmtoffset['userGmt']);
-        date_default_timezone_set($userTZ[0]);
+        $user_tz = $user_Obj->user_preferences['global']['timezone'];
+        if (is_null($user_tz)) {
+            $user_gmtoffset = $user_Obj->getUserDateTimePreferences();
+            $userTZ = explode(' ', $user_gmtoffset['userGmt']);
+            unset($userTZ[count($userTZ) - 1]);
+            $user_tz = implode('_', $userTZ);
+        }
+        date_default_timezone_set($user_tz);
 
         $UserTime = strtotime(date("h:i A"));
         if ($UserTime >= strtotime('06:00 PM') && $user_Obj->overdue_email_sent_c != TimeDate::getInstance()->nowDate() && $user_Obj->status == 'Active') {
