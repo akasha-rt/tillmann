@@ -780,7 +780,7 @@ function sendDailyCaseOverDueTaskEmail() {
                       AND users.deleted = 0
                   WHERE tasks.deleted = 0
                       AND users.deleted = 0
-                      AND tasks.date_due > '" . TimeDate::getInstance()->nowDb() . "'
+                      AND tasks.date_due < '" . TimeDate::getInstance()->nowDb() . "'
                       AND tasks.status = 'Not Started'
                   GROUP BY User_id";
     $overDueTaskResult = $db->query($overDueTaskQuery);
