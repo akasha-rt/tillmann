@@ -76,10 +76,10 @@ $dictionary['bc_WorkFlowTasks'] = array(
     'audited' => false,
     'reportable' => true,
     'unified_search' => false,
-    'size' => '20',
+    'size' => '80',
     'studio' => 'visible',
-    'rows' => '4',
-    'cols' => '20',
+    'rows' => 6,
+    'cols' => 80,
   ),
 ),
 	'relationships'=>array (
