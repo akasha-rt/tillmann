@@ -69,6 +69,11 @@ array (
             'name' => 'resolution',
             'nl2br' => true,
           ),
+          1 => 
+          array (
+            'name' => 'bc_workflow_cases_name',
+            'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
+          ),
         ),
       ),
       'LBL_PANEL_ASSIGNMENT' => 
