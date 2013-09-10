@@ -1,6 +1,12 @@
 <?php
 $listViewDefs ['Cases'] = 
 array (
+ 'follow_button_c' => 
+  array (
+    'sortable' => false,
+    'width' => '2%',
+    'default' => true,
+  ),
   'CASE_NUMBER' => 
   array (
     'width' => '5%',
@@ -9,7 +15,7 @@ array (
   ),
   'NAME' => 
   array (
-    'width' => '25%',
+    'width' => '15%',
     'label' => 'LBL_LIST_SUBJECT',
     'link' => true,
     'default' => true,
@@ -42,7 +48,7 @@ array (
   ),
   'ACCOUNT_NAME' => 
   array (
-    'width' => '20%',
+    'width' => '15%',
     'label' => 'LBL_LIST_ACCOUNT_NAME',
     'module' => 'Accounts',
     'id' => 'ACCOUNT_ID',

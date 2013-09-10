@@ -229,6 +229,215 @@ class HomeController extends SugarController {
     }
 
 //  @niranjan-End 
+    public function action_add_follow_list() {
+        global $db;
+        $select_query = "SELECT id,deleted from followup where module_id='{$_REQUEST['record']}'";
+        $select_result = $db->query($select_query);
+        $select_row = $db->fetchByAssoc($select_result);
+        if ($select_row) {
+            $select_follow_query = "SELECT deleted from followup where module_id = '{$_REQUEST['record']}'";
+            $select_follow_result = $db->query($select_follow_query);
+            $row_follow = $db->fetchByAssoc($select_follow_result);
+            $update_follow_query = "update followup set deleted =";
+            if ($row_follow['deleted'] == '0')
+                $update_follow_query .= '1';
+            else
+                $update_follow_query .= '0';
+            $update_follow_query .= " where module_id='{$_REQUEST['record']}'";
+            $update_follow_result = $db->query($update_follow_query);
+        }else {
+            $id = create_guid();
+            $query = "insert into followup values('{$id}','{$_REQUEST['module_name']}','{$_REQUEST['record']}','{$_REQUEST['userId']}',0);";
+            $db->query($query);
+        }
+        exit;
+    }
+
+    public function action_remove_follow_list() {
+        global $db;
+        $update_follow_query = "update followup set deleted =1 where module_id='{$_REQUEST['record']}' and module_name='{$_REQUEST['module_name']}'";
+        $update_follow_result = $db->query($update_follow_query);
+        exit;
+    }
+
+    public function action_remove_sort_rows() {
+        global $db;
+        $query = "SELECT * from followup WHERE module_name='Cases' and deleted=0";
+        $result = $db->query($query);
+        $totalRow = $result->num_rows;
+        while ($row = $db->fetchByAssoc($result)) {
+            $newCase = new aCase();
+            $newCase->retrieve($row['module_id']);
+            $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $newCase->name . "</a>";
+            $displayArray[] = array('number' => $newCase->case_number, 'name' => $case_name, 'status' => $newCase->status, 'user' => $newCase->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $newCase->name);
+            $countDisplayRow++;
+        }
+        $query = "SELECT * from followup WHERE module_name='Task' and deleted=0";
+        $result = $db->query($query);
+        $totalRow += $result->num_rows;
+        while ($row = $db->fetchByAssoc($result)) {
+            $newTask = new Task();
+            $newTask->retrieve($row['module_id']);
+            $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $newTask->name . "</a>";
+            $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $newTask->status, 'user' => $newTask->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $newTask->name);
+            $countDisplayRow++;
+        }
+        if($_REQUEST['column_by']=='name')
+            $orderBy = $_REQUEST['column_by'] . '_row';
+        else
+            $orderBy = $_REQUEST['column_by'];
+        for ($start = 0; $start < (count($displayArray) - 1); $start++) {
+            for ($second = 0; $second < (count($displayArray) - $start - 1); $second++) {
+                if ($_REQUEST['ordered'] == 'ASC') {
+                    if ($displayArray[$second][$orderBy] > $displayArray[$second + 1][$orderBy]) {
+                        $swap = $displayArray[$second];
+                        $displayArray[$second] = $displayArray[$second + 1];
+                        $displayArray[$second + 1] = $swap;
+                    }
+                } else {
+                    if ($displayArray[$second][$orderBy] < $displayArray[$second + 1][$orderBy]) {
+                        $swap = $displayArray[$second];
+                        $displayArray[$second] = $displayArray[$second + 1];
+                        $displayArray[$second + 1] = $swap;
+                    }
+                }
+            }
+        }
+        $printTrs = '';
+        $endIndex = ($_REQUEST['numberOfRow'] < count($displayArray)) ? $_REQUEST['numberOfRow'] : count($displayArray);
+        for ($start = 0; $start < $endIndex; $start++) {
+            $printTrs .= "<tr class=\"oddListRowS1\" id='oddListRowS1'>";
+            $printTrs .= "<td width='10px'><img src='custom/image/follow2.png' title='Remove from Watch List' style='height:17px;width:20px;cursor:pointer;' onclick='removeFromFollowList(\"{$displayArray[$start]['id']}\",\"{$displayArray[$start]['module']}\");'></td>";
+            if ($displayArray[$start]['module'] == "Task")
+                $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Tasks_32.gif' title='Task' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+            else
+                $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+            foreach ($displayArray[$start] as $key => $value) {
+                if ($key != "module" && $key != "id" && $key != 'name_row')
+                    $printTrs .= "<td valign='top'>$value</td>";
+            }
+            $printTrs .= "</tr>";
+        }
+        echo $printTrs;
+        exit;
+    }
+
+    public function action_pagination() {
+        global $db;
+        $query = "SELECT * from followup WHERE module_name='Cases' and deleted=0";
+        $result = $db->query($query);
+        $totalRow = $result->num_rows;
+        while ($row = $db->fetchByAssoc($result)) {
+            $newCase = new aCase();
+            $newCase->retrieve($row['module_id']);
+            $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $newCase->name . "</a>";
+            $displayArray[] = array('number' => $newCase->case_number, 'name' => $case_name, 'status' => $newCase->status, 'user' => $newCase->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
+            $countDisplayRow++;
+        }
+        $query = "SELECT * from followup WHERE module_name='Task' and deleted=0";
+        $result = $db->query($query);
+        $totalRow += $result->num_rows;
+        while ($row = $db->fetchByAssoc($result)) {
+            $newTask = new Task();
+            $newTask->retrieve($row['module_id']);
+            $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $newTask->name . "</a>";
+            $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $newTask->status, 'user' => $newTask->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
+            $countDisplayRow++;
+        }
+        if ($_REQUEST['last_sort'] != "") {
+            if ($_REQUEST['sort_direction'] == "")
+                $_REQUEST['sort_direction'] = "ASC";
+            $orderBy = $_REQUEST['last_sort'];
+            for ($start = 0; $start < (count($displayArray) - 1); $start++) {
+                for ($second = 0; $second < (count($displayArray) - $start - 1); $second++) {
+                    if ($_REQUEST['sort_direction'] == 'ASC') {
+                        if ($displayArray[$second][$orderBy] > $displayArray[$second + 1][$orderBy]) {
+                            $swap = $displayArray[$second];
+                            $displayArray[$second] = $displayArray[$second + 1];
+                            $displayArray[$second + 1] = $swap;
+                        }
+                    } else {
+                        if ($displayArray[$second][$orderBy] < $displayArray[$second + 1][$orderBy]) {
+                            $swap = $displayArray[$second];
+                            $displayArray[$second] = $displayArray[$second + 1];
+                            $displayArray[$second + 1] = $swap;
+                        }
+                    }
+                }
+            }
+        }
+        $printTrs = '';
+        if ($_REQUEST['direction'] == 'next') {
+            for ($start = ($_REQUEST['start'] + $_REQUEST['number_row']); $start < ($_REQUEST['start'] + ($_REQUEST['number_row'] * 2)); $start++) {
+                if ($displayArray[$start] != null) {
+                    $printTrs .= "<tr class=\"oddListRowS1\" id='oddListRowS1'>";
+                    $printTrs .= "<td width='10px'><img src='custom/image/follow2.png' title='Remove from Watch List' style='height:17px;width:20px;cursor:pointer;' onclick='removeFromFollowList(\"{$displayArray[$start]['id']}\",\"{$displayArray[$start]['module']}\");'></td>";
+                    if ($displayArray[$start]['module'] == "Task")
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Tasks_32.gif' title='Task' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    else
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    foreach ($displayArray[$start] as $key => $value) {
+                        if ($key != "module" && $key != "id")
+                            $printTrs .= "<td valign='top'>$value</td>";
+                    }
+                    $printTrs .= "</tr>";
+                }
+            }
+        }else if ($_REQUEST['direction'] == 'prev') {
+            for ($start = ($_REQUEST['start'] - $_REQUEST['number_row']); $start < (($_REQUEST['start'] - $_REQUEST['number_row']) + $_REQUEST['number_row']); $start++) {
+                if ($displayArray[$start] != null) {
+                    $printTrs .= "<tr class=\"oddListRowS1\" id='oddListRowS1'>";
+                    $printTrs .= "<td width='10px'><img src='custom/image/follow2.png' title='Remove from Watch List' style='height:17px;width:20px;cursor:pointer;' onclick='removeFromFollowList(\"{$displayArray[$start]['id']}\",\"{$displayArray[$start]['module']}\");'></td>";
+                    if ($displayArray[$start]['module'] == "Task")
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Tasks_32.gif' title='Task' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    else
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    foreach ($displayArray[$start] as $key => $value) {
+                        if ($key != "module" && $key != "id")
+                            $printTrs .= "<td valign='top'>$value</td>";
+                    }
+                    $printTrs .= "</tr>";
+                }
+            }
+        }else if ($_REQUEST['direction'] == 'end') {
+            $remain = count($displayArray) % $_REQUEST['number_row'];
+            for ($start = ($remain == 0) ? (count($displayArray) - 3) : (count($displayArray) - $remain); $start < (count($displayArray) + $remain); $start++) {
+                if ($displayArray[$start] != null) {
+                    $printTrs .= "<tr class=\"oddListRowS1\" id='oddListRowS1'>";
+                    $printTrs .= "<td width='10px'><img src='custom/image/follow2.png' title='Remove from Watch List' style='height:17px;width:20px;cursor:pointer;' onclick='removeFromFollowList(\"{$displayArray[$start]['id']}\",\"{$displayArray[$start]['module']}\");'></td>";
+                    if ($displayArray[$start]['module'] == "Task")
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Tasks_32.gif' title='Task' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    else
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    foreach ($displayArray[$start] as $key => $value) {
+                        if ($key != "module" && $key != "id")
+                            $printTrs .= "<td valign='top'>$value</td>";
+                    }
+                    $printTrs .= "</tr>";
+                }
+            }
+        }else if ($_REQUEST['direction'] == 'start') {
+            for ($start = 0; $start < $_REQUEST['number_row']; $start++) {
+                if ($displayArray[$start] != null) {
+                    $printTrs .= "<tr class=\"oddListRowS1\" id='oddListRowS1'>";
+                    $printTrs .= "<td width='10px'><img src='custom/image/follow2.png' title='Remove from Watch List' style='height:17px;width:20px;cursor:pointer;' onclick='removeFromFollowList(\"{$displayArray[$start]['id']}\",\"{$displayArray[$start]['module']}\");'></td>";
+                    if ($displayArray[$start]['module'] == "Task")
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Tasks_32.gif' title='Task' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    else
+                        $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
+                    foreach ($displayArray[$start] as $key => $value) {
+                        if ($key != "module" && $key != "id")
+                            $printTrs .= "<td valign='top'>$value</td>";
+                    }
+                    $printTrs .= "</tr>";
+                }
+            }
+        }
+
+        echo $printTrs;
+        exit;
+    }
+
 }
 
 ?>

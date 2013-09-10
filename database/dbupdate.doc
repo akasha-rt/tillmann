@@ -328,3 +328,13 @@ CREATE TABLE IF NOT EXISTS `users_cstm` (
   `overdue_email_sent_c` date DEFAULT NULL,
   PRIMARY KEY (`id_c`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+@dhaval - 07_09_13
+CREATE TABLE IF NOT EXISTS `followup` (
+  `id` char(36) NOT NULL,
+  `module_name` varchar(150) NOT NULL,
+  `module_id` char(36) NOT NULL,
+  `user_id` char(36) NOT NULL,
+  `deleted` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

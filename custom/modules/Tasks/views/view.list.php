@@ -40,13 +40,10 @@ if (!defined('sugarEntry') || !sugarEntry)
 
 require_once('include/MVC/View/views/view.list.php');
 
-class CasesViewList extends ViewList {
+class TasksViewList extends ViewList {
 
     public function preDisplay() {
         parent::preDisplay();
-        $this->lv->targetList = true;
-        $this->lv = new ListViewSmarty();
-        $this->lv->export = is_admin($GLOBALS['current_user']);
         echo "<script src='custom/include/js/Home/add_follow_list.js'></script>";
     }
 

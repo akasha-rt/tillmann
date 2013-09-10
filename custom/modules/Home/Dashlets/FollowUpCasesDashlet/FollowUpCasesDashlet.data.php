@@ -1,8 +1,6 @@
 <?php
-
-if (!defined('sugarEntry') || !sugarEntry)
-    die('Not A Valid Entry Point');
-/* * *******************************************************************************
+if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
+/*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
  * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
  * 
@@ -35,19 +33,12 @@ if (!defined('sugarEntry') || !sugarEntry)
  * SugarCRM" logo. If the display of the logo is not reasonably feasible for
  * technical reasons, the Appropriate Legal Notices must display the words
  * "Powered by SugarCRM".
- * ****************************************************************************** */
+ ********************************************************************************/
 
 
-require_once('include/MVC/View/views/view.list.php');
 
-class CasesViewList extends ViewList {
 
-    public function preDisplay() {
-        parent::preDisplay();
-        $this->lv->targetList = true;
-        $this->lv = new ListViewSmarty();
-        $this->lv->export = is_admin($GLOBALS['current_user']);
-        echo "<script src='custom/include/js/Home/add_follow_list.js'></script>";
-    }
+global $current_user;
 
-}
+$dashletData['FollowUpCasesDashlet']['searchFields'] = array('Number');
+?>

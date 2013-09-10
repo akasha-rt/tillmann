@@ -38,16 +38,13 @@ if (!defined('sugarEntry') || !sugarEntry)
  * ****************************************************************************** */
 
 
-require_once('include/MVC/View/views/view.list.php');
 
-class CasesViewList extends ViewList {
 
-    public function preDisplay() {
-        parent::preDisplay();
-        $this->lv->targetList = true;
-        $this->lv = new ListViewSmarty();
-        $this->lv->export = is_admin($GLOBALS['current_user']);
-        echo "<script src='custom/include/js/Home/add_follow_list.js'></script>";
-    }
+global $app_strings;
 
-}
+$dashletMeta['FollowUpCasesDashlet'] = array('module' => '',
+    'title' => 'Watch List Dashlet',
+    'description' => 'A customizable view into Cases',
+    'icon' => 'WatchList_32.png',
+    'category' => 'Module Views');
+?>

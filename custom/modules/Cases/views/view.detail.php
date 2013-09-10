@@ -11,6 +11,20 @@ class CasesViewDetail extends ViewDetail {
         parent::ViewDetail();
     }
 
+    public function getModuleTitle($show_help = true) {
+        global $current_user, $db;
+        $follow_result = $db->query("SELECT id from followup where module_id='{$this->bean->id}' and deleted=0 and module_name='Cases'");
+        $follow_row = $db->fetchByAssoc($follow_result);
+        $watchIcon = '<script type="text/javascript" src="custom/include/js/Home/add_follow_list.js"></script><h2>';
+        if ($follow_row)
+            $watchIcon .= '<img src="custom/image/follow2.png" style="height:17px;width:20px;cursor:pointer;" id="' . $this->bean->id . '" onclick="addToWatchList(this,\'' . $current_user->id . '\',\'Cases\');" title="Remove from Watch List" />';
+        else
+            $watchIcon .= '<img src="custom/image/follow1.png" style="height:17px;width:20px;cursor:pointer;" id="' . $this->bean->id . '" onclick="addToWatchList(this,\'' . $current_user->id . '\',\'Cases\');" title="Add to Watch List" />';
+        $print = '<a href="index.php?module=Cases&amp;action=index"><img src="themes/Sugar5/images/icon_Cases_32.gif" alt="Cases" title="Cases" align="absmiddle"></a><span class="pointer">»</span>' . $this->bean->name . '</h2>';
+        echo $watchIcon . $print;
+        parent::getModuleTitle($show_help);
+    }
+
     function display() {
         if (strlen(nl2br($this->bean->description)) > 250) {
             $short_description = "<span id='shortDesc' style='display:block'>" . nl2br(substr($this->bean->description, 0, 250));

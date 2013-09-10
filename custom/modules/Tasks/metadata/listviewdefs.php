@@ -38,16 +38,77 @@ if (!defined('sugarEntry') || !sugarEntry)
  * ****************************************************************************** */
 
 
-require_once('include/MVC/View/views/view.list.php');
 
-class CasesViewList extends ViewList {
 
-    public function preDisplay() {
-        parent::preDisplay();
-        $this->lv->targetList = true;
-        $this->lv = new ListViewSmarty();
-        $this->lv->export = is_admin($GLOBALS['current_user']);
-        echo "<script src='custom/include/js/Home/add_follow_list.js'></script>";
-    }
-
-}
+$listViewDefs['Tasks'] = array(
+    'follow_button_c' =>
+    array(
+        'sortable' => false,
+        'width' => '3%',
+        'default' => true,
+    ),
+    'SET_COMPLETE' => array(
+        'width' => '1',
+        'label' => 'LBL_LIST_CLOSE',
+        'link' => true,
+        'sortable' => false,
+        'default' => true,
+        'width' => '1%',
+        'related_fields' => array('status')),
+    'NAME' => array(
+        'width' => '40',
+        'label' => 'LBL_LIST_SUBJECT',
+        'link' => true,
+        'default' => true),
+    'CONTACT_NAME' => array(
+        'width' => '20',
+        'label' => 'LBL_LIST_CONTACT',
+        'link' => true,
+        'id' => 'CONTACT_ID',
+        'module' => 'Contacts',
+        'default' => true,
+        'ACLTag' => 'CONTACT',
+        'related_fields' => array('contact_id')),
+    'PARENT_NAME' => array(
+        'width' => '20',
+        'label' => 'LBL_LIST_RELATED_TO',
+        'dynamic_module' => 'PARENT_TYPE',
+        'id' => 'PARENT_ID',
+        'link' => true,
+        'default' => true,
+        'sortable' => false,
+        'ACLTag' => 'PARENT',
+        'related_fields' => array('parent_id', 'parent_type')),
+    'DATE_DUE' => array(
+        'width' => '15',
+        'label' => 'LBL_LIST_DUE_DATE',
+        'link' => false,
+        'default' => true),
+    'TIME_DUE' => array(
+        'width' => '15',
+        'label' => 'LBL_LIST_DUE_TIME',
+        'sortable' => false,
+        'link' => false,
+        'default' => true),
+    'ASSIGNED_USER_NAME' => array(
+        'width' => '2',
+        'label' => 'LBL_LIST_ASSIGNED_TO_NAME',
+        'module' => 'Employees',
+        'id' => 'ASSIGNED_USER_ID',
+        'default' => true),
+    'DATE_START' => array(
+        'width' => '5',
+        'label' => 'LBL_LIST_START_DATE',
+        'link' => false,
+        'default' => false),
+    'STATUS' => array(
+        'width' => '10',
+        'label' => 'LBL_LIST_STATUS',
+        'link' => false,
+        'default' => false),
+    'DATE_ENTERED' => array(
+        'width' => '10',
+        'label' => 'LBL_DATE_ENTERED',
+        'default' => true),
+);
+?>
