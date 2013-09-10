@@ -404,7 +404,7 @@ class aCase extends Basic {
     }
 
     function get_list_view_data() {
-        global $current_language;
+        global $current_language,$current_user;
         $app_list_strings = return_app_list_strings_language($current_language);
 
         $temp_array = $this->get_list_view_array();
@@ -414,7 +414,7 @@ class aCase extends Basic {
         $temp_array['ENCODED_NAME'] = $this->name;
         $temp_array['CASE_NUMBER'] = $this->case_number;
         global $current_user,$db;
-        $follow_result = $db->query("SELECT id from followup where module_id='{$temp_array['ID']}' and deleted=0 and module_name='Cases'");
+        $follow_result = $db->query("SELECT id from followup where module_id='{$temp_array['ID']}' and deleted=0 and module_name='Cases' and user_id='{$current_user->id}'");
         $follow_row = $db->fetchByAssoc($follow_result);
         if($follow_row)
             $temp_array['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow2.png" style="height:17px;width:20px;cursor:pointer;" id="'.$temp_array['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Cases\');" title="Remove from Watch List" />';

@@ -55,7 +55,7 @@ class FollowUpCasesDashlet extends DashletGeneric {
         if (empty($def['title']))
             $this->title = 'Watch List Dashlet';
         $this->searchFields = $dashletData['FollowUpCasesDashlet']['searchFields'];
-        $this->display_row = $def['displayRows'];
+        $this->display_row = ($def['displayRows']) ? $def['displayRows'] : 5;
         $this->myItem = $this->myItemsOnly;
         $this->deshlate_id = $id;
         $this->columns = $dashletData['FollowUpCasesDashlet']['columns'];
@@ -72,52 +72,49 @@ class FollowUpCasesDashlet extends DashletGeneric {
         $header = array('remove' => '', 'module_icon' => '', 'number' => 'Number', 'name' => 'Name/Subject', 'status' => 'Status', 'user' => 'Assign User');
         $ss = new Sugar_Smarty();
         global $db, $current_user;
-        $query = "SELECT * from followup WHERE module_name='Cases' and deleted=0";
+        if ($this->myItem) {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
+        } else {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
+        }
         $result = $db->query($query);
         $totalRow = $result->num_rows;
         while ($row = $db->fetchByAssoc($result)) {
             if ($countDisplayRow >= $this->display_row)
                 break;
-            $newCase = new aCase();
-            $newCase->retrieve($row['module_id']);
-            if ($this->myItem) {
-                if ($row['user_id'] == $current_user->id) {
-                    $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $newCase->name . "</a>";
-                    $displayArray[] = array('number' => $newCase->case_number, 'name' => $case_name, 'status' => $newCase->status, 'user' => $newCase->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
-                    $countDisplayRow++;
-                }
-            } else {
-                $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $newCase->name . "</a>";
-                $displayArray[] = array('number' => $newCase->case_number, 'name' => $case_name, 'status' => $newCase->status, 'user' => $newCase->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
-                $countDisplayRow++;
-            }
+            $userObject = new User();
+            $userObject->retrieve($row['assigned_user_id']);
+            $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $row['name'] . "</a>";
+            $displayArray[] = array('number' => $row['case_number'], 'name' => $case_name, 'status' => $row['status'], 'user' => $userObject->name, 'id' => $row['module_id'], 'module' => $row['module_name']);
+            $countDisplayRow++;
         }
-        $query = "SELECT * from followup WHERE module_name='Task' and deleted=0";
+        if ($this->myItem) {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,tasks.name,tasks.assigned_user_id,tasks.status from followup,tasks WHERE followup.module_name='Task' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=tasks.id group by tasks.id";
+        } else {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,tasks.name,tasks.assigned_user_id,tasks.status from followup,tasks WHERE followup.module_name='Task'  and followup.deleted=0 and followup.module_id=tasks.id group by tasks.id";
+        }
         $result = $db->query($query);
         $totalRow += $result->num_rows;
         while ($row = $db->fetchByAssoc($result)) {
             if ($countDisplayRow >= $this->display_row)
                 break;
-            $newTask = new Task();
-            $newTask->retrieve($row['module_id']);
-            if ($this->myItem) {
-                if ($row['user_id'] == $current_user->id) {
-                    $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $newTask->name . "</a>";
-                    $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $newTask->status, 'user' => $newTask->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
-                    $countDisplayRow++;
-                }
-            } else {
-                $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $newTask->name . "</a>";
-                $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $newTask->status, 'user' => $newTask->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
-                $countDisplayRow++;
-            }
+            $userObject = new User();
+            $userObject->retrieve($row['assigned_user_id']);
+            $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $row['name'] . "</a>";
+            $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $row['status'], 'user' => $userObject->name, 'id' => $row['module_id'], 'module' => $row['module_name']);
+            $countDisplayRow++;
         }
         $ss->assign('assign_user', $displayArray);
         $ss->assign('header', $header);
         $ss->assign('reocrds_id', $idArray);
         $ss->assign('total_record', $totalRow);
-        $ss->assign('pagginationBy', $this->display_row);
+        $ss->assign('pagginationBy', ($this->display_row) ? $this->display_row : 5);
         $ss->assign('deshlate_id', $this->deshlate_id);
+        if ($this->myItem) {
+            $ss->assign('item_checked', '1');
+        } else {
+            $ss->assign('item_checked', '0');
+        }
         return $ss->fetch('custom/modules/Home/Dashlets/FollowUpCasesDashlet/FollowUpCasesDashlet.tpl');
     }
 

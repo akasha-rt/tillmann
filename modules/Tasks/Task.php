@@ -274,7 +274,7 @@ class Task extends SugarBean {
         return $ret_array;
     }
 	function get_list_view_data(){
-		global $action, $currentModule, $focus, $current_module_strings, $app_list_strings, $timedate;
+		global $action, $currentModule, $focus, $current_module_strings, $app_list_strings, $timedate,$current_user;
 
 		$override_date_for_subpanel = false;
 		if(!empty($_REQUEST['module']) && $_REQUEST['module'] !='Calendar' && $_REQUEST['module'] !='Tasks' && $_REQUEST['module'] !='Home'){
@@ -285,7 +285,7 @@ class Task extends SugarBean {
 		$today = $timedate->nowDb();
 		$task_fields = $this->get_list_view_array();
                 global $current_user,$db;
-                $follow_result = $db->query("SELECT id from followup where module_id='{$task_fields['ID']}' and deleted=0 and module_name='Task'");
+                $follow_result = $db->query("SELECT id from followup where module_id='{$task_fields['ID']}' and deleted=0 and module_name='Task' and user_id='{$current_user->id}'");
                 $follow_row = $db->fetchByAssoc($follow_result);
                 if($follow_row)
                     $task_fields['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow2.png" style="height:17px;width:20px;cursor:pointer;" id="'.$task_fields['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Task\');" title="Remove from Watch List" />';

@@ -12,7 +12,7 @@ var storeDirection = '';
 function pagination(direction) {
     storeDirection = direction;
     $.ajax({
-        url: 'index.php?module=Home' + '&action=pagination&direction=' + storeDirection + '&start=' + $('#start_pagination').val() + "&number_row=" + $('#pagination').val() + "&last_sort=" + $('#last_sort').val() + "&sort_direction=" + $('#last_sort_direction').val(),
+        url: 'index.php?module=Home' + '&action=pagination&direction=' + storeDirection + '&start=' + $('#start_pagination').val() + "&number_row=" + $('#pagination').val() + "&last_sort=" + $('#last_sort').val() + "&sort_direction=" + $('#last_sort_direction').val() + '&my_item=' + $('#my_item').val(),
         type: "POST",
         success: function(data) {
             var trLen = $('tr[id=oddListRowS1]').length;
@@ -50,12 +50,12 @@ function pagination(direction) {
                     $('#Start').attr('disabled', 'disabled');
                     $('#img_first').attr('src', 'themes/Sugar5/images/start_off.gif');
                 }
-                if((parseInt($('#start_pagination').val())+parseInt($('#start_pagination').val())) >= parseInt($('#total_record').val())){
+                if ((parseInt($('#start_pagination').val()) + parseInt($('#start_pagination').val())) >= parseInt($('#total_record').val())) {
                     $('#Next').attr('disabled', 'disabled');
                     $('#img_next').attr('src', 'themes/Sugar5/images/next_off.gif');
                     $('#End').attr('disabled', 'disabled');
                     $('#img_end').attr('src', 'themes/Sugar5/images/end_off.gif');
-                }else{
+                } else {
                     $('#Next').removeAttr('disabled');
                     $('#img_next').attr('src', 'themes/Sugar5/images/next.gif');
                     $('#End').removeAttr('disabled');
@@ -65,7 +65,7 @@ function pagination(direction) {
                 if ((parseInt($('#pagination').val()) + parseInt($('#start_pagination').val())) < parseInt($('#pagination').val()))
                     pageNumbers = '(' + (parseInt($('#start_pagination').val()) + 1) + '-' + $('#total_record').val() + ' of ' + $('#total_record').val() + ")";
                 else {
-                    if((parseInt($('#start_pagination').val())+parseInt($('#pagination').val())) < parseInt($('#total_record').val()))
+                    if ((parseInt($('#start_pagination').val()) + parseInt($('#pagination').val())) < parseInt($('#total_record').val()))
                         pageNumbers = '(' + (parseInt($('#start_pagination').val()) + 1) + '-' + (parseInt($('#pagination').val()) + parseInt($('#start_pagination').val())) + ' of ' + $('#total_record').val() + ")";
                     else
                         pageNumbers = '(' + (parseInt($('#start_pagination').val()) + 1) + '-' + $('#total_record').val() + ' of ' + $('#total_record').val() + ")";
@@ -81,7 +81,7 @@ function sortRow(column, ordered, currentElement) {
     storeColumn = column;
     storeOrdered = ordered;
     $.ajax({
-        url: 'index.php?module=Home' + '&action=remove_sort_rows&column_by=' + column + '&ordered=' + ordered + "&numberOfRow=" + $('#pagination').val(),
+        url: 'index.php?module=Home' + '&action=remove_sort_rows&column_by=' + column + '&ordered=' + ordered + "&numberOfRow=" + $('#pagination').val() + '&my_item=' + $('#my_item').val(),
         type: "GET",
         success: function(data) {
             $('#last_sort').val(storeColumn);
@@ -113,6 +113,39 @@ function sortRow(column, ordered, currentElement) {
                 $(elemId).attr('onClick', $(elemId).attr('onClick').replace('DSC', 'ASC'));
                 var sort_imageId = '#sort_image_' + column;
                 $(sort_imageId).attr('src', "themes/Sugar5/images/arrow_up.gif");
+            }
+            var pageNumbers = '';
+            var starNumber = 0;
+            if (parseInt($('#total_record').val()) != 0)
+                starNumber = parseInt($('#total_record').val());
+            if ((parseInt($('#pagination').val())) < parseInt($('#total_record').val()))
+                pageNumbers = '(' + startNumber + '-' + $('#pagination').val() + ' of ' + $('#total_record').val() + ")";
+            else
+                pageNumbers = '(' + startNumber + '-' + $('#total_record').val() + ' of ' + $('#total_record').val() + ")";
+            $('#pageNumbers').text(pageNumbers);
+            $('#start_pagination').val('0');
+            if ($('#start_pagination').val() == 0) {
+                $('#Previous').attr('disabled', 'disabled');
+                $('#img_prev').attr('src', 'themes/Sugar5/images/previous_off.gif');
+                $('#Start').attr('disabled', 'disabled');
+                $('#img_first').attr('src', 'themes/Sugar5/images/start_off.gif');
+            }
+            if ((parseInt($('#start_pagination').val()) + parseInt($('#start_pagination').val())) >= parseInt($('#total_record').val())) {
+                $('#Next').attr('disabled', 'disabled');
+                $('#img_next').attr('src', 'themes/Sugar5/images/next_off.gif');
+                $('#End').attr('disabled', 'disabled');
+                $('#img_end').attr('src', 'themes/Sugar5/images/end_off.gif');
+            } else {
+                $('#Next').removeAttr('disabled');
+                $('#img_next').attr('src', 'themes/Sugar5/images/next.gif');
+                $('#End').removeAttr('disabled');
+                $('#img_end').attr('src', 'themes/Sugar5/images/end.gif');
+            }
+            if (parseInt($('#pagination').val()) >= parseInt($('#total_record').val())) {
+                $('#Next').attr('disabled', 'disabled');
+                $('#img_next').attr('src', 'themes/Sugar5/images/next_off.gif');
+                $('#End').attr('disabled', 'disabled');
+                $('#img_end').attr('src', 'themes/Sugar5/images/end_off.gif');
             }
             $('#follow_up').append(data);
         },

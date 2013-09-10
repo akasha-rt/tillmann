@@ -44,6 +44,7 @@
             <td align="left">&nbsp;</td>
             <td align="right" nowrap="nowrap" colspan="5">
                 <input type="hidden" id="deshlate_id" name="deshlate_id" value="{$deshlate_id}">
+                <input type="hidden" id="my_item" name="my_item" value="{$item_checked}">
                 <input type="hidden" id="last_sort" name="last_sort">
                 <input type="hidden" id="last_sort_direction" name="last_sort_direction">
                 <input type="hidden" name="pagination" id="pagination" value="{$pagginationBy}" />

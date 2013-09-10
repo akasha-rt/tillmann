@@ -230,12 +230,12 @@ class HomeController extends SugarController {
 
 //  @niranjan-End 
     public function action_add_follow_list() {
-        global $db;
-        $select_query = "SELECT id,deleted from followup where module_id='{$_REQUEST['record']}'";
+        global $db, $current_user;
+        $select_query = "SELECT id,deleted from followup where module_id='{$_REQUEST['record']}' and user_id='{$current_user->id}'";
         $select_result = $db->query($select_query);
         $select_row = $db->fetchByAssoc($select_result);
         if ($select_row) {
-            $select_follow_query = "SELECT deleted from followup where module_id = '{$_REQUEST['record']}'";
+            $select_follow_query = "SELECT deleted from followup where module_id = '{$_REQUEST['record']}' and user_id='{$current_user->id}'";
             $select_follow_result = $db->query($select_follow_query);
             $row_follow = $db->fetchByAssoc($select_follow_result);
             $update_follow_query = "update followup set deleted =";
@@ -243,7 +243,7 @@ class HomeController extends SugarController {
                 $update_follow_query .= '1';
             else
                 $update_follow_query .= '0';
-            $update_follow_query .= " where module_id='{$_REQUEST['record']}'";
+            $update_follow_query .= " where module_id='{$_REQUEST['record']}' and user_id='{$current_user->id}'";
             $update_follow_result = $db->query($update_follow_query);
         }else {
             $id = create_guid();
@@ -261,28 +261,36 @@ class HomeController extends SugarController {
     }
 
     public function action_remove_sort_rows() {
-        global $db;
-        $query = "SELECT * from followup WHERE module_name='Cases' and deleted=0";
+        global $db, $current_user;
+        if ($_REQUEST['my_item']) {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
+        } else {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
+        }
         $result = $db->query($query);
         $totalRow = $result->num_rows;
         while ($row = $db->fetchByAssoc($result)) {
-            $newCase = new aCase();
-            $newCase->retrieve($row['module_id']);
-            $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $newCase->name . "</a>";
-            $displayArray[] = array('number' => $newCase->case_number, 'name' => $case_name, 'status' => $newCase->status, 'user' => $newCase->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $newCase->name);
+            $userObject = new User();
+            $userObject->retrieve($row['assigned_user_id']);
+            $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $row['name'] . "</a>";
+            $displayArray[] = array('number' => $row['case_number'], 'name' => $case_name, 'status' => $row['status'], 'user' => $userObject->name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $row['name']);
             $countDisplayRow++;
         }
-        $query = "SELECT * from followup WHERE module_name='Task' and deleted=0";
+        if ($_REQUEST['my_item']) {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,tasks.name,tasks.assigned_user_id,tasks.status from followup,tasks WHERE followup.module_name='Task' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=tasks.id group by tasks.id";
+        } else {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,tasks.name,tasks.assigned_user_id,tasks.status from followup,tasks WHERE followup.module_name='Task'  and followup.deleted=0 and followup.module_id=tasks.id group by tasks.id";
+        }
         $result = $db->query($query);
         $totalRow += $result->num_rows;
         while ($row = $db->fetchByAssoc($result)) {
-            $newTask = new Task();
-            $newTask->retrieve($row['module_id']);
-            $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $newTask->name . "</a>";
-            $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $newTask->status, 'user' => $newTask->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $newTask->name);
+            $userObject = new User();
+            $userObject->retrieve($row['assigned_user_id']);
+            $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $row['name'] . "</a>";
+            $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $row['status'], 'user' => $userObject->name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $row['name']);
             $countDisplayRow++;
         }
-        if($_REQUEST['column_by']=='name')
+        if ($_REQUEST['column_by'] == 'name')
             $orderBy = $_REQUEST['column_by'] . '_row';
         else
             $orderBy = $_REQUEST['column_by'];
@@ -323,31 +331,43 @@ class HomeController extends SugarController {
     }
 
     public function action_pagination() {
-        global $db;
-        $query = "SELECT * from followup WHERE module_name='Cases' and deleted=0";
+        global $db, $current_user;
+        if ($_REQUEST['my_item']) {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
+        } else {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
+        }
         $result = $db->query($query);
         $totalRow = $result->num_rows;
         while ($row = $db->fetchByAssoc($result)) {
-            $newCase = new aCase();
-            $newCase->retrieve($row['module_id']);
-            $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $newCase->name . "</a>";
-            $displayArray[] = array('number' => $newCase->case_number, 'name' => $case_name, 'status' => $newCase->status, 'user' => $newCase->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
+            $userObject = new User();
+            $userObject->retrieve($row['assigned_user_id']);
+            $case_name = "<a href='index.php?module=Cases&action=DetailView&record={$row['module_id']}'>" . $row['name'] . "</a>";
+            $displayArray[] = array('number' => $row['case_number'], 'name' => $case_name, 'status' => $row['status'], 'user' => $userObject->name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $row['name']);
             $countDisplayRow++;
         }
-        $query = "SELECT * from followup WHERE module_name='Task' and deleted=0";
+        if ($_REQUEST['my_item']) {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,tasks.name,tasks.assigned_user_id,tasks.status from followup,tasks WHERE followup.module_name='Task' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=tasks.id group by tasks.id";
+        } else {
+            $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,tasks.name,tasks.assigned_user_id,tasks.status from followup,tasks WHERE followup.module_name='Task'  and followup.deleted=0 and followup.module_id=tasks.id group by tasks.id";
+        }
         $result = $db->query($query);
         $totalRow += $result->num_rows;
         while ($row = $db->fetchByAssoc($result)) {
-            $newTask = new Task();
-            $newTask->retrieve($row['module_id']);
-            $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $newTask->name . "</a>";
-            $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $newTask->status, 'user' => $newTask->assigned_user_name, 'id' => $row['module_id'], 'module' => $row['module_name']);
+            $userObject = new User();
+            $userObject->retrieve($row['assigned_user_id']);
+            $task_name = "<a href='index.php?module=Tasks&action=DetailView&record={$row['module_id']}'>" . $row['name'] . "</a>";
+            $displayArray[] = array('number' => '-', 'name' => $task_name, 'status' => $row['status'], 'user' => $userObject->name, 'id' => $row['module_id'], 'module' => $row['module_name'], 'name_row' => $row['name']);
             $countDisplayRow++;
         }
         if ($_REQUEST['last_sort'] != "") {
             if ($_REQUEST['sort_direction'] == "")
                 $_REQUEST['sort_direction'] = "ASC";
-            $orderBy = $_REQUEST['last_sort'];
+            $orderBy = '';
+            if ($_REQUEST['last_sort'] == 'name')
+                $orderBy = $_REQUEST['last_sort'] . '_row';
+            else
+                $orderBy = $_REQUEST['last_sort'];
             for ($start = 0; $start < (count($displayArray) - 1); $start++) {
                 for ($second = 0; $second < (count($displayArray) - $start - 1); $second++) {
                     if ($_REQUEST['sort_direction'] == 'ASC') {
@@ -377,7 +397,7 @@ class HomeController extends SugarController {
                     else
                         $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
                     foreach ($displayArray[$start] as $key => $value) {
-                        if ($key != "module" && $key != "id")
+                        if ($key != "module" && $key != "id" && $key != 'name_row')
                             $printTrs .= "<td valign='top'>$value</td>";
                     }
                     $printTrs .= "</tr>";
@@ -393,7 +413,7 @@ class HomeController extends SugarController {
                     else
                         $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
                     foreach ($displayArray[$start] as $key => $value) {
-                        if ($key != "module" && $key != "id")
+                        if ($key != "module" && $key != "id" && $key != 'name_row')
                             $printTrs .= "<td valign='top'>$value</td>";
                     }
                     $printTrs .= "</tr>";
@@ -410,7 +430,7 @@ class HomeController extends SugarController {
                     else
                         $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
                     foreach ($displayArray[$start] as $key => $value) {
-                        if ($key != "module" && $key != "id")
+                        if ($key != "module" && $key != "id" && $key != 'name_row')
                             $printTrs .= "<td valign='top'>$value</td>";
                     }
                     $printTrs .= "</tr>";
@@ -426,7 +446,7 @@ class HomeController extends SugarController {
                     else
                         $printTrs .= "<td width='10px'><a href='index.php?module={$displayArray[$start]['module']}&record={$displayArray[$start]['id']}&action=DetailView'><img src='themes/Sugar5/images/icon_Cases_32.gif' title='Case' style='height:17px;width:20px;cursor:pointer;' /></a></td>";
                     foreach ($displayArray[$start] as $key => $value) {
-                        if ($key != "module" && $key != "id")
+                        if ($key != "module" && $key != "id" && $key != 'name_row')
                             $printTrs .= "<td valign='top'>$value</td>";
                     }
                     $printTrs .= "</tr>";
