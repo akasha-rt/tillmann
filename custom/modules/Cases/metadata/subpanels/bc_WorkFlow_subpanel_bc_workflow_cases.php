@@ -46,20 +46,20 @@ $subpanel_layout['list_fields'] = array (
     'width' => '10%',
     'default' => true,
   ),
-  'edit_button' => 
-  array (
-    'vname' => 'LBL_EDIT_BUTTON',
-    'widget_class' => 'SubPanelEditButton',
-    'module' => 'Cases',
-    'width' => '4%',
-    'default' => true,
-  ),
-  'remove_button' => 
-  array (
-    'vname' => 'LBL_REMOVE',
-    'widget_class' => 'SubPanelRemoveButton',
-    'module' => 'Cases',
-    'width' => '5%',
-    'default' => true,
-  ),
+//  'edit_button' => 
+//  array (
+//    'vname' => 'LBL_EDIT_BUTTON',
+//    'widget_class' => 'SubPanelEditButton',
+//    'module' => 'Cases',
+//    'width' => '4%',
+//    'default' => true,
+//  ),
+//  'remove_button' => 
+//  array (
+//    'vname' => 'LBL_REMOVE',
+//    'widget_class' => 'SubPanelRemoveButton',
+//    'module' => 'Cases',
+//    'width' => '5%',
+//    'default' => true,
+//  ),
 );

@@ -14,10 +14,10 @@ $layout_defs["bc_WorkFlow"]["subpanel_setup"]['bc_workflow_bc_workflowtasks'] = 
     array (
       'widget_class' => 'SubPanelTopButtonQuickCreate',
     ),
-    1 => 
-    array (
-      'widget_class' => 'SubPanelTopSelectButton',
-      'mode' => 'MultiSelect',
-    ),
+//    1 => 
+//    array (
+//      'widget_class' => 'SubPanelTopSelectButton',
+//      'mode' => 'MultiSelect',
+//    ),
   ),
 );

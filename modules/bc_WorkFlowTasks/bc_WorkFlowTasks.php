@@ -44,5 +44,14 @@ class bc_WorkFlowTasks extends bc_WorkFlowTasks_sugar {
 		parent::bc_WorkFlowTasks_sugar();
 	}
 	
+    function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
+        $query = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
+        if($_REQUEST['module'] !== 'Cases' && $_REQUEST['module'] !== 'bc_WorkFlow'){
+        $query['from'] .= " LEFT JOIN  bc_workflowtasks_cases_c as bc_workflowtasks_cases_c
+                           ON  bc_workflowtasks_cases_c.bc_workflowtasks_casesbc_workflowtasks_idb = bc_workflowtasks.id";
+        $query['where'] .= " And bc_workflowtasks_cases_c.deleted = 0";
+        }
+        return $query;
+    }
 }
 ?>

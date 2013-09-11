@@ -16,6 +16,7 @@ $hook_array['before_save'][] = Array(1, 'Cases push feed', 'modules/Cases/SugarF
  */
 $hook_array['after_save'] = Array();
 $hook_array['after_save'][] = Array(1, 'Close Emails', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'closeEmails');
+$hook_array['after_save'][] = Array(2, 'Save WorkFlow Task List', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'saveWorkFlowTask');
 
 $hook_array['before_save'][] = Array(2, 'Queue Notification', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'queueNotification');
 ?>

@@ -10,14 +10,14 @@ $layout_defs["bc_WorkFlow"]["subpanel_setup"]['bc_workflow_cases'] = array (
   'get_subpanel_data' => 'bc_workflow_cases',
   'top_buttons' => 
   array (
-    0 => 
-    array (
-      'widget_class' => 'SubPanelTopButtonQuickCreate',
-    ),
-    1 => 
-    array (
-      'widget_class' => 'SubPanelTopSelectButton',
-      'mode' => 'MultiSelect',
-    ),
+//    0 => 
+//    array (
+//      'widget_class' => 'SubPanelTopButtonQuickCreate',
+//    ),
+//    1 => 
+//    array (
+//      'widget_class' => 'SubPanelTopSelectButton',
+//      'mode' => 'MultiSelect',
+//    ),
   ),
 );

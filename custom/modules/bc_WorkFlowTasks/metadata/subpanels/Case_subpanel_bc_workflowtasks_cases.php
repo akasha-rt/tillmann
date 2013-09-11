@@ -46,11 +46,11 @@ $subpanel_layout['list_fields'] = array (
     'width' => '4%',
     'default' => true,
   ),
-  'remove_button' => 
-  array (
-    'widget_class' => 'SubPanelRemoveButton',
-    'module' => 'bc_WorkFlowTasks',
-    'width' => '5%',
-    'default' => true,
-  ),
+//  'remove_button' => 
+//  array (
+//    'widget_class' => 'SubPanelRemoveButton',
+//    'module' => 'bc_WorkFlowTasks',
+//    'width' => '5%',
+//    'default' => true,
+//  ),
 );

@@ -41,12 +41,13 @@ if (!defined('sugarEntry') || !sugarEntry)
 
 require_once('include/MVC/View/views/view.edit.php');
 
-class CasesViewEdit extends ViewEdit {
+class bc_WorkFlowTasksViewEdit extends ViewEdit {
 
     public $useForSubpanel = true;
 
-    function CasesViewEdit() {
+    function bc_WorkFlowTasksViewEdit() {
         parent::ViewEdit();
+        $this->useForSubpanel = true;
     }
 
     /**
@@ -60,12 +61,24 @@ class CasesViewEdit extends ViewEdit {
     function display() {
         //debugbreak();
         parent::display();
-        if(!empty($this->bean->bc_workflow_casesbc_workflow_ida)){
+        if ($_REQUEST['return_module'] == 'Cases' && $_REQUEST['return_relationship'] == 'bc_workflowtasks_cases') {
             echo "<script>
                   $(document).ready(function(){
-                     $('#btn_bc_workflow_cases_name').hide();
-                     $('#btn_clr_bc_workflow_cases_name').hide();
-                     $('#bc_workflow_cases_name').attr('readOnly','readOnly');
+                     $('#bc_workflow_bc_workflowtasks_name_label').hide();
+                     $('#bc_workflow_bc_workflowtasks_name').hide();
+                     $('#btn_bc_workflow_bc_workflowtasks_name').hide();
+                     $('#btn_clr_bc_workflow_bc_workflowtasks_name').hide();
+                     $('#btn_bc_workflowtasks_cases_name').hide();
+                     $('#btn_clr_bc_workflowtasks_cases_name').hide();
+                     $('#bc_workflowtasks_cases_name').attr('readOnly','readOnly');
+                  });
+                </script>";
+        } else if ($_REQUEST['return_module'] == 'bc_WorkFlow') {
+            echo "<script>
+                  $(document).ready(function(){
+                     $('#status_label').closest('tr').hide();
+                     $('#note_label').html('');
+                     $('#note').closest('td').html('');
                   });
                 </script>";
         }
