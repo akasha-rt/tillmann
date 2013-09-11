@@ -13,7 +13,7 @@ class CasesViewDetail extends ViewDetail {
 
     public function getModuleTitle($show_help = true) {
         global $current_user, $db;
-        $follow_result = $db->query("SELECT id from followup where module_id='{$this->bean->id}' and deleted=0 and module_name='Cases'");
+        $follow_result = $db->query("SELECT id from followup where module_id='{$this->bean->id}' and deleted=0 and module_name='Cases' and user_id='{$current_user->id}'");
         $follow_row = $db->fetchByAssoc($follow_result);
         $watchIcon = '<script type="text/javascript" src="custom/include/js/Home/add_follow_list.js"></script><h2>';
         if ($follow_row)

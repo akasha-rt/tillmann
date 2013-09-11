@@ -115,13 +115,13 @@ function sortRow(column, ordered, currentElement) {
                 $(sort_imageId).attr('src', "themes/Sugar5/images/arrow_up.gif");
             }
             var pageNumbers = '';
-            var starNumber = 0;
+            var startNumber = 0;
             if (parseInt($('#total_record').val()) != 0)
-                starNumber = parseInt($('#total_record').val());
+                startNumber = 1;
             if ((parseInt($('#pagination').val())) < parseInt($('#total_record').val()))
-                pageNumbers = '(' + startNumber + '-' + $('#pagination').val() + ' of ' + $('#total_record').val() + ")";
+                pageNumbers = '(' + startNumber + ' - ' + $('#pagination').val() + ' of ' + $('#total_record').val() + ")";
             else
-                pageNumbers = '(' + startNumber + '-' + $('#total_record').val() + ' of ' + $('#total_record').val() + ")";
+                pageNumbers = '(' + startNumber + ' - ' + $('#total_record').val() + ' of ' + $('#total_record').val() + ")";
             $('#pageNumbers').text(pageNumbers);
             $('#start_pagination').val('0');
             if ($('#start_pagination').val() == 0) {

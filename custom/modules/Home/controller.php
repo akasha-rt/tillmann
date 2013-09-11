@@ -254,8 +254,8 @@ class HomeController extends SugarController {
     }
 
     public function action_remove_follow_list() {
-        global $db;
-        $update_follow_query = "update followup set deleted =1 where module_id='{$_REQUEST['record']}' and module_name='{$_REQUEST['module_name']}'";
+        global $db, $current_user;
+        $update_follow_query = "update followup set deleted =1 where module_id='{$_REQUEST['record']}' and module_name='{$_REQUEST['module_name']}' and user_id='{$current_user->id}'";
         $update_follow_result = $db->query($update_follow_query);
         exit;
     }
