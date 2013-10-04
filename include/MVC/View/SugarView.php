@@ -271,13 +271,19 @@ class SugarView
         global $app_list_strings;
         global $mod_strings;
         global $current_language;
-
+        
+        require_once 'modules/ACLRoles/ACLRole.php';
+        $acl_role_obj = new ACLRole();
+        $user_roles = $acl_role_obj->getUserRoles($current_user->id);
         $GLOBALS['app']->headerDisplayed = true;
 
         $themeObject = SugarThemeRegistry::current();
         $theme = $themeObject->__toString();
 
         $ss = new Sugar_Smarty();
+        if(in_array($sugar_config['Outsourcer_role'],$user_roles)){
+            $ss->assign("ROLE_OUTSOURCES", true);
+        }
         $ss->assign("APP", $app_strings);
         $ss->assign("THEME", $theme);
         $ss->assign("THEME_IE6COMPAT", $themeObject->ie6compat ? 'true':'false');
@@ -734,7 +740,7 @@ EOQ;
      */
     protected function _displayJavascript()
     {
-        global $locale, $sugar_config, $timedate;
+        global $locale, $sugar_config, $timedate,$current_user;
 
 
         if ($this->_getOption('show_javascript')) {
@@ -769,7 +775,12 @@ EOHTML;
             echo getVersionedScript('include/javascript/calendar.js');
             //For lookup
             echo getVersionedScript('custom/include/js/jquery.js');
-            echo getVersionedScript('custom/include/js/LookUp.js');
+            require_once 'modules/ACLRoles/ACLRole.php';
+            $acl_role_obj = new ACLRole();
+            $user_roles = $acl_role_obj->getUserRoles($current_user->id);
+            if(!in_array($sugar_config['Outsourcer_role'],$user_roles)){
+                echo getVersionedScript('custom/include/js/LookUp.js');
+            }
             //End - lookup
             //For Notification
             echo getVersionedScript('custom/include/js/unserialize.js');   
