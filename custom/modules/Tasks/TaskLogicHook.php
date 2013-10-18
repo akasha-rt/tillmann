@@ -14,12 +14,27 @@ class TaskLogicHook {
      * @param type $arguments 
      */
     function queueNotification(&$bean, $event, $arguments) {
-        if ($bean->fetched_row['assigned_user_id'] != $bean->assigned_user_id) {
+        if ($bean->fetched_row['assigned_user_id'] != $bean->assigned_user_id || ($bean->module_name == 'Threads' && empty($bean->fetched_row['id']))) {
             global $db;
             $id = create_guid();
-            $sql = "INSERT into notification_queue (id,userid,bean_id,bean_type,date_time,is_notify) 
+            if ($bean->module_name == 'Threads') {
+                $selectAllActiveUsers = "SELECT
+                                        users.id AS UserID
+                                      FROM users
+                                      WHERE users.status = 'active'
+                                          AND users.deleted = 0";
+                $query = $db->query($selectAllActiveUsers);
+                while ($result = $db->fetchByAssoc($query)) {
+                    $ids = create_guid();
+                    $sql = "INSERT into notification_queue (id,userid,bean_id,bean_type,date_time,is_notify) 
+            VALUES ('{$ids}','{$result['UserID']}','{$bean->id}','{$bean->module_name}',NOW(),0)";
+                    $db->query($sql);
+                }
+            } else {
+                $sql = "INSERT into notification_queue (id,userid,bean_id,bean_type,date_time,is_notify) 
             VALUES ('{$id}','{$bean->assigned_user_id}','{$bean->id}','{$bean->module_name}',NOW(),0)";
-            $db->query($sql);
+                $db->query($sql);
+            }
         }
     }
 

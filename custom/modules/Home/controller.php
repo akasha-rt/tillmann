@@ -167,6 +167,7 @@ class HomeController extends SugarController {
                               notes.name                   AS nname,
                               cases.name                   AS cname,
                               tasks.name                   AS tname,
+                              threads.title                AS thname,
                               n_q.date_time
                             FROM notification_queue n_q
                               LEFT JOIN emails emails
@@ -177,6 +178,8 @@ class HomeController extends SugarController {
                                 ON tasks.id = n_q.bean_id
                               LEFT JOIN cases cases
                                 ON cases.id = n_q.bean_id
+                              LEFT JOIN threads threads
+                                ON threads.id = n_q.bean_id
                               LEFT JOIN users users
                                 ON n_q.userid = users.id
                             WHERE n_q.is_notify = 0
@@ -202,6 +205,9 @@ class HomeController extends SugarController {
 
                 case "Notes":
                     $name[$bean_id][0] = $row['nname'];
+                    break;
+                case "Threads":
+                    $name[$bean_id][0] = $row['thname'];
                     break;
             }
 
