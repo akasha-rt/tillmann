@@ -98,9 +98,9 @@ function createNotificationInstance() {
                                     thread_notification.cancel();
                                     window.open(thread_url);
                                 });
-                                setTimeout(function() {
+                                /*setTimeout(function() {
                                     thread_notification.cancel();
-                                }, 10000);
+                                }, 10000);*/
                                 break;
                         }
 
