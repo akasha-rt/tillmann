@@ -19,4 +19,7 @@ $hook_array['after_save'][] = Array(1, 'Close Emails', 'custom/modules/Cases/Cas
 $hook_array['after_save'][] = Array(2, 'Save WorkFlow Task List', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'saveWorkFlowTask');
 
 $hook_array['before_save'][] = Array(2, 'Queue Notification', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'queueNotification');
+
+$hook_array['after_relationship_add'] = Array();
+$hook_array['after_relationship_add'][] = Array(1, 'Open Case on new Email', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'openCaseOnNewEmail');
 ?>
