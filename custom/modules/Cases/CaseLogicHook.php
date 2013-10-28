@@ -56,13 +56,18 @@ class CaseLogicHook {
     }
 
     function openCaseOnNewEmail(&$bean, $event, $arguments) {
-        if ($arguments['related_module'] == 'Emails') {
+        if ($arguments['related_module'] == 'Emails' && $bean->firstTime != true) {
             $email = BeanFactory::getBean('Emails', $arguments['related_id']);
             if ($email->status != 'closed') {
                 $bean->status = 'Open';
                 $bean->save(false);
             }
         }
+    }
+
+    function assignInitialStatus(&$bean, $event, $arguments) {
+        if (empty($bean->fetched_row))
+            $bean->firstTime = true;
     }
 
 }
