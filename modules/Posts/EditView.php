@@ -114,7 +114,7 @@ if($_REQUEST['return_module'] == "Threads" && $_REQUEST['return_action'] == "Det
         <br /><br />
         ";
         
-        $description_html = htmlentities($quote, ENT_COMPAT, "UTF-8");
+        $description_html = htmlentities($quote, ENT_COMPAT | ENT_IGNORE, "UTF-8");
     }
   }
 }
