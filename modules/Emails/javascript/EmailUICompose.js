@@ -1575,7 +1575,7 @@ SE.composeLayout = {
                 var newHtml = html;
 
                 //remove custom spacing
-                var spacing = '<span id="spacing"><br /><br /><br /></span>&nbsp;';
+                var spacing = '&nbsp;';
                 var customSpacingStart = html.indexOf(spacing);
 
                 if (customSpacingStart > -1)
