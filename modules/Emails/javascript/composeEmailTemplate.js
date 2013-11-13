@@ -132,7 +132,10 @@ function ForwardLookUp(input_fields, module_name, action){
                     fset = "<select id='"+input_field+"_search_offers' size='5' multiple='true'>" + fset;
                     fset += '</select>';
                     $("#"+input_field+"_search").html(fset);
+                    $("#"+input_field+"_search").css('position','absolute');
+                    $("#"+input_field+"_search").css('z-index','1');
                     $("#"+input_field+"_search").show();
+                    
                 }
             });
         }
