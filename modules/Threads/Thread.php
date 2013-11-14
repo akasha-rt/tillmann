@@ -282,5 +282,18 @@ class Thread extends SugarBean {
       
       return $where;
     }
+    
+    function get_list_view_data() {
+      $temp_array = $this->get_list_view_array();
+      $temp_array['TITLE'] = $this->title;
+      $temp_array['CREATED_BY'] = "<a href='index.php?action=DetailView&module=Employees&record={$this->created_by}'>{$this->created_by_user}</a>";
+      $temp_array['RECENT_POST_TITLE'] = "<a href='index.php?action=DetailView&module=Posts&record={$this->recent_post_id}'>{$this->recent_post_title}</a>";
+      $temp_array['RECENT_POST_MODIFIED_NAME'] = "<a href='index.php?action=DetailView&module=Employees&record={$this->recent_post_modified_id}'>{$this->recent_post_modified_name}</a>";
+      $temp_array['DATE_MODIFIED'] = $this->date_modified;
+      $temp_array['POSTCOUNT'] = $this->postcount;
+      $temp_array['VIEW_COUNT'] = $this->view_count;
+      parent::get_list_view_data();
+      return $temp_array;
+  }
 }
 ?>

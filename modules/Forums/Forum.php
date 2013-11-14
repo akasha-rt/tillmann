@@ -332,6 +332,18 @@ function bean_implements($interface){
         "where id='".$id."'"
     );
   }
+  
+  function get_list_view_data() {
+      $temp_array = $this->get_list_view_array();
+      $temp_array['TITLE'] = $this->title;
+      $temp_array['RECENT_THREAD_TITLE'] = "<a href='index.php?action=DetailView&module=Threads&record={$this->recent_thread_id}'>{$this->recent_thread_title}</a>";
+      $temp_array['RECENT_THREAD_MODIFIED_NAME'] = "<a href='index.php?action=DetailView&module=Employees&record={$this->recent_thread_modified_id}'>{$this->recent_thread_modified_name}</a>";
+      $temp_array['DATE_MODIFIED'] = $this->date_modified;
+      $temp_array['THREADCOUNT'] = $this->threadcount;
+      $temp_array['THREADANDPOSTCOUNT'] = $this->threadandpostcount;
+      parent::get_list_view_data();
+      return $temp_array;
+  }
 
 }
 ?>

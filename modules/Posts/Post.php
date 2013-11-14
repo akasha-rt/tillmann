@@ -167,5 +167,15 @@ class Post extends SugarBean {
       
       return $where;
     }
+    function get_list_view_data() {
+      $temp_array = $this->get_list_view_array();
+      $temp_array['TITLE'] = $this->title;
+      $temp_array['THREAD_ID'] = "<a href='index.php?action=DetailView&module=Threads&record={$this->thread_id}'>{$this->thread_name}</a>";
+      $temp_array['CREATED_BY_USER'] = "<a href='index.php?action=DetailView&module=Employees&record={$this->created_by}'>{$this->created_by_user}</a>";
+      $temp_array['MODIFIED_USER_ID'] = "<a href='index.php?action=DetailView&module=Employees&record={$this->modified_user_id}'>{$this->modified_by_user}</a>";
+      $temp_array['DATE_MODIFIED'] = $this->date_modified;
+      parent::get_list_view_data();
+     return $temp_array;
+  }
 }
 ?>
