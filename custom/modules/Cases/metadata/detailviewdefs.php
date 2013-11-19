@@ -111,14 +111,40 @@ array (
             'name' => 'description',
             'customCode' => '{$DESCRIPTION}',
           ),
+          1 => 
+          array (
+            'name' => 'product_c',
+            'studio' => 'visible',
+            'label' => 'LBL_PRODUCT',
+          ),
         ),
         4 => 
         array (
-          0 => 'resolution',
-          1 => 
+          0 => 
           array (
             'name' => 'bc_workflow_cases_name',
             'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
+          ),
+          1 => 
+          array (
+            'name' => 'supplier_c',
+            'studio' => 'visible',
+            'label' => 'LBL_SUPPLIER',
+          ),
+        ),
+        5 => 
+        array (
+          0 => 
+          array (
+            'name' => 'technical_c',
+            'studio' => 'visible',
+            'label' => 'LBL_TECHNICAL',
+          ),
+          1 => 
+          array (
+            'name' => 'review_c',
+            'studio' => 'visible',
+            'label' => 'LBL_REVIEW',
           ),
         ),
       ),

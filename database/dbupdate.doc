@@ -338,3 +338,11 @@ CREATE TABLE IF NOT EXISTS `followup` (
   `user_id` char(36) NOT NULL,
   `deleted` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+@dhaval - 19_11_13
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Casesproduct_c', 'product_c', 'LBL_PRODUCT', '', '', 'Cases', 'multienum', 100, 0, NULL, '2013-11-18 13:11:28', 0, 0, 0, 0, 1, 'true', 'account_type_dom', '', '', ''),
+('Casesreview_c', 'review_c', 'LBL_REVIEW', '', '', 'Cases', 'enum', 100, 0, 'None', '2013-11-18 13:12:50', 0, 0, 0, 0, 1, 'true', 'review_list', '', '', ''),
+('Casessupplier_c', 'supplier_c', 'LBL_SUPPLIER', '', '', 'Cases', 'enum', 100, 0, '', '2013-11-19 07:45:17', 0, 0, 0, 0, 1, 'true', 'account_type_dom', '', '', ''),
+('Casestechnical_c', 'technical_c', 'LBL_TECHNICAL', '', '', 'Cases', 'enum', 100, 0, 'None', '2013-11-18 13:10:27', 0, 0, 0, 0, 1, 'true', 'technical_list', '', '', '');
