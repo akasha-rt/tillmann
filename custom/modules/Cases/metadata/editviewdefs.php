@@ -61,12 +61,12 @@ array (
             'name' => 'description',
             'nl2br' => true,
           ),
-          1 => 
-          array (
+          1 => NULL, 
+          /*array (
             'name' => 'product_c',
             'studio' => 'visible',
             'label' => 'LBL_PRODUCT',
-          ),
+          ),*/
         ),
         5 => 
         array (
@@ -75,12 +75,12 @@ array (
             'name' => 'bc_workflow_cases_name',
             'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
           ),
-          1 => 
-          array (
+          1 => NULL, 
+          /*array (
             'name' => 'supplier_c',
             'studio' => 'visible',
             'label' => 'LBL_SUPPLIER',
-          ),
+          ),*/
         ),
         6 => 
         array (
