@@ -346,3 +346,6 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 ('Casesreview_c', 'review_c', 'LBL_REVIEW', '', '', 'Cases', 'enum', 100, 0, 'None', '2013-11-18 13:12:50', 0, 0, 0, 0, 1, 'true', 'review_list', '', '', ''),
 ('Casessupplier_c', 'supplier_c', 'LBL_SUPPLIER', '', '', 'Cases', 'enum', 100, 0, '', '2013-11-19 07:45:17', 0, 0, 0, 0, 1, 'true', 'account_type_dom', '', '', ''),
 ('Casestechnical_c', 'technical_c', 'LBL_TECHNICAL', '', '', 'Cases', 'enum', 100, 0, 'None', '2013-11-18 13:10:27', 0, 0, 0, 0, 1, 'true', 'technical_list', '', '', '');
+
+@dhaval - 20_11_13
+UPDATE `fields_meta_data` SET  `type` =  'multienum' WHERE  `fields_meta_data`.`id` =  'Casessupplier_c';

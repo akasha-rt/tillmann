@@ -32,15 +32,27 @@ array (
             'name' => 'case_number',
             'type' => 'readonly',
           ),
+          1 => 'type',
         ),
         1 => 
         array (
           0 => 'priority',
+          1 => 
+          array (
+            'name' => 'technical_c',
+            'studio' => 'visible',
+            'label' => 'LBL_TECHNICAL',
+          ),
         ),
         2 => 
         array (
           0 => 'status',
-          1 => 'type',
+          1 => 
+          array (
+            'name' => 'product_c',
+            'studio' => 'visible',
+            'label' => 'LBL_PRODUCT',
+          ),
         ),
         3 => 
         array (
@@ -53,6 +65,12 @@ array (
               'required' => false,
             ),
           ),
+          1 => 
+          array (
+            'name' => 'review_c',
+            'studio' => 'visible',
+            'label' => 'LBL_REVIEW',
+          ),
         ),
         4 => 
         array (
@@ -61,12 +79,12 @@ array (
             'name' => 'description',
             'nl2br' => true,
           ),
-          1 => NULL, 
-          /*array (
-            'name' => 'product_c',
+          1 => 
+          array (
+            'name' => 'supplier_c',
             'studio' => 'visible',
-            'label' => 'LBL_PRODUCT',
-          ),*/
+            'label' => 'LBL_SUPPLIER',
+          ),
         ),
         5 => 
         array (
@@ -74,27 +92,6 @@ array (
           array (
             'name' => 'bc_workflow_cases_name',
             'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
-          ),
-          1 => NULL, 
-          /*array (
-            'name' => 'supplier_c',
-            'studio' => 'visible',
-            'label' => 'LBL_SUPPLIER',
-          ),*/
-        ),
-        6 => 
-        array (
-          0 => 
-          array (
-            'name' => 'technical_c',
-            'studio' => 'visible',
-            'label' => 'LBL_TECHNICAL',
-          ),
-          1 => 
-          array (
-            'name' => 'review_c',
-            'studio' => 'visible',
-            'label' => 'LBL_REVIEW',
           ),
         ),
       ),

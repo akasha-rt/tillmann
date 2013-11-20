@@ -86,65 +86,66 @@ array (
             'name' => 'case_number',
             'label' => 'LBL_CASE_NUMBER',
           ),
-          1 => 'priority',
+          1 => '',
         ),
         1 => 
         array (
-          0 => 
-          array (
-            'name' => 'status',
-          ),
+          0 => 'priority',
           1 => 'type',
         ),
         2 => 
         array (
           0 => 
           array (
-            'name' => 'name',
-            'label' => 'LBL_SUBJECT',
+            'name' => 'status',
+          ),
+          1 => 
+          array (
+            'name' => 'technical_c',
+            'studio' => 'visible',
+            'label' => 'LBL_TECHNICAL',
           ),
         ),
         3 => 
         array (
           0 => 
           array (
-            'name' => 'description',
-            'customCode' => '{$DESCRIPTION}',
+            'name' => 'name',
+            'label' => 'LBL_SUBJECT',
           ),
-          1 => NULL, 
-          /*array (
+          1 => 
+          array (
             'name' => 'product_c',
             'studio' => 'visible',
             'label' => 'LBL_PRODUCT',
-          ),*/
+          ),
         ),
         4 => 
         array (
           0 => 
           array (
-            'name' => 'bc_workflow_cases_name',
-            'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
-          ),
-          1 => NULL, 
-          /*array (
-            'name' => 'supplier_c',
-            'studio' => 'visible',
-            'label' => 'LBL_SUPPLIER',
-          ),*/
-        ),
-        5 => 
-        array (
-          0 => 
-          array (
-            'name' => 'technical_c',
-            'studio' => 'visible',
-            'label' => 'LBL_TECHNICAL',
+            'name' => 'description',
+            'customCode' => '{$DESCRIPTION}',
           ),
           1 => 
           array (
             'name' => 'review_c',
             'studio' => 'visible',
             'label' => 'LBL_REVIEW',
+          ),
+        ),
+        5 => 
+        array (
+          0 => 
+          array (
+            'name' => 'bc_workflow_cases_name',
+            'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
+          ),
+          1 => 
+          array (
+            'name' => 'supplier_c',
+            'studio' => 'visible',
+            'label' => 'LBL_SUPPLIER',
           ),
         ),
       ),
