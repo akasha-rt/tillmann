@@ -60,7 +60,7 @@ class CasesViewEdit extends ViewEdit {
     function display() {
         //debugbreak();
         parent::display();
-        if(!empty($this->bean->bc_workflow_casesbc_workflow_ida)){
+        if (!empty($this->bean->bc_workflow_casesbc_workflow_ida)) {
             echo "<script>
                   $(document).ready(function(){
                      $('#btn_bc_workflow_cases_name').hide();
@@ -81,6 +81,29 @@ class CasesViewEdit extends ViewEdit {
         removeFromValidate('EditView','account_name');      
           </script>";
         }
+
+        echo <<<EOJS
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $("#reload_storeDD").click(function(){
+                    $.ajax({
+                        url: "index.php",
+                        type: "Post",
+                        data: {module: "Cases",action:"updateStoreDataDD"},
+                        success: function(result) {
+                            alert('Product And Supplier data has been updated. Please refresh the page to see changes.');
+                        },
+                        beforeSend: function() {  
+                            ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_PROCESSING_REQUEST'));
+                        },
+                        complete: function() {
+                            ajaxStatus.hideStatus();
+                        },
+                    });
+                });
+            });
+        </script>
+EOJS;
     }
 
 }

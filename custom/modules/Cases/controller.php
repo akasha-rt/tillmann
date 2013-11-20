@@ -16,6 +16,12 @@ class CasesController extends SugarController {
         exit;
     }
 
+    public function action_updateStoreDataDD() {
+        require_once 'custom/modules/Schedulers/_AddJobsHere.php';
+        updateStoreDataDropDowns();
+        exit;
+    }
+
 }
 
 ?>

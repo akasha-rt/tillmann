@@ -17,6 +17,7 @@ $job_strings[] = 'updateCustomerFromMagento';
 $job_strings[] = 'sendMonthlyWorkLog';
 $job_strings[] = 'sendDailyCaseOverDueTaskEmail';
 $job_strings[] = 'processUploadImportPermitCase';
+$job_strings[] = 'updateStoreDataDropDowns';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -892,6 +893,51 @@ function processUploadImportPermitCase() {
         $query = "UPDATE cases_cstm SET permit_flag_c = 0 WHERE id_c = '{$result['id']}' ";
         $db->query($query);
     }
+    return true;
+}
+
+function updateStoreDataDropDowns() {
+    global $db;
+
+    $purgeSQL = "DELETE
+                FROM bc_dropdown
+                WHERE bc_dropdown.dropdown_id = 'supplierStoreData'
+                     OR bc_dropdown.dropdown_id = 'productStoreData'";
+    $db->query($purgeSQL);
+
+    $productInsertSQL = "INSERT INTO bc_dropdown
+                                (dropdown_id,
+                                 option_val,
+                                 option_name)
+                    SELECT
+                      'productStoreData' AS dropdown_id,
+                      bc_storedata.sku   AS option_val,
+                      bc_storedata.name  AS option_name
+                    FROM bc_storedata
+                    WHERE bc_storedata.deleted = 0
+                        AND bc_storedata.name != ''
+                        AND bc_storedata.name IS NOT NULL
+                        AND bc_storedata.sku != ''
+                        AND bc_storedata.sku IS NOT NULL
+                    GROUP BY bc_storedata.sku
+                    ORDER BY bc_storedata.name";
+    $db->query($productInsertSQL);
+
+    $supplierInsertSQL = "INSERT INTO bc_dropdown
+                                                (dropdown_id,
+                                                 option_val,
+                                                 option_name)
+                                    SELECT DISTINCT
+                                      'supplierStoreData'     AS dropdown_id,
+                                      bc_storedata.supplierid AS option_val,
+                                      bc_storedata.supplierid AS option_name
+                                    FROM bc_storedata
+                                    WHERE bc_storedata.deleted = 0
+                                        AND bc_storedata.supplierid != ''
+                                        AND bc_storedata.supplierid IS NOT NULL
+                                        AND bc_storedata.supplierid != ''
+                                    ORDER BY bc_storedata.supplierid";
+    $db->query($supplierInsertSQL);
     return true;
 }
 

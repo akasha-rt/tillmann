@@ -17,4 +17,5 @@ $mod_strings ['LBL_UPDATECUSTOMERFROMMAGENTO'] = 'updateCustomerFromMagento';
 $mod_strings ['LBL_SENDMONTHLYWORKLOG'] = 'sendMonthlyWorkLog';
 $mod_strings ['LBL_SENDDAILYCASEOVERDUETASKEMAIL'] = 'sendDailyCaseOverDueTaskEmail';
 $mod_strings ['LBL_PROCESSUPLOADIMPORTPERMITCASE'] = 'processUploadImportPermitCase';
+$mod_strings ['LBL_UPDATESTOREDATADROPDOWNS'] = 'updateStoreDataDropDowns';
 ?>

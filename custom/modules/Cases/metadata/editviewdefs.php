@@ -93,6 +93,11 @@ array (
             'name' => 'bc_workflow_cases_name',
             'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
           ),
+          1 => 
+          array (
+             'label' => 'LBL_LOADSD_DD',
+             'customCode' => '<input type="button" name="reload_storeDD" id="reload_storeDD" value="Reload Product And Supplier from Store Data" />',
+          ),
         ),
       ),
       'LBL_PANEL_ASSIGNMENT' => 
