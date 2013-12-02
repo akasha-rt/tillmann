@@ -78,7 +78,7 @@ class CasesViewEdit extends ViewEdit {
         }
         $supplierJSON = json_encode($supplierList);
         echo "
-            <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js'></script>
+            <script src='http://code.jquery.com/jquery-1.10.1.min.js'></script>
             <script type='text/javascript' src='custom/include/js/jquery.tokeninput.js'></script>
             <link rel='stylesheet' type='text/css' href='custom/include/css/token-input-facebook.css' />
             <script type='text/javascript'>

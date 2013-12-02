@@ -353,3 +353,9 @@ UPDATE `fields_meta_data` SET  `type` =  'multienum' WHERE  `fields_meta_data`.`
 @niranjan - 01_12_13
 UPDATE `fields_meta_data` SET  `type` =  'varchar',`len` =  '255',`ext1` =  '' WHERE  `fields_meta_data`.`id` =  'Casesproduct_c';
 UPDATE  `fields_meta_data` SET  `type` =  'varchar',`len` =  '255',`default_value` =  '' ,`ext1` =  '' WHERE  `fields_meta_data`.`id` =  'Casessupplier_c';
+
+
+@dhaval - 02_12_13
+UPDATE `fields_meta_data` SET `type` = 'text', `len` = NULL, `ext1` = NULL, `ext2` = '6', `ext3` = '80', `ext4` = NULL WHERE `fields_meta_data`.`id` = 'Casesproduct_c';
+UPDATE `fields_meta_data` SET `type` = 'text', `len` = NULL, `ext1` = NULL, `ext2` = '6', `ext3` = '80', `ext4` = NULL WHERE `fields_meta_data`.`id` = 'Casessupplier_c';
+ALTER TABLE  `cases_cstm` CHANGE  `supplier_c`  `supplier_c` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
