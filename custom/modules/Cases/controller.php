@@ -29,7 +29,7 @@ class CasesController extends SugarController {
                                                 AND bc_storedata.supplierid IS NOT NULL
                                                 AND bc_storedata.supplierid LIKE '%{$_GET["q"]}%'
                                             GROUP BY bc_storedata.supplierid
-                                            ORDER BY bc_storedata.name";
+                                            ORDER BY bc_storedata.name  LIMIT 500";
         } else if (isset($_REQUEST['product_c']) && $_REQUEST['product_c'] == 1) {
             $query = "SELECT
                                               bc_storedata.sku   AS id,
@@ -42,7 +42,7 @@ class CasesController extends SugarController {
                                                 AND bc_storedata.sku IS NOT NULL
                                                 AND bc_storedata.name LIKE '%{$_GET["q"]}%'
                                             GROUP BY bc_storedata.sku
-                                            ORDER BY bc_storedata.name";
+                                            ORDER BY bc_storedata.name  LIMIT 500";
         } else {
             $query = "";
         }
