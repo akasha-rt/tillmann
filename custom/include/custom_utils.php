@@ -1,32 +1,18 @@
 <?php
 
-function getProductFromStoreData() {
+function getProductName($id) {
     global $db;
-
-    $productSQL = $db->query("SELECT *
-                                FROM bc_dropdown
-                                WHERE dropdown_id = 'productStoreData'
-                                ORDER BY option_name");
-    $option_array = array();
-    $option_array[$dd['']] = 'None';
-    while ($dd = $db->fetchByAssoc($productSQL)) {
-        $option_array[$dd['option_val']] = $dd['option_name'];
+    $new_result = array();
+    $id = "'".implode("','",  explode(",", $id))."'";
+    $select_Products = "SELECT
+         bc_storedata.sku,
+        bc_storedata.name
+      FROM bc_storedata
+      WHERE bc_storedata.sku IN  ($id)";
+    $query = $db->query($select_Products);
+    while ($result = $db->fetchByAssoc($query)) {
+        $new_result[$result['sku']] = $result['name'];
     }
-    return $option_array;
+    return $new_result;
 }
-
-function getSupplierFromStoreData() {
-    global $db;
-    $supplierSQL = $db->query("SELECT *
-                                FROM bc_dropdown
-                                WHERE dropdown_id = 'supplierStoreData'
-                                ORDER BY option_name");
-    $option_array = array();
-    $option_array[$dd['']] = 'None';
-    while ($dd = $db->fetchByAssoc($supplierSQL)) {
-        $option_array[$dd['option_val']] = $dd['option_name'];
-    }
-    return $option_array;
-}
-
 ?>

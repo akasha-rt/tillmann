@@ -47,12 +47,12 @@ array (
         2 => 
         array (
           0 => 'status',
-          /*1 => 
+          1 => 
           array (
             'name' => 'product_c',
             'studio' => 'visible',
             'label' => 'LBL_PRODUCT',
-          ),*/
+        ),
         ),
         3 => 
         array (
@@ -79,12 +79,12 @@ array (
             'name' => 'description',
             'nl2br' => true,
           ),
-          /*1 => 
+          1 => 
           array (
             'name' => 'supplier_c',
             'studio' => 'visible',
             'label' => 'LBL_SUPPLIER',
-          ),*/
+        ),
         ),
         5 => 
         array (
@@ -93,12 +93,10 @@ array (
             'name' => 'bc_workflow_cases_name',
             'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
           ),
-          /*1 => 
+          1 => 
           array (
-             'label' => 'LBL_LOADSD_DD',
-             'customCode' => '<input type="button" name="reload_storeDD" id="reload_storeDD" value="Reload Product And Supplier from Store Data" />',
-          ),*/
         ),
+      ),
       ),
       'LBL_PANEL_ASSIGNMENT' => 
       array (

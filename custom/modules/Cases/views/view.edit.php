@@ -58,7 +58,36 @@ class CasesViewEdit extends ViewEdit {
      * locale then it'll use file include/SugarFields/Fields/Address/en_us.DetailView.tpl.
      */
     function display() {
-        //debugbreak();
+        require_once 'custom/include/custom_utils.php';
+        $product_temp_array = getProductName($this->bean->product_c);
+        $productIDVal = array();
+        $key = 0;
+        foreach ($product_temp_array as $id => $val) {
+            $productIDVal[$key]['id'] = $id;
+            $productIDVal[$key]['name'] = $val;
+            $key++;
+        }
+        $procuctJSON = json_encode($productIDVal);
+        $supplierList = array();
+        $supplier_temp = explode(",", $this->bean->supplier_c);
+        foreach ($supplier_temp as $ids => $vals) {
+            if (!empty($vals)) {
+                $supplierList[$ids]['id'] = $vals;
+                $supplierList[$ids]['name'] = $vals;
+            }
+        }
+        $supplierJSON = json_encode($supplierList);
+        echo "
+            <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js'></script>
+            <script type='text/javascript' src='custom/include/js/jquery.tokeninput.js'></script>
+            <link rel='stylesheet' type='text/css' href='custom/include/css/token-input-facebook.css' />
+            <script type='text/javascript'>
+            $(document).ready(function () {
+                $('#product_c').tokenInput('index.php?module=Cases&action=saveDataInbcDropdown&product_c=1',{prePopulate: {$procuctJSON}});
+                $('#supplier_c').tokenInput('index.php?module=Cases&action=saveDataInbcDropdown&supplier_c=1',{prePopulate: {$supplierJSON}});
+            });
+            </script>
+            ";
         parent::display();
         if (!empty($this->bean->bc_workflow_casesbc_workflow_ida)) {
             echo "<script>
@@ -81,29 +110,6 @@ class CasesViewEdit extends ViewEdit {
         removeFromValidate('EditView','account_name');      
           </script>";
         }
-
-        echo <<<EOJS
-        <script type="text/javascript">
-            $(document).ready(function(){
-                $("#reload_storeDD").click(function(){
-                    $.ajax({
-                        url: "index.php",
-                        type: "Post",
-                        data: {module: "Cases",action:"updateStoreDataDD"},
-                        success: function(result) {
-                            alert('Product And Supplier data has been updated. Please refresh the page to see changes.');
-                        },
-                        beforeSend: function() {  
-                            ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_PROCESSING_REQUEST'));
-                        },
-                        complete: function() {
-                            ajaxStatus.hideStatus();
-                        },
-                    });
-                });
-            });
-        </script>
-EOJS;
     }
 
 }

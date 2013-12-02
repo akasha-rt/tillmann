@@ -113,12 +113,13 @@ array (
             'name' => 'name',
             'label' => 'LBL_SUBJECT',
           ),
-          /*1 => 
+          1 => 
           array (
             'name' => 'product_c',
             'studio' => 'visible',
             'label' => 'LBL_PRODUCT',
-          ),*/
+            'customCode' => '{$PRODUCTS}',
+        ),
         ),
         4 => 
         array (
@@ -141,13 +142,14 @@ array (
             'name' => 'bc_workflow_cases_name',
             'label' => 'LBL_BC_WORKFLOW_CASES_FROM_BC_WORKFLOW_TITLE',
           ),
-          /*1 => 
+          1 => 
           array (
             'name' => 'supplier_c',
             'studio' => 'visible',
             'label' => 'LBL_SUPPLIER',
-          ),*/
+            'customCode' => '{$SUPPLIERS}',
         ),
+      ),
       ),
       'LBL_PANEL_ASSIGNMENT' => 
       array (
@@ -172,9 +174,9 @@ array (
             'name' => 'date_entered',
             'customCode' => '{$fields.date_entered.value} {$APP.LBL_BY} {$fields.created_by_name.value}',
           ),
-        ),
       ),
     ),
+  ),
   ),
 );
 ?>

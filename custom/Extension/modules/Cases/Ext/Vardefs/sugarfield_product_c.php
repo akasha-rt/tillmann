@@ -1,5 +1,4 @@
 <?php
+ // created: 2013-12-02 07:34:59
 
-unset($dictionary['Case']['fields']['product_c']['options']);
-$dictionary['Case']['fields']['product_c']['function'] = "getProductFromStoreData";
-?>
+ ?>

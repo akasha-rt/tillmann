@@ -26,6 +26,7 @@ class CasesViewDetail extends ViewDetail {
     }
 
     function display() {
+        require_once 'custom/include/custom_utils.php';
         if (strlen(nl2br($this->bean->description)) > 250) {
             $short_description = "<span id='shortDesc' style='display:block'>" . nl2br(substr($this->bean->description, 0, 250));
             $short_description .= "...<a href='javascript:void(0)' id='showmore' style='text-decoration:none;'>[Show More]</a></span>";
@@ -50,7 +51,25 @@ EOS;
             $description = $this->bean->description;
             $this->ss->assign('DESCRIPTION', nl2br($description));
         }
+        /* Display Products */
+        $products = getProductName($this->bean->product_c);
+        $html = '';
+        foreach ($products as $key => $prod_name) {
+            $html .= '<li style="margin-left:10px;">' . $prod_name . '</li>';
+        }
+        $this->ss->assign('PRODUCTS', $html);
 
+        $supplierList = '';
+        if ($this->bean->supplier_c != '') {
+            $supplier_temp = explode(",", $this->bean->supplier_c);
+            foreach ($supplier_temp as $ids => $vals) {
+                if (!empty($vals)) {
+                    $supplierList .= '<li style="margin-left:10px;">' . $vals . '</li>';
+                }
+            }
+        }
+        $this->ss->assign('SUPPLIERS', $supplierList);
+        /* End */
         parent::display();
     }
 

@@ -349,3 +349,7 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 
 @dhaval - 20_11_13
 UPDATE `fields_meta_data` SET  `type` =  'multienum' WHERE  `fields_meta_data`.`id` =  'Casessupplier_c';
+
+@niranjan - 01_12_13
+UPDATE `fields_meta_data` SET  `type` =  'varchar',`len` =  '255',`ext1` =  '' WHERE  `fields_meta_data`.`id` =  'Casesproduct_c';
+UPDATE  `fields_meta_data` SET  `type` =  'varchar',`len` =  '255',`default_value` =  '' ,`ext1` =  '' WHERE  `fields_meta_data`.`id` =  'Casessupplier_c';
