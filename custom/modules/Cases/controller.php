@@ -40,7 +40,8 @@ class CasesController extends SugarController {
                                                 AND bc_storedata.name IS NOT NULL
                                                 AND bc_storedata.sku != ''
                                                 AND bc_storedata.sku IS NOT NULL
-                                                AND bc_storedata.name LIKE '%{$_GET["q"]}%'
+                                                AND (bc_storedata.name LIKE '%{$_GET["q"]}%'
+                                                OR bc_storedata.sku LIKE '%{$_GET["q"]}%')
                                             GROUP BY bc_storedata.sku
                                             ORDER BY bc_storedata.name  LIMIT 500";
         } else {
