@@ -24,6 +24,10 @@ $dashletData['CasesDashlet']['searchFields'] = array (
   array (
     'default' => '',
   ),
+  'status' => 
+  array (
+    'default' => '',
+  ),
 );
 $dashletData['CasesDashlet']['columns'] = array (
   'case_number' => 
