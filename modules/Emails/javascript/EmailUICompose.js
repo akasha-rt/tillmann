@@ -2114,7 +2114,8 @@ SE.composeLayout = {
             //bug 48179
             //check tinyHTML for closing tags
             var body = tinyHTML.lastIndexOf('</body>');
-            spacing = '<span id="spacing"><br /><br /><br /></span>&nbsp;';
+            //spacing = '<span id="spacing"><br /><br /><br /></span>&nbsp;';
+            spacing = '&nbsp;';
 
             if (body > -1)
             {
