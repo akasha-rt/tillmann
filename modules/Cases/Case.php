@@ -392,6 +392,7 @@ class aCase extends Basic {
         $temp = Array('id', 'first_name', 'last_name', 'title', 'email1', 'phone_work', 'case_role', 'case_rel_id');
         return $this->build_related_list2($query, new Contact(), $temp);
     }
+
     function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
         if ($order_by == '' || empty($order_by)) {
             $order_by = 'date_entered DESC';
@@ -404,7 +405,7 @@ class aCase extends Basic {
     }
 
     function get_list_view_data() {
-        global $current_language,$current_user;
+        global $current_language, $current_user;
         $app_list_strings = return_app_list_strings_language($current_language);
 
         $temp_array = $this->get_list_view_array();
@@ -413,15 +414,21 @@ class aCase extends Basic {
         $temp_array['STATUS'] = empty($this->status) ? "" : $app_list_strings['case_status_dom'][$this->status];
         $temp_array['ENCODED_NAME'] = $this->name;
         $temp_array['CASE_NUMBER'] = $this->case_number;
-        global $current_user,$db;
+        global $current_user, $db;
         $follow_result = $db->query("SELECT id from followup where module_id='{$temp_array['ID']}' and deleted=0 and module_name='Cases' and user_id='{$current_user->id}'");
         $follow_row = $db->fetchByAssoc($follow_result);
-        if($follow_row)
-            $temp_array['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow2.png" style="height:17px;width:20px;cursor:pointer;" id="'.$temp_array['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Cases\');" title="Remove from Watch List" />';
+        if ($follow_row)
+            $temp_array['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow2.png" style="height:17px;width:20px;cursor:pointer;" id="' . $temp_array['ID'] . '" onclick="addToWatchList(this,\'' . $current_user->id . '\',\'Cases\');" title="Remove from Watch List" />';
         else
-            $temp_array['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow1.png" style="height:17px;width:20px;cursor:pointer;" id="'.$temp_array['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Cases\');" title="Add to Watch List" />';
+            $temp_array['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow1.png" style="height:17px;width:20px;cursor:pointer;" id="' . $temp_array['ID'] . '" onclick="addToWatchList(this,\'' . $current_user->id . '\',\'Cases\');" title="Add to Watch List" />';
         $temp_array['SET_COMPLETE'] = "<a href='index.php?return_module=Home&return_action=index&action=EditView&module=Cases&record=$this->id&status=Closed'>" . SugarThemeRegistry::current()->getImage("close_inline", "title=" . translate('LBL_LIST_CLOSE', 'Cases') . " border='0'", null, null, '.gif', translate('LBL_LIST_CLOSE', 'Cases')) . "</a>";
         //$temp_array['ACCOUNT_NAME'] = $this->account_name; //overwrites the account_name value returned from the cases table.
+        
+        //Products In Dashlet
+        $products = getProductName($this->product_c);
+        $temp_array['PRODUCT_C'] = implode(",", $products);
+        //Products In Dashlet : End
+        
         return $temp_array;
     }
 

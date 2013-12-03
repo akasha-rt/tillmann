@@ -35,7 +35,7 @@ $dashletData['CasesDashlet']['columns'] = array (
   ),
   'name' => 
   array (
-    'width' => '40%',
+    'width' => '20%',
     'label' => 'LBL_LIST_SUBJECT',
     'link' => '1',
     'default' => true,
@@ -43,14 +43,14 @@ $dashletData['CasesDashlet']['columns'] = array (
   ),
   'priority' => 
   array (
-    'width' => '15%',
+    'width' => '5%',
     'label' => 'LBL_PRIORITY',
     'default' => true,
     'name' => 'priority',
   ),
   'status' => 
   array (
-    'width' => '8%',
+    'width' => '10%',
     'label' => 'LBL_STATUS',
     'default' => true,
     'name' => 'status',
@@ -77,7 +77,7 @@ $dashletData['CasesDashlet']['columns'] = array (
     'type' => 'varchar',
     'default' => true,
     'label' => 'LBL_PRODUCT',
-    'width' => '10%',
+    'width' => '20%',
     'name' => 'product_c',
   ),
   'review_c' => 
@@ -86,7 +86,7 @@ $dashletData['CasesDashlet']['columns'] = array (
     'default' => true,
     'studio' => 'visible',
     'label' => 'LBL_REVIEW',
-    'width' => '10%',
+    'width' => '7%',
     'name' => 'review_c',
   ),
   'supplier_c' => 
