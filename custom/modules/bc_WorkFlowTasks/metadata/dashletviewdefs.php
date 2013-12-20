@@ -1,6 +1,14 @@
 <?php
 $dashletData['bc_WorkFlowTasksDashlet']['searchFields'] = array (
+  'task_sequence_c' => 
+  array (
+    'default' => '',
+  ),
   'name' => 
+  array (
+    'default' => '',
+  ),
+  'bc_workflowtasks_cases_name' => 
   array (
     'default' => '',
   ),
@@ -10,6 +18,13 @@ $dashletData['bc_WorkFlowTasksDashlet']['searchFields'] = array (
   ),
 );
 $dashletData['bc_WorkFlowTasksDashlet']['columns'] = array (
+  'task_sequence_c' => 
+  array (
+    'type' => 'int',
+    'default' => true,
+    'label' => 'LBL_TASK_SEQUENCE',
+    'width' => '10%',
+  ),
   'name' => 
   array (
     'width' => '30%',
