@@ -1,6 +1,13 @@
 <?php
-// created: 2013-09-10 15:56:00
+// created: 2013-12-20 14:38:37
 $subpanel_layout['list_fields'] = array (
+  'task_sequence_c' => 
+  array (
+    'type' => 'int',
+    'default' => true,
+    'vname' => 'LBL_TASK_SEQUENCE',
+    'width' => '10%',
+  ),
   'name' => 
   array (
     'vname' => 'LBL_NAME',
@@ -36,11 +43,4 @@ $subpanel_layout['list_fields'] = array (
     'width' => '4%',
     'default' => true,
   ),
-//  'remove_button' => 
-//  array (
-//    'widget_class' => 'SubPanelRemoveButton',
-//    'module' => 'bc_WorkFlowTasks',
-//    'width' => '5%',
-//    'default' => true,
-//  ),
 );

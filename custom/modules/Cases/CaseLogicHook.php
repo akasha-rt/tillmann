@@ -47,6 +47,7 @@ class CaseLogicHook {
                 $wf_taskCase->note = $wf_task->note;
                 $wf_taskCase->description = $wf_task->description;
                 $wf_taskCase->assigned_user_id = $wf_task->assigned_user_id;
+                $wf_taskCase->task_sequence_c = $wf_task->task_sequence_c;
                 $wf_taskCase->save();
                 $bean->load_relationship('bc_workflowtasks_cases');
                 $bean->bc_workflowtasks_cases->add($wf_taskCase->id);
