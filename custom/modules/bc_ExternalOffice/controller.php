@@ -24,6 +24,21 @@ class bc_ExternalOfficeController extends SugarController {
         exit;
     }
 
+    function action_updateExternalOfficeUser() {
+        $office_id = $_POST['office_id'];
+        $case = new aCase();
+        $case->external_office_c = $office_id;
+        $html_options = '';
+
+        $user_array = getExternalOfficeUserList($case, 'external_office_c', $office_id, 'Controller');
+        foreach ($user_array as $id => $value) {
+            $html_options .= "<option value='{$id}'>{$value}</option>";
+        }
+
+        echo $html_options;
+        exit;
+    }
+
 }
 
 ?>

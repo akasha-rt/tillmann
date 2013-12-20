@@ -119,7 +119,7 @@ array (
             'studio' => 'visible',
             'label' => 'LBL_PRODUCT',
             'customCode' => '{$PRODUCTS}',
-        ),
+          ),
         ),
         4 => 
         array (
@@ -148,8 +148,25 @@ array (
             'studio' => 'visible',
             'label' => 'LBL_SUPPLIER',
             'customCode' => '{$SUPPLIERS}',
+          ),
         ),
       ),
+      'lbl_detailview_panel1' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            'name' => 'external_office_c',
+            'studio' => 'visible',
+            'label' => 'LBL_EXTERNAL_OFFICE',
+          ),
+          1 => 
+          array (
+            'name' => 'external_user_name_c',
+            'label' => 'LBL_EXTERNAL_USER_NAME',
+          ),
+        ),
       ),
       'LBL_PANEL_ASSIGNMENT' => 
       array (
@@ -174,9 +191,9 @@ array (
             'name' => 'date_entered',
             'customCode' => '{$fields.date_entered.value} {$APP.LBL_BY} {$fields.created_by_name.value}',
           ),
+        ),
       ),
     ),
-  ),
   ),
 );
 ?>

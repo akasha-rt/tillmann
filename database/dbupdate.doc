@@ -359,3 +359,56 @@ UPDATE  `fields_meta_data` SET  `type` =  'varchar',`len` =  '255',`default_valu
 UPDATE `fields_meta_data` SET `type` = 'text', `len` = NULL, `ext1` = NULL, `ext2` = '6', `ext3` = '80', `ext4` = NULL WHERE `fields_meta_data`.`id` = 'Casesproduct_c';
 UPDATE `fields_meta_data` SET `type` = 'text', `len` = NULL, `ext1` = NULL, `ext2` = '6', `ext3` = '80', `ext4` = NULL WHERE `fields_meta_data`.`id` = 'Casessupplier_c';
 ALTER TABLE  `cases_cstm` CHANGE  `supplier_c`  `supplier_c` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
+
+
+@dhaval - 20_12_13
+/* Create table in target */
+CREATE TABLE `bc_externaloffice`(
+	`id` char(36) COLLATE utf8_general_ci NOT NULL  , 
+	`name` varchar(255) COLLATE utf8_general_ci NULL  , 
+	`date_entered` datetime NULL  , 
+	`date_modified` datetime NULL  , 
+	`modified_user_id` char(36) COLLATE utf8_general_ci NULL  , 
+	`created_by` char(36) COLLATE utf8_general_ci NULL  , 
+	`description` text COLLATE utf8_general_ci NULL  , 
+	`deleted` tinyint(1) NULL  DEFAULT '0' , 
+	`assigned_user_id` char(36) COLLATE utf8_general_ci NULL  , 
+	`office_code` varchar(255) COLLATE utf8_general_ci NULL  , 
+	`api_url` varchar(255) COLLATE utf8_general_ci NULL  , 
+	`api_user` varchar(255) COLLATE utf8_general_ci NULL  , 
+	`api_user_pass` varchar(255) COLLATE utf8_general_ci NULL  , 
+	PRIMARY KEY (`id`) 
+) ENGINE=InnoDB DEFAULT CHARSET='utf8';
+
+
+/* Create table in target */
+CREATE TABLE `bc_externaloffice_audit`(
+	`id` char(36) COLLATE utf8_general_ci NOT NULL  , 
+	`parent_id` char(36) COLLATE utf8_general_ci NOT NULL  , 
+	`date_created` datetime NULL  , 
+	`created_by` varchar(36) COLLATE utf8_general_ci NULL  , 
+	`field_name` varchar(100) COLLATE utf8_general_ci NULL  , 
+	`data_type` varchar(100) COLLATE utf8_general_ci NULL  , 
+	`before_value_string` varchar(255) COLLATE utf8_general_ci NULL  , 
+	`after_value_string` varchar(255) COLLATE utf8_general_ci NULL  , 
+	`before_value_text` text COLLATE utf8_general_ci NULL  , 
+	`after_value_text` text COLLATE utf8_general_ci NULL  , 
+	KEY `idx_bc_externaloffice_primary`(`id`) , 
+	KEY `idx_bc_externaloffice_parent_id`(`parent_id`) 
+) ENGINE=InnoDB DEFAULT CHARSET='utf8';
+
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('bc_WorkFlowTaskstask_sequence_c', 'task_sequence_c', 'LBL_TASK_SEQUENCE', '', '', 'bc_WorkFlowTasks', 'int', 255, 0, '', '2013-12-19 09:37:58', 0, 0, 0, 0, 1, 'true', '', '', '', '');
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Casesexternal_case_id_c', 'external_case_id_c', 'LBL_EXTERNAL_CASE_ID', 'Store case id of external office for sync', 'Store case id of external office for sync', 'Cases', 'varchar', 255, 0, '', '2013-12-20 09:57:42', 0, 1, 0, 0, 1, 'true', '', '', '', ''),
+('Casesexternal_office_c', 'external_office_c', 'LBL_EXTERNAL_OFFICE', 'Select other office to assign case', 'Select other office to assign case', 'Cases', 'enum', 100, 0, '', '2013-12-20 09:50:29', 0, 1, 0, 0, 1, 'true', 'account_type_dom', '', '', ''),
+('Casesexternal_user_id_c', 'external_user_id_c', 'LBL_EXTERNAL_USER_ID', 'Select user from selected office to assign case', 'Select user from selected office to assign case', 'Cases', 'enum', 100, 0, '', '2013-12-20 09:54:43', 0, 1, 0, 0, 1, 'true', 'account_type_dom', '', '', ''),
+('Casesexternal_user_name_c', 'external_user_name_c', 'LBL_EXTERNAL_USER_NAME', '', '', 'Cases', 'varchar', 255, 0, '', '2013-12-20 09:55:52', 0, 1, 0, 0, 1, 'true', '', '', '', '');
+
+ALTER TABLE `cases_cstm` 
+	ADD COLUMN `external_office_c` varchar(100)  COLLATE utf8_general_ci NULL after `supplier_c`, 
+	ADD COLUMN `external_user_id_c` varchar(100)  COLLATE utf8_general_ci NULL after `external_office_c`, 
+	ADD COLUMN `external_user_name_c` varchar(255)  COLLATE utf8_general_ci NULL after `external_user_id_c`, 
+	ADD COLUMN `external_case_id_c` varchar(255)  COLLATE utf8_general_ci NULL after `external_user_name_c`, COMMENT='';
