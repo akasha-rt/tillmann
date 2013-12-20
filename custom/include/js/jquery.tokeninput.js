@@ -10,7 +10,7 @@
 
 (function ($) {
 // Default settings
-debugger;
+
 var DEFAULT_SETTINGS = {
 	// Search settings
     method: "GET",
