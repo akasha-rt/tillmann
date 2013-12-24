@@ -15,4 +15,7 @@ $mod_strings = array(
     'LBL_REVIEW' => 'Review',
     'LBL_SUPPLIER' => 'Supplier',
     'LBL_LOADSD_DD' => 'If you do not see any Supplier or Product in DropDown, try reloading it from Store Data.<br /><b>Note : Clicking on button may take a while</b>',
+    'LBL_PRODUCT_COMPLAINT_DASHLET' => 'Product Complaint Dashlet',
+    'LBL_COMPLAINT' => 'Complaint',
+    'LBL_COMPLAINT_PRODUCT' => 'Product',
 );
