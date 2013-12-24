@@ -412,3 +412,13 @@ ALTER TABLE `cases_cstm`
 	ADD COLUMN `external_user_id_c` varchar(100)  COLLATE utf8_general_ci NULL after `external_office_c`, 
 	ADD COLUMN `external_user_name_c` varchar(255)  COLLATE utf8_general_ci NULL after `external_user_id_c`, 
 	ADD COLUMN `external_case_id_c` varchar(255)  COLLATE utf8_general_ci NULL after `external_user_name_c`, COMMENT='';
+
+@dhaval - 24_12_13
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Emailsexternal_email_id_c', 'external_email_id_c', 'LBL_EXTERNAL_EMAIL_ID', 'Store Email id of external office for sync', 'Store Email id of external office for sync', 'Emails', 'varchar', 255, 0, '', '2013-12-20 09:57:42', 0, 1, 0, 0, 1, 'true', '', '', '', '');
+
+/*Checking Custom Fields for module : Emails */
+CREATE TABLE emails_cstm (id_c char(36)  NOT NULL  , PRIMARY KEY (id_c)) CHARACTER SET utf8 COLLATE utf8_general_ci;
+/*MISSING IN DATABASE - external_email_id_c -  ROW*/
+ALTER TABLE emails_cstm add COLUMN external_email_id_c varchar(255)  NULL ;
+

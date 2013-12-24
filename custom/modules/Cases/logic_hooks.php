@@ -9,6 +9,7 @@ $hook_array['before_save'] = Array();
 $hook_array['before_save'][] = Array(1, 'Cases push feed', 'modules/Cases/SugarFeeds/CaseFeed.php', 'CaseFeed', 'pushFeed');
 $hook_array['before_save'][] = Array(2, 'Check if case is created or edited', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'assignInitialStatus');
 $hook_array['before_save'][] = Array(3, 'Queue Notification', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'queueNotification');
+$hook_array['before_save'][] = Array(4, 'Sync Case with external Office', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'syncCaseWithExternalOffice');
 
 
 /**

@@ -71,6 +71,93 @@ class CaseLogicHook {
             $bean->firstTime = true;
     }
 
+    function syncCaseWithExternalOffice(&$bean, $event, $arguments) {
+        if (!$bean->synced && count($_REQUEST) > 4 && !empty($bean->external_office_c)) {
+            global $sugar_config;
+            $case_sync_data = array();
+            $note_sync_data = array();
+            $email_sync_data = array();
+
+            //initiate syncing!
+            include_once 'custom/modules/bc_ExternalOffice/externalOfficeComm.php';
+            $comm_gateway = new ExternalOfficeComm($bean->external_office_c);
+
+            $case_key_fields = $sugar_config['Cases']['to_sync'];
+            $note_key_fields = $sugar_config['Notes']['to_sync'];
+            $email_key_fields = $sugar_config['Emails']['to_sync'];
+
+            //grab changes fields
+            foreach ($case_key_fields as $field) {
+                if ($bean->$field != $bean->fetched_row[$field]) {
+                    $case_sync_data[$field] = $bean->$field;
+                }
+            }
+            //correct few fields
+            unset($case_sync_data['id']);
+            if (!empty($bean->external_case_id_c)) {
+                $case_sync_data['id'] = $bean->external_case_id_c;
+            }
+            $case_sync_data['assigned_user_id'] = $bean->external_user_id_c;
+            $case_sync_data['assigned_user_name'] = $bean->external_user_name_c;
+            $case_sync_data['external_office_c'] = $sugar_config['office_code'];
+            $case_sync_data['external_user_id_c'] = $bean->assigned_user_id;
+            $case_sync_data['external_user_name_c'] = $bean->assigned_user_name;
+            $case_sync_data['external_case_id_c'] = $bean->id;
+            //sync case first
+            $bean->external_case_id_c = $comm_gateway->syncCaseToExternalOffice($case_sync_data);
+
+            //time for history items
+            //notes first
+            $bean->load_relationship("case_notes");
+            $relatedNotes = $bean->get_linked_beans('notes', 'Notes');
+            if (!empty($relatedNotes)) {
+                foreach ($relatedNotes as $note) {
+                    if (empty($note->external_note_id_c)) {
+                        $note_sync_data = array();
+                        foreach ($note_key_fields as $field) {
+                            $note_sync_data[$field] = $bean->$field;
+                        }
+                        $note_sync_data['assigned_user_id'] = $bean->external_user_id_c;
+                        $note_sync_data['assigned_user_name'] = $bean->external_user_name_c;
+                        $note_sync_data['parent_type'] = 'Cases';
+                        $note_sync_data['parent_id'] = $bean->external_case_id_c;
+                        $note_sync_data['external_note_id_c'] = $note->id;
+                        //Sync note
+                        $note->external_note_id_c = $comm_gateway->syncNoteToExternalOffice($note_sync_data);
+                        $note->synced = true;
+                        $note->save(false);
+                    }
+                }
+            }
+
+            //now emails
+            $bean->load_relationship("case_emails");
+            $relatedEmails = $bean->get_linked_beans('emails', 'Emails');
+            if (!empty($relatedEmails)) {
+                foreach ($relatedEmails as $email) {
+                    if (empty($email->external_email_id_c)) {
+                        $email_sync_data = array();
+                        foreach ($email_key_fields as $field) {
+                            $email_sync_data[$field] = $bean->$field;
+                        }
+                        $email_sync_data['assigned_user_id'] = $bean->external_user_id_c;
+                        $email_sync_data['assigned_user_name'] = $bean->external_user_name_c;
+                        $email_sync_data['parent_type'] = 'Cases';
+                        $email_sync_data['parent_id'] = $bean->external_case_id_c;
+                        $email_sync_data['external_email_id_c'] = $email->id;
+                        //Sync email
+                        $email->external_email_id_c = $comm_gateway->syncEmailToExternalOffice($email_sync_data);
+                        $email->synced = true;
+                        $email->save(false);
+                    }
+                }
+            }
+
+
+            $bean->synced = true;
+        }
+    }
+
 }
 
 ?>

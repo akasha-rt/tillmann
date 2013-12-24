@@ -12,11 +12,27 @@ class ExternalOfficeComm {
     var $api_pass = '';
     var $session_id = '';
     var $soap_client = '';
+    var $office_code = '';
+    var $name_value_list = '';
 
-    function __construct($api_url, $api_user, $api_pass) {
-        $this->api_url = $api_url;
-        $this->api_user = $api_user;
-        $this->api_pass = $api_pass;
+    function __construct($office_code) {
+        $this->office_code = $office_code;
+    }
+
+    function setConnectionParams() {
+        global $db;
+        $office_query = "SELECT
+                            bc_externaloffice.api_url,
+                            bc_externaloffice.api_user,
+                            bc_externaloffice.api_user_pass
+                          FROM bc_externaloffice
+                          WHERE bc_externaloffice.deleted = 0
+                              AND bc_externaloffice.office_code = '{$this->office_code}'";
+        $result = $db->query($office_query);
+        $office_detail = $db->fetchByAssoc($result);
+        $this->api_url = $office_detail['api_url'];
+        $this->api_user = $office_detail['api_user'];
+        $this->api_pass = $office_detail['api_user_pass'];
         $this->soap_client = new nusoapclient($this->api_url, true);
     }
 
@@ -25,6 +41,7 @@ class ExternalOfficeComm {
     }
 
     private function login() {
+        $this->setConnectionParams();
         $user_auth = array(
             'user_auth' => array(
                 'user_name' => $this->api_user,
@@ -71,10 +88,80 @@ class ExternalOfficeComm {
         }
     }
 
+    function formateSyncDataNVL($sync_data) {
+        $this->name_value_list = array();
+        $index = 0;
+        foreach ($sync_data as $name => $value) {
+            $this->name_value_list[$index]['name'] = $name;
+            $this->name_value_list[$index]['value'] = $value;
+            $index++;
+        }
+    }
+
+    function syncSetEntry($module_name) {
+        $set_entry_params = array(
+            'session' => $this->session_id,
+            'module_name' => $module_name,
+            'name_value_list' => $this->name_value_list
+        );
+        $set_entry_result = $this->soap_client->call('set_entry', $set_entry_params);
+        $error = $set_entry_result['error'];
+        if ($error['number'] <> 0) {
+            $this->session_id = '';
+            return false;
+        }
+        return $set_entry_result['id'];
+    }
+
+    function syncNoteAttachment($note_id, $filename) {
+        global $sugar_config;
+        $attachment = array(
+            'id' => $note_id,
+            'filename' => $filename,
+            'file' => base64_encode(file_get_contents($sugar_config['upload_dir'] . $note_id))
+        );
+        $note_attachment = array(
+            'session' => $this->session_id,
+            'note' => $attachment
+        );
+        $this->soap_client->call('set_note_attachment', $note_attachment);
+    }
+
+    function syncCaseToExternalOffice($sync_data = array()) {
+        $this->formateSyncDataNVL($sync_data);
+        if ($this->checkSession()) {
+            return $this->syncSetEntry('Cases');
+        }
+        return false;
+    }
+
+    function syncNoteToExternalOffice($sync_data = array()) {
+        $this->formateSyncDataNVL($sync_data);
+        if ($this->checkSession()) {
+            $note_id = $this->syncSetEntry('Notes');
+            if (!empty($sync_data['filename'])) {
+                $this->syncNoteAttachment($note_id, $sync_data['filename']);
+            }
+            return $note_id;
+        }
+        return false;
+    }
+
+    function syncEmailToExternalOffice($sync_data = array()) {
+        $this->formateSyncDataNVL($sync_data);
+        if ($this->checkSession()) {
+            return $this->syncSetEntry('Emails');
+        }
+        return false;
+    }
+
     function logout() {
         $error = $this->soap_client->call('logout', $this->session_id);
     }
 
-}
+    function __destruct() {
+        $this->logout();
+    }
 
+}
 ?>

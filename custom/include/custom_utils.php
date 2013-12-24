@@ -34,19 +34,8 @@ function getExternalOfficeUserList($focus, $name, $value, $view) {
     //$focus->external_office_c
     $user_array = array('' => 'None');
     if (!empty($focus->external_office_c)) {
-        global $db;
-        $office_query = "SELECT
-                            bc_externaloffice.api_url,
-                            bc_externaloffice.api_user,
-                            bc_externaloffice.api_user_pass
-                          FROM bc_externaloffice
-                          WHERE bc_externaloffice.deleted = 0
-                              AND bc_externaloffice.office_code = '{$focus->external_office_c}'";
-        $result = $db->query($office_query);
-        $office_detail = $db->fetchByAssoc($result);
-
         include_once 'custom/modules/bc_ExternalOffice/externalOfficeComm.php';
-        $comm_gateway = new ExternalOfficeComm($office_detail['api_url'], $office_detail['api_user'], $office_detail['api_user_pass']);
+        $comm_gateway = new ExternalOfficeComm($focus->external_office_c);
         $user_array = $comm_gateway->getExternalOfficeUsers();
     }
     return $user_array;
