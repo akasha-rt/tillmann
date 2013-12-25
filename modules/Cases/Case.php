@@ -397,13 +397,18 @@ class aCase extends Basic {
         if ($order_by == '' || empty($order_by)) {
             $order_by = 'date_entered DESC';
         }
-        $ret_array = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, true, $parentbean, $singleSelect);
-        $ret_array['select'] .= ', "" as follow_button_c ';
-        if (!$return_array)
-            return $ret_array['select'] . $ret_array['from'] . $ret_array['where'] . $ret_array['order_by'];
-        return $ret_array;
+        if (!$this->ComplaintDashlet) {
+            $ret_array = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, true, $parentbean, $singleSelect);
+            $ret_array['select'] .= ', "" as follow_button_c ';
+                if (!$return_array){
+                    return $ret_array['select'] . $ret_array['from'] . $ret_array['where'] . $ret_array['order_by'];
+                }
+            return $ret_array;
+        }else {
+            return $ret_array;
+        }
     }
-
+    
     function get_list_view_data() {
         global $current_language, $current_user;
         $app_list_strings = return_app_list_strings_language($current_language);
@@ -423,12 +428,18 @@ class aCase extends Basic {
             $temp_array['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow1.png" style="height:17px;width:20px;cursor:pointer;" id="' . $temp_array['ID'] . '" onclick="addToWatchList(this,\'' . $current_user->id . '\',\'Cases\');" title="Add to Watch List" />';
         $temp_array['SET_COMPLETE'] = "<a href='index.php?return_module=Home&return_action=index&action=EditView&module=Cases&record=$this->id&status=Closed'>" . SugarThemeRegistry::current()->getImage("close_inline", "title=" . translate('LBL_LIST_CLOSE', 'Cases') . " border='0'", null, null, '.gif', translate('LBL_LIST_CLOSE', 'Cases')) . "</a>";
         //$temp_array['ACCOUNT_NAME'] = $this->account_name; //overwrites the account_name value returned from the cases table.
-        
         //Products In Dashlet
+        $temp_array['TECHNICAL_C'] = $this->technical_c;
+        // Display Product And Its Total Complaint In Complaint Dashlet
+        $complaint_products = getProductName($this->complaint_product);
+        $temp_array['COMPLAINT_PRODUCT'] = implode(",", $complaint_products);
+        $temp_array['COMPLAINT'] = $this->complaint;
+        // End
+
         $products = getProductName($this->product_c);
         $temp_array['PRODUCT_C'] = implode(",", $products);
         //Products In Dashlet : End
-        
+
         return $temp_array;
     }
 

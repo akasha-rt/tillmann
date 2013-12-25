@@ -20,11 +20,13 @@ array (
     'link' => true,
     'default' => true,
   ),
-  'PRIORITY' => 
+  'TECHNICAL_C' => 
   array (
-    'width' => '10%',
-    'label' => 'LBL_LIST_PRIORITY',
+    'type' => 'enum',
     'default' => true,
+    'studio' => 'visible',
+    'label' => 'LBL_TECHNICAL',
+    'width' => '10%',
   ),
   'STATUS' => 
   array (
