@@ -69,19 +69,19 @@ class NewProductComplaintDashlet extends CustomDashletGeneric {
         }
         $this->seedBean->ComplaintDashlet = true;
         $lvsParams = array(
-            'custom_select' => "SELECT
+            'custom_select' => "SELECT a.complaint_product AS complaint_product,a.complaint AS complaint ",
+            'custom_from' => " FROM
+                                        (SELECT
                                         bc_storedata.sku      AS complaint_product,
-                                        COUNT(bc_storedata.sku) AS complaint",
-            'custom_from' => "   FROM cases
+                                        COUNT(bc_storedata.sku) AS complaint FROM cases
                                         LEFT JOIN cases_cstm
                                           ON cases.id = cases_cstm.id_c
-                                          LEFT JOIN bc_storedata ON  FIND_IN_SET(bc_storedata.sku,cases_cstm.product_c)",
-            'custom_where' => "   WHERE cases.deleted = 0
+                                          LEFT JOIN bc_storedata ON  FIND_IN_SET(bc_storedata.sku,cases_cstm.product_c) WHERE cases.deleted = 0
                                         AND cases_cstm.technical_c = 'Complaint'
                                         AND cases_cstm.product_c IS NOT NULL
-                                        GROUP BY bc_storedata.sku
-                                        HAVING COUNT(bc_storedata.sku) >= 2
-                                        $orderBy",
+                                         GROUP BY bc_storedata.sku
+                                        HAVING COUNT(bc_storedata.sku) >= 2 ) AS a",
+            'custom_order_by' => $orderBy,
             'distinct' => true
         );
         parent::process($lvsParams);
