@@ -113,12 +113,12 @@ class ExternalOfficeComm {
         return $set_entry_result['id'];
     }
 
-    function syncNoteAttachment($note_id, $filename) {
+    function syncNoteAttachment($note_id, $external_note_id, $filename) {
         global $sugar_config;
         $attachment = array(
             'id' => $note_id,
             'filename' => $filename,
-            'file' => base64_encode(file_get_contents($sugar_config['upload_dir'] . $note_id))
+            'file' => base64_encode(file_get_contents($sugar_config['upload_dir'] . $external_note_id))
         );
         $note_attachment = array(
             'session' => $this->session_id,
@@ -140,7 +140,7 @@ class ExternalOfficeComm {
         if ($this->checkSession()) {
             $note_id = $this->syncSetEntry('Notes');
             if (!empty($sync_data['filename'])) {
-                $this->syncNoteAttachment($note_id, $sync_data['filename']);
+                $this->syncNoteAttachment($note_id, $sync_data['external_note_id_c'], $sync_data['filename']);
             }
             return $note_id;
         }
@@ -164,4 +164,5 @@ class ExternalOfficeComm {
     }
 
 }
+
 ?>

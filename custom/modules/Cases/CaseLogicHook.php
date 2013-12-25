@@ -72,7 +72,13 @@ class CaseLogicHook {
     }
 
     function syncCaseWithExternalOffice(&$bean, $event, $arguments) {
-        if (!$bean->synced && count($_REQUEST) > 4 && !empty($bean->external_office_c)) {
+        if (!$bean->synced && count($_REQUEST) > 4 && !empty($bean->external_office_c) && $_REQUEST['module'] == 'Cases') {
+
+            //check if office changed
+            if ($bean->external_office_c != $bean->fetched_row['external_office_c']) {
+                $bean->external_case_id_c = '';
+            }
+
             global $sugar_config;
             $case_sync_data = array();
             $note_sync_data = array();
@@ -82,13 +88,19 @@ class CaseLogicHook {
             include_once 'custom/modules/bc_ExternalOffice/externalOfficeComm.php';
             $comm_gateway = new ExternalOfficeComm($bean->external_office_c);
 
-            $case_key_fields = $sugar_config['Cases']['to_sync'];
-            $note_key_fields = $sugar_config['Notes']['to_sync'];
-            $email_key_fields = $sugar_config['Emails']['to_sync'];
+            $case_key_fields = $sugar_config['sync_data']['Cases']['to_sync'];
+            $note_key_fields = $sugar_config['sync_data']['Notes']['to_sync'];
+            $email_key_fields = $sugar_config['sync_data']['Emails']['to_sync'];
 
             //grab changes fields
-            foreach ($case_key_fields as $field) {
-                if ($bean->$field != $bean->fetched_row[$field]) {
+            if (!empty($bean->external_case_id_c)) {
+                foreach ($case_key_fields as $field) {
+                    if ($bean->$field != $bean->fetched_row[$field]) {
+                        $case_sync_data[$field] = $bean->$field;
+                    }
+                }
+            } else {
+                foreach ($case_key_fields as $field) {
                     $case_sync_data[$field] = $bean->$field;
                 }
             }
@@ -105,6 +117,7 @@ class CaseLogicHook {
             $case_sync_data['external_case_id_c'] = $bean->id;
             //sync case first
             $bean->external_case_id_c = $comm_gateway->syncCaseToExternalOffice($case_sync_data);
+            $bean->synced = true;
 
             //time for history items
             //notes first
@@ -115,7 +128,7 @@ class CaseLogicHook {
                     if (empty($note->external_note_id_c)) {
                         $note_sync_data = array();
                         foreach ($note_key_fields as $field) {
-                            $note_sync_data[$field] = $bean->$field;
+                            $note_sync_data[$field] = $note->$field;
                         }
                         $note_sync_data['assigned_user_id'] = $bean->external_user_id_c;
                         $note_sync_data['assigned_user_name'] = $bean->external_user_name_c;
@@ -138,7 +151,7 @@ class CaseLogicHook {
                     if (empty($email->external_email_id_c)) {
                         $email_sync_data = array();
                         foreach ($email_key_fields as $field) {
-                            $email_sync_data[$field] = $bean->$field;
+                            $email_sync_data[$field] = $email->$field;
                         }
                         $email_sync_data['assigned_user_id'] = $bean->external_user_id_c;
                         $email_sync_data['assigned_user_name'] = $bean->external_user_name_c;
@@ -152,9 +165,6 @@ class CaseLogicHook {
                     }
                 }
             }
-
-
-            $bean->synced = true;
         }
     }
 
