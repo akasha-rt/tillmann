@@ -8,4 +8,5 @@ $hook_array = Array();
 
 $hook_array['before_save'] = Array();
 $hook_array['before_save'][] = Array(1, 'Queue Notification', 'custom/modules/Notes/NoteLogicHook.php', 'NoteLogicHook', 'queueNotification');
+$hook_array['before_save'][] = Array(2, 'Sync Note with External Office', 'custom/modules/Notes/NoteLogicHook.php', 'NoteLogicHook', 'syncNoteWithExternalOffice');
 ?>

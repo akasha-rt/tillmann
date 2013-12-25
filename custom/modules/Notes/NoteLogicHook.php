@@ -23,6 +23,41 @@ class NoteLogicHook {
         }
     }
 
+    function syncNoteWithExternalOffice(&$bean, $event, $arguments) {
+        if (!$bean->synced && count($_REQUEST) > 4 && $bean->parent_type == 'Cases' &&
+                !empty($bean->parent_id) && empty($bean->fetched_row['id'])) {
+
+            $case = new aCase();
+            $case->retrieve($bean->parent_id);
+
+            if (!empty($case->external_office_c)) {
+
+                global $sugar_config;
+                $note_sync_data = array();
+                $note_key_fields = $sugar_config['sync_data']['Notes']['to_sync'];
+
+                //initiate syncing!
+                include_once 'custom/modules/bc_ExternalOffice/externalOfficeComm.php';
+                $comm_gateway = new ExternalOfficeComm($case->external_office_c);
+
+                if (empty($bean->external_note_id_c)) {
+
+                    foreach ($note_key_fields as $field) {
+                        $note_sync_data[$field] = $bean->$field;
+                    }
+                    $note_sync_data['assigned_user_id'] = $case->external_user_id_c;
+                    $note_sync_data['assigned_user_name'] = $case->external_user_name_c;
+                    $note_sync_data['parent_type'] = 'Cases';
+                    $note_sync_data['parent_id'] = $case->external_case_id_c;
+                    $note_sync_data['external_note_id_c'] = $bean->id;
+                    //Sync note
+                    $bean->external_note_id_c = $comm_gateway->syncNoteToExternalOffice($note_sync_data);
+                    $bean->synced = true;
+                }
+            }
+        }
+    }
+
 }
 
 ?>
