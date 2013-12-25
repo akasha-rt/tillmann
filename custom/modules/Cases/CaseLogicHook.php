@@ -14,7 +14,7 @@ class CaseLogicHook {
      * @param type $arguments 
      */
     function closeEmails(&$bean, $event, $arguments) {
-        if ($bean->status == 'Closed') {
+        if ($bean->status == 'Closed' && !$bean->synced) {
             $bean->load_relationship('emails');
             foreach ($bean->emails->getBeans() as $email) {
                 $email->status = 'closed';
@@ -24,7 +24,7 @@ class CaseLogicHook {
     }
 
     function queueNotification(&$bean, $event, $arguments) {
-        if ($bean->fetched_row['assigned_user_id'] != $bean->assigned_user_id) {
+        if ($bean->fetched_row['assigned_user_id'] != $bean->assigned_user_id && !$bean->synced) {
             global $db;
             $id = create_guid();
             $sql = "INSERT into notification_queue (id,userid,bean_id,bean_type,date_time,is_notify) 
@@ -57,7 +57,7 @@ class CaseLogicHook {
     }
 
     function openCaseOnNewEmail(&$bean, $event, $arguments) {
-        if ($arguments['related_module'] == 'Emails' && $bean->firstTime != true) {
+        if ($arguments['related_module'] == 'Emails' && $bean->firstTime != true && !$bean->synced) {
             $email = BeanFactory::getBean('Emails', $arguments['related_id']);
             if ($email->status != 'closed') {
                 $bean->status = 'Open';
@@ -67,7 +67,7 @@ class CaseLogicHook {
     }
 
     function assignInitialStatus(&$bean, $event, $arguments) {
-        if (empty($bean->fetched_row))
+        if (empty($bean->fetched_row) && !$bean->synced)
             $bean->firstTime = true;
     }
 

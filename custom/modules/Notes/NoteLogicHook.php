@@ -14,7 +14,7 @@ class NoteLogicHook {
      * @param type $arguments 
      */
     function queueNotification(&$bean, $event, $arguments) {
-        if ($bean->fetched_row['assigned_user_id'] != $bean->assigned_user_id) {
+        if ($bean->fetched_row['assigned_user_id'] != $bean->assigned_user_id && !$bean->synced) {
             global $db;
             $id = create_guid();
             $sql = "INSERT into notification_queue (id,userid,bean_id,bean_type,date_time,is_notify) 
