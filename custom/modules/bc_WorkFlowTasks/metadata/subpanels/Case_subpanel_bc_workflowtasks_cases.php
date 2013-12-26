@@ -53,4 +53,12 @@ $subpanel_layout['list_fields'] = array (
     'width' => '4%',
     'default' => true,
   ),
+  'complete_button' => 
+  array (
+    'widget_class' => 'SubPanelCompleteButton',
+    'sortable' => false,  
+    'module' => 'bc_WorkFlowTasks',
+    'width' => '4%',
+    'default' => true,
+  ),
 );

@@ -72,6 +72,10 @@ array (
         array (
           'file' => 'custom/include/js/jquery.js',
         ),
+        1 => 
+        array (
+          'file' => 'custom/include/js/Cases/complete-wf-tasks.js',
+        ),
       ),
       'useTabs' => false,
     ),
