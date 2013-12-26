@@ -422,3 +422,11 @@ CREATE TABLE emails_cstm (id_c char(36)  NOT NULL  , PRIMARY KEY (id_c)) CHARACT
 /*MISSING IN DATABASE - external_email_id_c -  ROW*/
 ALTER TABLE emails_cstm add COLUMN external_email_id_c varchar(255)  NULL ;
 
+
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('Notesexternal_note_id_c', 'external_note_id_c', 'LBL_EXTERNAL_NOTE_ID', '', '', 'Notes', 'varchar', 255, 0, '', '2013-12-24 12:14:49', 0, 1, 0, 0, 1, 'true', '', '', '', '');
+
+/*Checking Custom Fields for module : Notes */
+/*MISSING IN DATABASE - external_note_id_c -  ROW*/
+ALTER TABLE notes_cstm add COLUMN external_note_id_c varchar(255)  NULL ;
+
