@@ -105,7 +105,7 @@ function ForwardLookUp(input_fields, module_name, action){
     $($("#"+input_field).parent()).append("<div id='"+input_field+"_search' class='"+input_field+"_search_class'>");
     $("#"+input_field+"_search").hide();
         
-    $("#"+input_field).live("input", function() {
+    $(document).on("input","#"+input_field, function() {
        
         var search = $("#"+input_field).val().replace(new RegExp('<[^<]+\>', 'g'), "");
         
@@ -141,7 +141,7 @@ function ForwardLookUp(input_fields, module_name, action){
         }
     });
     
-    $("#"+input_field+"_search_offers").live("click", function() {
+    $(document).on('click', "#"+input_field+"_search_offers", function() {
 
         var str = "";        
         str = $(this).val();
