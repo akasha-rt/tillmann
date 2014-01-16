@@ -35,7 +35,7 @@ class CaseLogicHook {
 
     function saveWorkFlowTask(&$bean, $event, $arguments) {
         $workflowObj = new bc_WorkFlow();
-        $workflowObj->retrieve($bean->bc_workflow_casesbc_workflow_ida);
+        $workflowObj->retrieve((!is_object($bean->bc_workflow_casesbc_workflow_ida)) ? $bean->bc_workflow_casesbc_workflow_ida : '');
         $workflowtask = $workflowObj->get_linked_beans('bc_workflow_bc_workflowtasks', 'bc_workflowtasks');
         $bean->retrieve($bean->id);
         $caseTask = $bean->get_linked_beans('bc_workflowtasks_cases', 'bc_workflowtasks');
