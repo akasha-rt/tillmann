@@ -44,9 +44,9 @@ class ContactsViewList extends ViewList {
 
     public function preDisplay() {
         parent::preDisplay();
-        $this->lv->targetList = true;
         $this->lv = new ListViewSmarty();
         $this->lv->export = is_admin($GLOBALS['current_user']);
+        $this->lv->targetList = true;
     }
 
 }
