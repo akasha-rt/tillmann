@@ -58,6 +58,13 @@ array (
     'width' => '10%',
     'default' => true,
   ),
+  'SUPPLIER_URL_C' => 
+  array (
+    'type' => 'varchar',
+    'default' => true,
+    'label' => 'LBL_SUPPLIER_URL',
+    'width' => '10%',
+  ),
   'ASSIGNED_USER_NAME' => 
   array (
     'width' => '9%',

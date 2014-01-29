@@ -112,6 +112,11 @@ array (
             'name' => 'supplierid',
             'label' => 'LBL_SUPPLIERID',
           ),
+          1 => 
+          array (
+            'name' => 'supplier_url_c',
+            'label' => 'LBL_SUPPLIER_URL',
+          ),
         ),
         7 => 
         array (

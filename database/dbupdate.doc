@@ -430,3 +430,9 @@ INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `cust
 /*MISSING IN DATABASE - external_note_id_c -  ROW*/
 ALTER TABLE notes_cstm add COLUMN external_note_id_c varchar(255)  NULL ;
 
+
+@dhaval - 29_01_14
+INSERT INTO `fields_meta_data` (`id`, `name`, `vname`, `comments`, `help`, `custom_module`, `type`, `len`, `required`, `default_value`, `date_modified`, `deleted`, `audited`, `massupdate`, `duplicate_merge`, `reportable`, `importable`, `ext1`, `ext2`, `ext3`, `ext4`) VALUES
+('bc_StoreDatasupplier_url_c', 'supplier_url_c', 'LBL_SUPPLIER_URL', '', '', 'bc_StoreData', 'varchar', 255, 0, '', '2014-01-27 13:15:57', 0, 0, 0, 0, 1, 'true', '', '', '', '');
+
+ALTER TABLE bc_storedata_cstm add COLUMN supplier_url_c varchar(255)  NULL ;

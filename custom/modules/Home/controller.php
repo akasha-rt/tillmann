@@ -17,6 +17,7 @@ class HomeController extends SugarController {
             'catalognumber' => 'catalognumber',
             'sku' => 'sku',
             'supplierid' => 'supplierid',
+            'supplier_url' => 'supplier_url',
             'immunogen' => 'immunogen',
             'admin_immunogen_c' => 'admin_immunogen',
             'purchasingemail' => 'purchasingemail',
@@ -43,7 +44,8 @@ class HomeController extends SugarController {
                           bc_storedata_cstm.order_number_c,
                           bc_storedata_cstm.customer_po_number_c,
                           bc_storedata_cstm.order_status_c,
-                          bc_storedata_cstm.other_notes_c
+                          bc_storedata_cstm.other_notes_c,
+                          bc_storedata_cstm.supplier_url_c AS supplier_url
                 FROM bc_storedata
                 LEFT JOIN bc_storedata_cstm
                     ON bc_storedata_cstm.id_c = bc_storedata.id
@@ -62,6 +64,7 @@ class HomeController extends SugarController {
                         OR bc_storedata_cstm.customer_po_number_c LIKE '%{$searchString}%'
                         OR bc_storedata_cstm.order_status_c LIKE '%{$searchString}%'
                         OR bc_storedata_cstm.other_notes_c LIKE '%{$searchString}%'
+                        OR bc_storedata_cstm.supplier_url_c LIKE '%{$searchString}%'
                         OR bc_storedata_cstm.admin_immunogen_c LIKE '%{$searchString}%')
                         AND deleted = 0";
 
