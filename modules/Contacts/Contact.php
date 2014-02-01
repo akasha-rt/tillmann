@@ -183,7 +183,7 @@ class Contact extends Person {
 			}
 		return $array_assign;
 	}
-                       
+
 	function create_new_list_query($order_by, $where,$filter=array(),$params=array(), $show_deleted = 0,$join_type='', $return_array = false,$parentbean=null, $singleSelect = false)
 	{
 		//if this is from "contact address popup" action, then process popup list query
@@ -197,15 +197,7 @@ class Contact extends Person {
 				//and perhaps a performance issue, so just remove it
 				$order_by = '';
 			}
-			$query =  parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
-                        $query['select'] .= ', campaignTABLE.Campaign_Name as cont_campaign_name';
-                        $query['from'] .= ' LEFT OUTER JOIN (SELECT campaigns.name AS Campaign_Name,
-                                                campaign_log.target_id AS contactID
-                                                             FROM campaigns
-                                                             LEFT JOIN campaign_log ON campaign_log.campaign_id = campaigns.id 
-                                                             AND campaign_log.deleted = 0 AND campaigns.deleted = 0
-                                                             ) as campaignTABLE on campaignTABLE.contactID = contacts.id';
-                         return $query;
+			return parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
 		}
 
 
@@ -424,12 +416,12 @@ class Contact extends Person {
 	function get_list_view_data($filter_fields = array()) {
 		global $system_config;
 		global $current_user;
-                
+
 		$this->_create_proper_name_field();
 		$temp_array = $this->get_list_view_array();
 		$temp_array['NAME'] = $this->name;
 		$temp_array['ENCODED_NAME'] = $this->name;
-                
+
 		if(isset($system_config->settings['system_skypeout_on'])
 			&& $system_config->settings['system_skypeout_on'] == 1)
 		{
