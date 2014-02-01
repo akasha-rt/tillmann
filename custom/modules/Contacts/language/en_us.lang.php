@@ -5,4 +5,5 @@ $mod_strings = array (
   'LBL_FIRST_NAME' => 'First Name:',
   'LBL_LAST_NAME' => 'Last Name:',
   'LBL_LAST_SHIPMENT_DATE' => 'Last Shipment Date',
+  'LBL_CAMPAIGN_NAME_FOR_CONTACT' => 'Campaign Name'
 );
