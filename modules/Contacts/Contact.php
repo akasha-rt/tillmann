@@ -204,6 +204,7 @@ class Contact extends Person {
                                                              FROM campaigns
                                                              LEFT JOIN campaign_log ON campaign_log.campaign_id = campaigns.id 
                                                              AND campaign_log.deleted = 0 AND campaigns.deleted = 0
+                                                             GROUP BY campaign_log.target_id
                                                              ) as campaignTABLE on campaignTABLE.contactID = contacts.id';
                          return $query;
 		}
