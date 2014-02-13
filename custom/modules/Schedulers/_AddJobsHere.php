@@ -136,7 +136,7 @@ function checkOpportunitySalesData() {
     foreach ($oppSoapResponse as $oppId => $oppOrderStatus) {
         //Create Opp object
         $currentOpp = new Opportunity();
-        $currentOpp = $currentOpp->retrieve($oppId);
+        $currentOpp->retrieve($oppId);
 
         $name = $contactData[$oppId]['Contact_name'];
         $assigned_user_name = $contactData[$oppId]['assigned_user_name'];
@@ -145,10 +145,10 @@ function checkOpportunitySalesData() {
         $emailtemplate = new EmailTemplate();
         if (count($oppOrderStatus) == 0) {
             $currentOpp->sales_stage = "Closed Lost";
-            $emailtemplate = $emailtemplate->retrieve('786de532-f84f-6209-5e57-507505bf9e65');
+            $emailtemplate->retrieve($sugar_config['opp_no_order_placed']);
         } else {
             $currentOpp->sales_stage = "Closed Won";
-            $emailtemplate = $emailtemplate->retrieve('cd5a91aa-9409-249c-b17d-507505fe8269');
+            $emailtemplate->retrieve($sugar_config['opp_order_placed']);
         }
 
         //Load the signature
@@ -246,7 +246,7 @@ function processOverDueCase() {
 
         //Send email
         $emailtemplate = new EmailTemplate();
-        $emailtemplate = $emailtemplate->retrieve('34565e1a-257d-c1af-0eba-50e7a45b7b60');
+        $emailtemplate->retrieve($sugar_config['overdue_pay_invoice']);
 
         $email_body = $emailtemplate->body_html;
         //for plain text supported email client
@@ -358,7 +358,7 @@ function processPOAndVATCases() {
         //Send email
         $emailtemplate = new EmailTemplate();
         if (!is_null($PO_VAT_Case['po_number']) && $PO_VAT_Case['po_number'] != "") {
-            $emailtemplate = $emailtemplate->retrieve('9a5243cf-982c-3c64-bd3c-50ff8ee7171f');
+            $emailtemplate->retrieve($sugar_config['po_reminder_order']);
             $email_body = $emailtemplate->body_html;
             $email_body_plain = $emailtemplate->body;
             $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
@@ -368,7 +368,7 @@ function processPOAndVATCases() {
             $mailSubject = $emailtemplate->subject;
             $mailSubject = str_replace('$order_number', $bean->order_number_c, $mailSubject);
         } elseif (!is_null($PO_VAT_Case['vat_number']) && $PO_VAT_Case['vat_number'] != "") {
-            $emailtemplate = $emailtemplate->retrieve('47062b68-ad29-beb2-454c-50ff8e5e4572');
+            $emailtemplate->retrieve($sugar_config['zero_vat_cert_reminder']);
             $email_body = $emailtemplate->body_html;
             $email_body_plain = $emailtemplate->body;
             $email_body = str_replace('$customerName', $bean->customer_name_c, $email_body);
@@ -803,7 +803,7 @@ function sendDailyCaseOverDueTaskEmail() {
         $UserTime = strtotime(date("h:i A"));
         if ($UserTime >= strtotime('06:00 PM') && $user_Obj->overdue_email_sent_c != TimeDate::getInstance()->nowDate() && $user_Obj->status == 'Active') {
             $emailtemplate = new EmailTemplate();
-            $emailtemplate->retrieve('e5cbcb63-4de7-8c36-4d50-521b04b3c6cd');
+            $emailtemplate->retrieve($sugar_config['daily_work_digest']);
             $email_body = $emailtemplate->body_html;
             $email_body_plain = $emailtemplate->body;
             $email_body = str_replace('$user_first_name', (empty($user_Obj->first_name)) ? $user_Obj->last_name : $user_Obj->first_name, $email_body);
@@ -856,7 +856,7 @@ function processUploadImportPermitCase() {
                   AND cases_cstm.permit_flag_c = 1";
     $query = $db->query($select);
     $emailtemplate = new EmailTemplate();
-    $emailtemplate = $emailtemplate->retrieve('9037075d-ab4d-56fe-01a9-521daf3b43d4');
+    $emailtemplate->retrieve($sugar_config['permit_reminder_order']);
     while ($result = $db->fetchByAssoc($query)) {
         $email_body = $emailtemplate->body_html;
         $email_body_plain = $emailtemplate->body;
