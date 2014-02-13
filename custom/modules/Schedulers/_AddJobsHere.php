@@ -25,7 +25,7 @@ function createOppFromCase() {
     require_once('modules/Opportunities/Opportunity.php');
     $op = new Opportunity();
 
-    global $db;
+    global $db, $sugar_config;
     $case_list = $db->query("SELECT
                                 c.id,
                                 c.name,
@@ -71,7 +71,7 @@ function checkOpportunitySalesData() {
     $GLOBALS['log']->debug('Custom Scheduler : Starting checkOpportunitySalesData');
     require_once('modules/Emails/Email.php');
     require_once('modules/Opportunities/Opportunity.php');
-    global $db;
+    global $db, $sugar_config;
     $oppDataSql = $db->query("SELECT
                                     opp.id                      AS id,
                                     opp_c.product_c             AS product_sku,
@@ -319,7 +319,7 @@ function processOverDueCase() {
 
 function processPOAndVATCases() {
     $GLOBALS['log']->debug('Custom Scheduler : Starting processPOAndVATCases');
-    global $db;
+    global $db, $sugar_config;
 
     require_once 'modules/Cases/Case.php';
     require_once 'modules/EmailTemplates/EmailTemplate.php';
@@ -428,7 +428,7 @@ function processPOAndVATCases() {
 }
 
 function updateCaseStatusOnModification() {
-    global $db;
+    global $db, $sugar_config;
     $query = "SELECT id
               FROM cases
               WHERE 5 * ( DATEDIFF( DATE( NOW( ) ) , date_modified ) 
@@ -842,7 +842,7 @@ function sendDailyCaseOverDueTaskEmail() {
 }
 
 function processUploadImportPermitCase() {
-    global $db;
+    global $db, $sugar_config;
     $select = "SELECT
                 cases.id                    AS id,
                 cases_cstm.customer_name_c  AS customer_name,
@@ -897,7 +897,7 @@ function processUploadImportPermitCase() {
 }
 
 function updateStoreDataDropDowns() {
-    global $db;
+    global $db, $sugar_config;
 
     $purgeSQL = "DELETE
                 FROM bc_dropdown
