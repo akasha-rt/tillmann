@@ -18,6 +18,7 @@ $job_strings[] = 'sendMonthlyWorkLog';
 $job_strings[] = 'sendDailyCaseOverDueTaskEmail';
 $job_strings[] = 'processUploadImportPermitCase';
 $job_strings[] = 'updateStoreDataDropDowns';
+$job_strings[] = 'updateLastShipDateFromOrdersInMagento';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase() {
@@ -938,6 +939,29 @@ function updateStoreDataDropDowns() {
                                         AND bc_storedata.supplierid != ''
                                     ORDER BY bc_storedata.supplierid";
     $db->query($supplierInsertSQL);
+    return true;
+}
+
+function updateLastShipDateFromOrdersInMagento() {
+    global $db;
+    include 'custom/include/magentoSoapIntegration/config.php';
+    try {
+        $customerSoapResponse = $soap->call($session_id, 'sales_order.getWeeklyShipments');
+    } catch (Exception $e) {
+        $customerSoapResponse = array();
+    }
+    foreach ($customerSoapResponse as $MagentoData) {
+        $selctQuery = "UPDATE contacts_cstm
+                            LEFT JOIN contacts
+                          ON contacts_cstm.id_c = contacts.id
+                        LEFT JOIN email_addr_bean_rel
+                          ON email_addr_bean_rel.bean_id = contacts.id
+                        LEFT JOIN email_addresses
+                          ON email_addresses.id = email_addr_bean_rel.email_address_id
+                          SET contacts_cstm.last_shipment_date_c = '" . date('Y-m-d', strtotime($MagentoData['shipped_date'])) . "'
+                      WHERE contacts.deleted = '0' AND email_addresses.email_address = '{$MagentoData['customer_email']}'";
+        $db->query($selctQuery);
+    }
     return true;
 }
 
