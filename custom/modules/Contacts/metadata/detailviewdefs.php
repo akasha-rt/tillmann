@@ -195,6 +195,11 @@ array (
             'customCode' => '{$fields.date_entered.value} {$APP.LBL_BY} {$fields.created_by_name.value}',
             'label' => 'LBL_DATE_ENTERED',
           ),
+          1 => 
+          array (
+            'name' => 'last_shipment_date_c',
+            'label' => 'LBL_LAST_SHIPMENT_DATE',
+          ),
         ),
       ),
     ),

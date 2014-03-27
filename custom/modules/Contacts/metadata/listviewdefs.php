@@ -34,12 +34,6 @@ $listViewDefs ['Contacts'] =
                     4 => 'account_id',
                 ),
             ),
-            'DEPARTMENT' =>
-            array(
-                'width' => '10%',
-                'label' => 'LBL_DEPARTMENT',
-                'default' => true,
-            ),
             'TYPE_C' =>
             array(
                 'type' => 'enum',
@@ -79,7 +73,7 @@ $listViewDefs ['Contacts'] =
             ),
             'EMAIL1' =>
             array(
-                'width' => '15%',
+                'width' => '10%',
                 'label' => 'LBL_LIST_EMAIL_ADDRESS',
                 'sortable' => false,
                 'link' => true,
@@ -101,10 +95,17 @@ $listViewDefs ['Contacts'] =
             ),
             'ASSIGNED_USER_NAME' =>
             array(
-                'width' => '10%',
+                'width' => '8%',
                 'label' => 'LBL_LIST_ASSIGNED_USER',
                 'module' => 'Employees',
                 'id' => 'ASSIGNED_USER_ID',
+                'default' => true,
+            ),
+            'DATE_MODIFIED' =>
+            array(
+                'type' => 'datetime',
+                'label' => 'LBL_DATE_MODIFIED',
+                'width' => '10%',
                 'default' => true,
             ),
             'DATE_ENTERED' =>
@@ -113,10 +114,23 @@ $listViewDefs ['Contacts'] =
                 'label' => 'LBL_DATE_ENTERED',
                 'default' => true,
             ),
+            'LAST_SHIPMENT_DATE_C' =>
+            array(
+                'type' => 'date',
+                'default' => true,
+                'label' => 'LBL_LAST_SHIPMENT_DATE',
+                'width' => '10%',
+            ),
             'PHONE_WORK' =>
             array(
                 'width' => '15%',
                 'label' => 'LBL_OFFICE_PHONE',
+                'default' => false,
+            ),
+            'DEPARTMENT' =>
+            array(
+                'width' => '10%',
+                'label' => 'LBL_DEPARTMENT',
                 'default' => false,
             ),
             'TITLE' =>
