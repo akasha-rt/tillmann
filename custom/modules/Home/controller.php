@@ -5,9 +5,11 @@ if (!defined('sugarEntry') || !sugarEntry)
 
 require_once('include/MVC/Controller/SugarController.php');
 
-class HomeController extends SugarController {
+class HomeController extends SugarController
+{
 
-    function action_lookup() {
+    function action_lookup()
+    {
         global $db;
         $searchString = $_GET['search'];
         $searchString = ($searchString) ? $searchString : '@@@@@';
@@ -49,24 +51,9 @@ class HomeController extends SugarController {
                 FROM bc_storedata
                 LEFT JOIN bc_storedata_cstm
                     ON bc_storedata_cstm.id_c = bc_storedata.id
-                WHERE (bc_storedata.id LIKE '%{$searchString}%'
-                        OR bc_storedata.name LIKE '%{$searchString}%'
-                        OR bc_storedata.description LIKE '%{$searchString}%'
-                        OR bc_storedata.catalognumber LIKE '%{$searchString}%'
-                        OR bc_storedata.sku LIKE '%{$searchString}%'
-                        OR bc_storedata.supplierid LIKE '%{$searchString}%'
-                        OR bc_storedata.immunogen LIKE '%{$searchString}%'
-                        OR bc_storedata.purchasingemail LIKE '%{$searchString}%'
-                        OR bc_storedata.purchasingname LIKE '%{$searchString}%'
-                        OR bc_storedata.supportemail LIKE '%{$searchString}%'
-                        OR bc_storedata.supportname LIKE '%{$searchString}%'
-                        OR bc_storedata_cstm.order_number_c LIKE '%{$searchString}%'
-                        OR bc_storedata_cstm.customer_po_number_c LIKE '%{$searchString}%'
-                        OR bc_storedata_cstm.order_status_c LIKE '%{$searchString}%'
-                        OR bc_storedata_cstm.other_notes_c LIKE '%{$searchString}%'
-                        OR bc_storedata_cstm.supplier_url_c LIKE '%{$searchString}%'
-                        OR bc_storedata_cstm.admin_immunogen_c LIKE '%{$searchString}%')
-                        AND deleted = 0";
+                WHERE MATCH(name, description, catalognumber, sku, supplierid, immunogen, purchasingemail, purchasingname, supportemail, supportname) AGAINST ('{$searchString}')
+                  OR MATCH(order_number_c, customer_po_number_c, order_status_c, other_notes_c, supplier_url_c, admin_immunogen_c) AGAINST ('{$searchString}')
+                  AND deleted = 0";
 
         $lookUpResult = $db->query($lookUpSql);
 
@@ -138,27 +125,28 @@ class HomeController extends SugarController {
 
 
         echo '<table width="100%" border="0" cellpadding="1" cellspacing="0" class="olBgClass">' .
-        '<tbody><tr><td>' .
-        '<table width="100%" border="0" cellpadding="2" cellspacing="0" class="olCgClass">' .
-        '<tbody><tr><td width="100%" class="olCgClass">' .
-        '<div class="olCapFontClass">' .
-        '<div style="float:left">Look-up Result </div>' .
-        '<div style="float: right">' .
-        '<a href="#" onClick="$(\'#lookup_result_div\').hide();" title="Click to Close" id="closediv">' .
-        '<img border="0" style="margin-left:2px; margin-right: 2px;" src="index.php?entryPoint=getImage&amp;themeName=Sugar5&amp;imageName=close.gif">' .
-        '</a></div></div>' .
-        '</td></tr></tbody>' .
-        '</table></td></tr><tr><td><div style="overflow: auto;max-height:400px;">' .
-        $finalResult .
-        '</div></td></tr></tbody></table>';
+            '<tbody><tr><td>' .
+            '<table width="100%" border="0" cellpadding="2" cellspacing="0" class="olCgClass">' .
+            '<tbody><tr><td width="100%" class="olCgClass">' .
+            '<div class="olCapFontClass">' .
+            '<div style="float:left">Look-up Result </div>' .
+            '<div style="float: right">' .
+            '<a href="#" onClick="$(\'#lookup_result_div\').hide();" title="Click to Close" id="closediv">' .
+            '<img border="0" style="margin-left:2px; margin-right: 2px;" src="index.php?entryPoint=getImage&amp;themeName=Sugar5&amp;imageName=close.gif">' .
+            '</a></div></div>' .
+            '</td></tr></tbody>' .
+            '</table></td></tr><tr><td><div style="overflow: auto;max-height:400px;">' .
+            $finalResult .
+            '</div></td></tr></tbody></table>';
         exit;
     }
 
     /**
      * @author Reena Sattani
-     * @return 
+     * @return
      */
-    public function action_getnotify() {
+    public function action_getnotify()
+    {
         global $db, $current_user;
         $name = array();
         $sql = $db->query("SELECT * FROM (SELECT
@@ -229,7 +217,8 @@ class HomeController extends SugarController {
     }
 
 //  @niranjan-Start 24/11/2012 for  Priority Task   
-    public function action_updatetask() {
+    public function action_updatetask()
+    {
         $tasks = new Task();
         $tasks = $tasks->retrieve($_REQUEST['record']);
         $tasks->status = 'Completed';
@@ -238,7 +227,8 @@ class HomeController extends SugarController {
     }
 
 //  @niranjan-End 
-    public function action_add_follow_list() {
+    public function action_add_follow_list()
+    {
         global $db, $current_user;
         $select_query = "SELECT id,deleted from followup where module_id='{$_REQUEST['record']}' and user_id='{$current_user->id}'";
         $select_result = $db->query($select_query);
@@ -254,7 +244,7 @@ class HomeController extends SugarController {
                 $update_follow_query .= '0';
             $update_follow_query .= " where module_id='{$_REQUEST['record']}' and user_id='{$current_user->id}'";
             $update_follow_result = $db->query($update_follow_query);
-        }else {
+        } else {
             $id = create_guid();
             $query = "insert into followup values('{$id}','{$_REQUEST['module_name']}','{$_REQUEST['record']}','{$_REQUEST['userId']}',0);";
             $db->query($query);
@@ -262,14 +252,16 @@ class HomeController extends SugarController {
         exit;
     }
 
-    public function action_remove_follow_list() {
+    public function action_remove_follow_list()
+    {
         global $db, $current_user;
         $update_follow_query = "update followup set deleted =1 where module_id='{$_REQUEST['record']}' and module_name='{$_REQUEST['module_name']}' and user_id='{$current_user->id}'";
         $update_follow_result = $db->query($update_follow_query);
         exit;
     }
 
-    public function action_remove_sort_rows() {
+    public function action_remove_sort_rows()
+    {
         global $db, $current_user;
         if ($_REQUEST['my_item']) {
             $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
@@ -339,7 +331,8 @@ class HomeController extends SugarController {
         exit;
     }
 
-    public function action_pagination() {
+    public function action_pagination()
+    {
         global $db, $current_user;
         if ($_REQUEST['my_item']) {
             $query = "SELECT  followup.id,followup.module_name,followup.module_id,followup.user_id,followup.deleted,cases.case_number,cases.name,cases.assigned_user_id,cases.status from followup,cases WHERE followup.module_name='Cases' and followup.user_id='{$current_user->id}' and followup.deleted=0 and followup.module_id=cases.id group by cases.id";
@@ -412,7 +405,7 @@ class HomeController extends SugarController {
                     $printTrs .= "</tr>";
                 }
             }
-        }else if ($_REQUEST['direction'] == 'prev') {
+        } else if ($_REQUEST['direction'] == 'prev') {
             for ($start = ($_REQUEST['start'] - $_REQUEST['number_row']); $start < (($_REQUEST['start'] - $_REQUEST['number_row']) + $_REQUEST['number_row']); $start++) {
                 if ($displayArray[$start] != null) {
                     $printTrs .= "<tr class=\"oddListRowS1\" id='oddListRowS1'>";
@@ -428,7 +421,7 @@ class HomeController extends SugarController {
                     $printTrs .= "</tr>";
                 }
             }
-        }else if ($_REQUEST['direction'] == 'end') {
+        } else if ($_REQUEST['direction'] == 'end') {
             $remain = count($displayArray) % $_REQUEST['number_row'];
             for ($start = ($remain == 0) ? (count($displayArray) - 3) : (count($displayArray) - $remain); $start < (count($displayArray) + $remain); $start++) {
                 if ($displayArray[$start] != null) {
@@ -445,7 +438,7 @@ class HomeController extends SugarController {
                     $printTrs .= "</tr>";
                 }
             }
-        }else if ($_REQUEST['direction'] == 'start') {
+        } else if ($_REQUEST['direction'] == 'start') {
             for ($start = 0; $start < $_REQUEST['number_row']; $start++) {
                 if ($displayArray[$start] != null) {
                     $printTrs .= "<tr class=\"oddListRowS1\" id='oddListRowS1'>";
