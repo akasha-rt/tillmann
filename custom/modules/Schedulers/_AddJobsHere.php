@@ -19,9 +19,15 @@ $job_strings[] = 'sendDailyCaseOverDueTaskEmail';
 $job_strings[] = 'processUploadImportPermitCase';
 $job_strings[] = 'updateStoreDataDropDowns';
 $job_strings[] = 'updateLastShipDateFromOrdersInMagento';
+$job_strings[] = 'sendCustomerFirstFollowUp';
+$job_strings[] = 'sendCustomerSecondFollowUp';
+$job_strings[] = 'sendCustomerSecondFollowUpMonthly';
+$job_strings[] = 'campaignForDiscountsForData';
+$job_strings[] = 'campaignForAutomaticEnquiry';
 
 //Function to call when the new job is called from cronjob
-function createOppFromCase() {
+function createOppFromCase()
+{
     $GLOBALS['log']->debug('Custom Scheduler : Starting createOppFromCase');
     require_once('modules/Opportunities/Opportunity.php');
     $op = new Opportunity();
@@ -68,7 +74,8 @@ function createOppFromCase() {
     return true;
 }
 
-function checkOpportunitySalesData() {
+function checkOpportunitySalesData()
+{
     $GLOBALS['log']->debug('Custom Scheduler : Starting checkOpportunitySalesData');
     require_once('modules/Emails/Email.php');
     require_once('modules/Opportunities/Opportunity.php');
@@ -220,7 +227,8 @@ function checkOpportunitySalesData() {
  * @global type $db
  * @return boolean
  */
-function processOverDueCase() {
+function processOverDueCase()
+{
     $GLOBALS['log']->debug('Custom Scheduler : Starting processOverDueCase');
     global $sugar_config;
     global $db;
@@ -318,7 +326,8 @@ function processOverDueCase() {
     return true;
 }
 
-function processPOAndVATCases() {
+function processPOAndVATCases()
+{
     $GLOBALS['log']->debug('Custom Scheduler : Starting processPOAndVATCases');
     global $db, $sugar_config;
 
@@ -428,7 +437,8 @@ function processPOAndVATCases() {
     return true;
 }
 
-function updateCaseStatusOnModification() {
+function updateCaseStatusOnModification()
+{
     global $db, $sugar_config;
     $query = "SELECT id
               FROM cases
@@ -445,7 +455,8 @@ function updateCaseStatusOnModification() {
     return true;
 }
 
-function updateCustomerFromMagento() {
+function updateCustomerFromMagento()
+{
     global $db, $sugar_config;
     //retrive last customer created/updated dates from sugar config
     $configQuery = 'SELECT
@@ -636,7 +647,8 @@ function updateCustomerFromMagento() {
     return true;
 }
 
-function sendMonthlyWorkLog() {
+function sendMonthlyWorkLog()
+{
     global $db, $sugar_config;
     $query = "SELECT
                 DATE(la_loginaudit.date_entered) AS DATE,
@@ -685,7 +697,8 @@ function sendMonthlyWorkLog() {
         $finalExportData[] = $data;
     }
 
-    function cleanData(&$str) {
+    function cleanData(&$str)
+    {
         $str = preg_replace("/\t/", "\\t", $str);
         $str = preg_replace("/\r?\n/", "\\n", $str);
         $str = preg_replace("/&nbsp;/", "", $str);
@@ -740,7 +753,8 @@ function sendMonthlyWorkLog() {
     return true;
 }
 
-function sendDailyCaseOverDueTaskEmail() {
+function sendDailyCaseOverDueTaskEmail()
+{
     global $db, $sugar_config;
     $gloablUserData = array();
     $openCaseQuery = "SELECT
@@ -842,7 +856,8 @@ function sendDailyCaseOverDueTaskEmail() {
     return true;
 }
 
-function processUploadImportPermitCase() {
+function processUploadImportPermitCase()
+{
     global $db, $sugar_config;
     $select = "SELECT
                 cases.id                    AS id,
@@ -897,7 +912,8 @@ function processUploadImportPermitCase() {
     return true;
 }
 
-function updateStoreDataDropDowns() {
+function updateStoreDataDropDowns()
+{
     global $db, $sugar_config;
 
     $purgeSQL = "DELETE
@@ -942,7 +958,8 @@ function updateStoreDataDropDowns() {
     return true;
 }
 
-function updateLastShipDateFromOrdersInMagento() {
+function updateLastShipDateFromOrdersInMagento()
+{
     global $db;
     include 'custom/include/magentoSoapIntegration/config.php';
     try {
@@ -958,9 +975,432 @@ function updateLastShipDateFromOrdersInMagento() {
                           ON email_addr_bean_rel.bean_id = contacts.id
                         LEFT JOIN email_addresses
                           ON email_addresses.id = email_addr_bean_rel.email_address_id
-                          SET contacts_cstm.last_shipment_date_c = '" . date('Y-m-d', strtotime($MagentoData['shipped_date'])) . "'
+                          SET contacts_cstm.last_shipment_date_c = '" . date('Y-m-d', strtotime($MagentoData['shipped_date'])) . "',
+                          contacts_cstm.first_followup_c = ''
                       WHERE contacts.deleted = '0' AND email_addresses.email_address = '{$MagentoData['customer_email']}'";
         $db->query($selctQuery);
+    }
+    return true;
+}
+
+function sendCustomerFirstFollowUp()
+{
+    global $sugar_config;
+    global $db;
+
+    require_once 'modules/Contacts/Contact.php';
+    require_once 'modules/EmailTemplates/EmailTemplate.php';
+    require_once 'modules/Emails/Email.php';
+    require_once 'include/SugarPHPMailer.php';
+
+    $sql = "SELECT
+            contacts_cstm.last_shipment_date_c,
+            contacts.id
+          FROM contacts
+            JOIN contacts_cstm
+              ON contacts.id = contacts_cstm.id_c
+          WHERE contacts.deleted = 0
+               AND DATEDIFF(DATE(CURDATE()), contacts_cstm.last_shipment_date_c) > 10
+              AND contacts_cstm.type_c IN('Regular_Customer','One_time_customer')
+              AND contacts_cstm.last_shipment_date_c > '2014-06-01'
+              AND (contacts_cstm.last_shipment_date_c IS NOT NULL  OR last_shipment_date_c != '')
+              AND (contacts_cstm.first_followup_c IS NULL OR contacts_cstm.first_followup_c = '')
+          ORDER by contacts_cstm.last_shipment_date_c";
+    $result = $db->query($sql);
+    while ($contactRow = $db->fetchByAssoc($result)) {
+
+        $bean = new Contact();
+        $bean->retrieve($contactRow['id']);
+
+        //Send email
+        $emailtemplate = new EmailTemplate();
+        $emailtemplate->retrieve($sugar_config['cus_first_followup_template']);
+
+        $email_body = $emailtemplate->body_html;
+        //for plain text supported email client
+        $email_body_plain = $emailtemplate->body;
+        $email_body = str_replace('$contact_first_name', $bean->name, $email_body);
+
+        //Correct the subject
+        $mailSubject = $emailtemplate->subject;
+
+        $email_address = $bean->email1;
+        $email_address = 'dhaval@india.biztechconsultancy.com';
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = $email_body_plain; //Sets the text-only body of the message.
+        $mail->prepForOutbound();
+        $address = $email_address;
+        $mail->AddAddress($email_address);
+
+        if ($mail->Send()) {
+            $emailObj->to_addrs = $address;
+            $emailObj->type = 'out';
+            $emailObj->deleted = '0';
+            $emailObj->name = $subject;
+            $emailObj->description = $email_body_plain; //Sets the text-only body of the message.
+            $emailObj->description_html = from_html($email_body);
+            $emailObj->from_addr = $defaults['email'];
+            $emailObj->parent_type = 'Contacts';
+            $emailObj->parent_id = $bean->id;
+            $user_id = '1';
+            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+            $emailObj->assigned_user_id = $user_id;
+            $emailObj->modified_user_id = $user_id;
+            $emailObj->created_by = $user_id;
+            $emailObj->status = 'sent';
+            $emailObj->save();
+
+            // set first_ followup flag
+            $date = TimeDate::getInstance()->nowDbDate();
+            $query = "UPDATE contacts_cstm SET first_followup_c = '{$date}' WHERE id_c = '{$bean->id}'";
+            $db->query($query);
+        } else {
+            $mail_msg = $mail->ErrorInfo;
+        }
+    }
+    return true;
+}
+
+function sendCustomerSecondFollowUp()
+{
+    global $sugar_config;
+    global $db;
+
+    require_once 'modules/Contacts/Contact.php';
+    require_once 'modules/EmailTemplates/EmailTemplate.php';
+    require_once 'modules/Emails/Email.php';
+    require_once 'include/SugarPHPMailer.php';
+
+    $sql = "SELECT
+            contacts_cstm.last_shipment_date_c,
+            contacts.id
+          FROM contacts
+            JOIN contacts_cstm
+              ON contacts.id = contacts_cstm.id_c
+          WHERE contacts.deleted = 0
+              AND DATEDIFF(DATE(CURDATE()), contacts_cstm.last_shipment_date_c) > 20
+              AND contacts_cstm.type_c IN('One_time_customer')
+              AND contacts_cstm.last_shipment_date_c > '2014-06-01'
+              AND (contacts_cstm.last_shipment_date_c IS NOT NULL OR last_shipment_date_c != '')
+              AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '')
+          ORDER by contacts_cstm.last_shipment_date_c";
+
+    $result = $db->query($sql);
+    while ($contactRow = $db->fetchByAssoc($result)) {
+
+        $bean = new Contact();
+        $bean->retrieve($contactRow['id']);
+
+        //Send email
+        $emailtemplate = new EmailTemplate();
+        $emailtemplate->retrieve($sugar_config['cus_sec_followup_template']);
+
+        $email_body = $emailtemplate->body_html;
+        //for plain text supported email client
+        $email_body_plain = $emailtemplate->body;
+        $email_body = str_replace('$contact_first_name', $bean->name, $email_body);
+
+        //Correct the subject
+        $mailSubject = $emailtemplate->subject;
+
+        $email_address = $bean->email1;
+        $email_address = 'dhaval@india.biztechconsultancy.com';
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = $email_body_plain; //Sets the text-only body of the message.
+        $mail->prepForOutbound();
+        $address = $email_address;
+        $mail->AddAddress($email_address);
+
+        if ($mail->Send()) {
+            $emailObj->to_addrs = $address;
+            $emailObj->type = 'out';
+            $emailObj->deleted = '0';
+            $emailObj->name = $subject;
+            $emailObj->description = $email_body_plain; //Sets the text-only body of the message.
+            $emailObj->description_html = from_html($email_body);
+            $emailObj->from_addr = $defaults['email'];
+            $emailObj->parent_type = 'Contacts';
+            $emailObj->parent_id = $bean->id;
+            $user_id = '1';
+            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+            $emailObj->assigned_user_id = $user_id;
+            $emailObj->modified_user_id = $user_id;
+            $emailObj->created_by = $user_id;
+            $emailObj->status = 'sent';
+            $emailObj->save();
+
+            // set second followup flag
+            $date = TimeDate::getInstance()->nowDbDate();
+            $query = "UPDATE contacts_cstm SET second_followup_c = '{$date}' WHERE id_c = '{$bean->id}'";
+            $db->query($query);
+        } else {
+            $mail_msg = $mail->ErrorInfo;
+        }
+    }
+    return true;
+}
+
+function sendCustomerSecondFollowUpMonthly()
+{
+    global $sugar_config;
+    global $db;
+
+    require_once 'modules/Contacts/Contact.php';
+    require_once 'modules/EmailTemplates/EmailTemplate.php';
+    require_once 'modules/Emails/Email.php';
+    require_once 'include/SugarPHPMailer.php';
+
+    $sql = "SELECT
+            contacts_cstm.last_shipment_date_c,
+            contacts.id
+          FROM contacts
+            JOIN contacts_cstm
+              ON contacts.id = contacts_cstm.id_c
+          WHERE contacts.deleted = 0
+              AND contacts_cstm.type_c IN('One_time_customer')
+              AND contacts_cstm.last_shipment_date_c > '2014-06-01'
+              AND (contacts_cstm.last_shipment_date_c IS NULL OR last_shipment_date_c = '')
+              AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '')";
+
+
+    $result = $db->query($sql);
+    while ($contactRow = $db->fetchByAssoc($result)) {
+
+        $bean = new Contact();
+        $bean->retrieve($contactRow['id']);
+
+        //Send email
+        $emailtemplate = new EmailTemplate();
+        $emailtemplate->retrieve($sugar_config['cus_sec_followup_template']);
+
+        $email_body = $emailtemplate->body_html;
+        //for plain text supported email client
+        $email_body_plain = $emailtemplate->body;
+        $email_body = str_replace('$contact_first_name', $bean->name, $email_body);
+
+        //Correct the subject
+        $mailSubject = $emailtemplate->subject;
+
+        $email_address = $bean->email1;
+        $email_address = 'dhaval@india.biztechconsultancy.com';
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = $email_body_plain; //Sets the text-only body of the message.
+        $mail->prepForOutbound();
+        $address = $email_address;
+        $mail->AddAddress($email_address);
+
+        if ($mail->Send()) {
+            $emailObj->to_addrs = $address;
+            $emailObj->type = 'out';
+            $emailObj->deleted = '0';
+            $emailObj->name = $subject;
+            $emailObj->description = $email_body_plain; //Sets the text-only body of the message.
+            $emailObj->description_html = from_html($email_body);
+            $emailObj->from_addr = $defaults['email'];
+            $emailObj->parent_type = 'Contacts';
+            $emailObj->parent_id = $bean->id;
+            $user_id = '1';
+            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+            $emailObj->assigned_user_id = $user_id;
+            $emailObj->modified_user_id = $user_id;
+            $emailObj->created_by = $user_id;
+            $emailObj->status = 'sent';
+            $emailObj->save();
+
+            // set second followup flag
+            $date = TimeDate::getInstance()->nowDbDate();
+            $query = "UPDATE contacts_cstm SET second_followup_c = '{$date}' WHERE id_c = '{$bean->id}'";
+            $db->query($query);
+        } else {
+            $mail_msg = $mail->ErrorInfo;
+        }
+    }
+    return true;
+}
+
+function campaignForAutomaticEnquiry()
+{
+    global $db, $sugar_config, $current_user;
+    $emailtemplate = new EmailTemplate();
+    $emailtemplate->retrieve($sugar_config['auto_enquiry_camp_template']);
+    $mailSubject = $emailtemplate->subject;
+    $sendMailDate = TimeDate::getInstance()->nowDbDate();
+    $result = $db->query("SELECT
+                            con.id                        AS ID,
+                            CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
+                            ea.email_address              AS Email
+                          FROM contacts con
+                            LEFT JOIN contacts_cstm con_cstm
+                              ON con.id = con_cstm.id_c
+                                AND con.deleted = 0
+                            LEFT JOIN email_addr_bean_rel AS ear
+                              ON ear.bean_id = con.id
+                                AND ear.deleted = 0
+                            LEFT JOIN email_addresses ea
+                              ON ea.id = ear.email_address_id
+                                AND ea.deleted = 0
+                          WHERE con.deleted = 0
+                              AND con_cstm.type_c IN('Enquiry')
+                              AND DATEDIFF(CURDATE(),con.date_modified) > '21'
+                              AND ea.email_address IS NOT NULL
+                              AND (con_cstm.automatic_enquiry_c IS NULL OR con_cstm.automatic_enquiry_c = '')
+                          GROUP by ea.email_address ");
+    while ($result_query = $db->fetchByAssoc($result)) {
+        $email_body = $emailtemplate->body_html;
+        $email_body_plain = $emailtemplate->body;
+        $email_body = str_replace('$contact_first_name', $result_query['NAME'], $email_body);
+        $email_body_plain = str_replace('$contact_first_name', $result_query['NAME'], $email_body_plain);
+        $email_address = $result['Email'];
+        $email_address = 'dhaval@india.biztechconsultancy.com';
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = $email_body_plain;
+        $mail->prepForOutbound();
+        $mail->AddAddress($email_address);
+        if ($mail->Send()) {
+            $emailObj->to_addrs = $email_address;
+            $emailObj->type = 'out';
+            $emailObj->deleted = '0';
+            $emailObj->name = $subject;
+            $emailObj->description = $email_body_plain;
+            $emailObj->description_html = from_html($email_body);
+            $emailObj->from_addr = $defaults['email'];
+            $emailObj->parent_type = 'Contacts';
+            $emailObj->parent_id = $result_query['ID'];
+            $user_id = $current_user->id;
+            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+            $emailObj->assigned_user_id = $user_id;
+            $emailObj->modified_user_id = $user_id;
+            $emailObj->created_by = $user_id;
+            $emailObj->status = 'sent';
+            $emailObj->save();
+            $query = "UPDATE contacts_cstm SET automatic_enquiry_c = '{$sendMailDate}' WHERE id_c = '{$result_query['ID']}' ";
+            $db->query($query);
+        } else {
+            $mail_msg = $mail->ErrorInfo;
+        }
+    }
+    return true;
+}
+
+function campaignForDiscountsForData()
+{
+    global $db, $sugar_config, $current_user;
+    $emailtemplate = new EmailTemplate();
+    $emailtemplate->retrieve($sugar_config['discounts_for_data_template']);
+    $mailSubject = $emailtemplate->subject;
+    $sendMailDate = TimeDate::getInstance()->nowDbDate();
+    $result = $db->query("SELECT
+                            con.id                        AS ID,
+                            CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
+                            ea.email_address              AS Email,
+                            con_cstm.last_shipment_date_c
+                          FROM contacts con
+                            LEFT JOIN contacts_cstm con_cstm
+                              ON con.id = con_cstm.id_c
+                                AND con.deleted = 0
+                            LEFT JOIN email_addr_bean_rel AS ear
+                              ON ear.bean_id = con.id
+                                AND ear.deleted = 0
+                            LEFT JOIN email_addresses ea
+                              ON ea.id = ear.email_address_id
+                                AND ea.deleted = 0
+                          WHERE con.deleted = 0
+                                AND con_cstm.type_c IN('One_time_customer','Regular_Customer')
+                                AND IF(con_cstm.last_shipment_date_c IS NULL
+                                        OR con_cstm.last_shipment_date_c = '', DATEDIFF(CURDATE(),IF(con_cstm.second_followup_c IS NOT NULL, con_cstm.second_followup_c, con_cstm.first_followup_c)) > '28', DATEDIFF(CURDATE(),con_cstm.last_shipment_date_c) > '42')
+                                AND IF(con_cstm.last_shipment_date_c IS NOT NULL, con_cstm.last_shipment_date_c > '2014-05-01', TRUE)
+                                AND ea.email_address IS NOT NULL
+                                AND (con_cstm.discounts_followup_c IS NULL OR con_cstm.discounts_followup_c = '')
+                          GROUP by ea.email_address
+                          ORDER by con_cstm.last_shipment_date_c");
+    while ($result_query = $db->fetchByAssoc($result)) {
+        $email_body = $emailtemplate->body_html;
+        $email_body_plain = $emailtemplate->body;
+        $email_body = str_replace('$contact_first_name', $result_query['NAME'], $email_body);
+        $email_body_plain = str_replace('$contact_first_name', $result_query['NAME'], $email_body_plain);
+        $email_address = $result['Email'];
+        $email_address = 'dhaval@india.biztechconsultancy.com';
+
+        $emailObj = new Email();
+        $defaults = $emailObj->getSystemDefaultEmail();
+        $mail = new SugarPHPMailer();
+        $mail->setMailerForSystem();
+        $mail->ClearAllRecipients();
+        $mail->ClearReplyTos();
+        $mail->From = $defaults['email'];
+        $mail->FromName = $defaults['name'];
+        $subject = $mailSubject;
+        $mail->Subject = $subject;
+        $mail->Body = from_html($email_body);
+        $mail->AltBody = $email_body_plain;
+        $mail->prepForOutbound();
+        $mail->AddAddress($email_address);
+        if ($mail->Send()) {
+            $emailObj->to_addrs = $email_address;
+            $emailObj->type = 'out';
+            $emailObj->deleted = '0';
+            $emailObj->name = $subject;
+            $emailObj->description = $email_body_plain;
+            $emailObj->description_html = from_html($email_body);
+            $emailObj->from_addr = $defaults['email'];
+            $emailObj->parent_type = 'Contacts';
+            $emailObj->parent_id = $result_query['ID'];
+            $user_id = $current_user->id;
+            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+            $emailObj->assigned_user_id = $user_id;
+            $emailObj->modified_user_id = $user_id;
+            $emailObj->created_by = $user_id;
+            $emailObj->status = 'sent';
+            $emailObj->save();
+            $query = "UPDATE contacts_cstm SET discounts_followup_c = '{$sendMailDate}' WHERE id_c = '{$result_query['ID']}' ";
+            $db->query($query);
+        } else {
+            $mail_msg = $mail->ErrorInfo;
+        }
     }
     return true;
 }

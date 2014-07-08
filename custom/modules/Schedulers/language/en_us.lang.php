@@ -19,4 +19,9 @@ $mod_strings ['LBL_SENDDAILYCASEOVERDUETASKEMAIL'] = 'sendDailyCaseOverDueTaskEm
 $mod_strings ['LBL_PROCESSUPLOADIMPORTPERMITCASE'] = 'processUploadImportPermitCase';
 $mod_strings ['LBL_UPDATESTOREDATADROPDOWNS'] = 'updateStoreDataDropDowns';
 $mod_strings ['LBL_UPDATELASTSHIPDATEFROMORDERSINMAGENTO'] = 'updateLastShipDateFromOrdersInMagento';
+$mod_strings ['LBL_SENDCUSTOMERFIRSTFOLLOWUP'] = 'sendCustomerFirstFollowUp';
+$mod_strings ['LBL_SENDCUSTOMERSECONDFOLLOWUP'] = 'sendCustomerSecondFollowUp';
+$mod_strings ['LBL_SENDCUSTOMERSECONDFOLLOWUPMONTHLY'] = 'sendCustomerSecondFollowUpMonthly';
+$mod_strings ['LBL_CAMPAIGNFORDISCOUNTSFORDATA'] = 'campaignForDiscountsForData';
+$mod_strings ['LBL_CAMPAIGNFORAUTOMATICENQUIRY'] = 'campaignForAutomaticEnquiry';
 ?>
