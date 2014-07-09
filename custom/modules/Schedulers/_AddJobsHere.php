@@ -976,7 +976,7 @@ function updateLastShipDateFromOrdersInMagento()
                         LEFT JOIN email_addresses
                           ON email_addresses.id = email_addr_bean_rel.email_address_id
                           SET contacts_cstm.last_shipment_date_c = '" . date('Y-m-d', strtotime($MagentoData['shipped_date'])) . "',
-                          contacts_cstm.first_followup_c = ''
+                          contacts_cstm.first_followup_c = NULL
                       WHERE contacts.deleted = '0' AND email_addresses.email_address = '{$MagentoData['customer_email']}'";
         $db->query($selctQuery);
     }
@@ -1025,7 +1025,6 @@ function sendCustomerFirstFollowUp()
         $mailSubject = $emailtemplate->subject;
 
         $email_address = $bean->email1;
-        $email_address = 'dhaval@india.biztechconsultancy.com';
 
         $emailObj = new Email();
         $defaults = $emailObj->getSystemDefaultEmail();
@@ -1115,7 +1114,6 @@ function sendCustomerSecondFollowUp()
         $mailSubject = $emailtemplate->subject;
 
         $email_address = $bean->email1;
-        $email_address = 'dhaval@india.biztechconsultancy.com';
 
         $emailObj = new Email();
         $defaults = $emailObj->getSystemDefaultEmail();
@@ -1180,7 +1178,6 @@ function sendCustomerSecondFollowUpMonthly()
               ON contacts.id = contacts_cstm.id_c
           WHERE contacts.deleted = 0
               AND contacts_cstm.type_c IN('One_time_customer')
-              AND contacts_cstm.last_shipment_date_c > '2014-06-01'
               AND (contacts_cstm.last_shipment_date_c IS NULL OR last_shipment_date_c = '')
               AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '')";
 
@@ -1204,7 +1201,6 @@ function sendCustomerSecondFollowUpMonthly()
         $mailSubject = $emailtemplate->subject;
 
         $email_address = $bean->email1;
-        $email_address = 'dhaval@india.biztechconsultancy.com';
 
         $emailObj = new Email();
         $defaults = $emailObj->getSystemDefaultEmail();
@@ -1283,8 +1279,7 @@ function campaignForAutomaticEnquiry()
         $email_body_plain = $emailtemplate->body;
         $email_body = str_replace('$contact_first_name', $result_query['NAME'], $email_body);
         $email_body_plain = str_replace('$contact_first_name', $result_query['NAME'], $email_body_plain);
-        $email_address = $result['Email'];
-        $email_address = 'dhaval@india.biztechconsultancy.com';
+        $email_address = $result_query['Email'];
 
         $emailObj = new Email();
         $defaults = $emailObj->getSystemDefaultEmail();
@@ -1362,8 +1357,7 @@ function campaignForDiscountsForData()
         $email_body_plain = $emailtemplate->body;
         $email_body = str_replace('$contact_first_name', $result_query['NAME'], $email_body);
         $email_body_plain = str_replace('$contact_first_name', $result_query['NAME'], $email_body_plain);
-        $email_address = $result['Email'];
-        $email_address = 'dhaval@india.biztechconsultancy.com';
+        $email_address = $result_query['Email'];
 
         $emailObj = new Email();
         $defaults = $emailObj->getSystemDefaultEmail();
