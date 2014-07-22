@@ -189,7 +189,7 @@ function checkOpportunitySalesData()
         $address = $email_address;
         $mail->AddAddress($email_address);
 
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
@@ -298,7 +298,7 @@ function processOverDueCase()
         $address = $email_address;
         $mail->AddAddress($email_address);
 
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
@@ -355,7 +355,6 @@ function processPOAndVATCases()
                         AND cases_cstm.vat_number_c IS NOT NULL))";
     $result = $db->query($sql);
     while ($PO_VAT_Case = $db->fetchByAssoc($result)) {
-
         $bean = new aCase();
         $bean->retrieve($PO_VAT_Case['id']);
         $bean->customer_name_c = $PO_VAT_Case['customer_name'];
@@ -410,7 +409,7 @@ function processPOAndVATCases()
         $address = $email_address;
         $mail->AddAddress($email_address);
 
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
@@ -904,7 +903,9 @@ function processUploadImportPermitCase()
         $mail->AltBody = $email_body_plain;
         $mail->prepForOutbound();
         $mail->AddAddress($email_address);
-        $mail->Send();
+        if (!empty($email_address)) {
+            $mail->Send();
+        }
         //update permit flag to 0
         $query = "UPDATE cases_cstm SET permit_flag_c = 0 WHERE id_c = '{$result['id']}' ";
         $db->query($query);
@@ -1042,7 +1043,7 @@ function sendCustomerFirstFollowUp()
         $address = $email_address;
         $mail->AddAddress($email_address);
 
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
@@ -1131,7 +1132,7 @@ function sendCustomerSecondFollowUp()
         $address = $email_address;
         $mail->AddAddress($email_address);
 
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
@@ -1218,7 +1219,7 @@ function sendCustomerSecondFollowUpMonthly()
         $address = $email_address;
         $mail->AddAddress($email_address);
 
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
@@ -1295,7 +1296,7 @@ function campaignForAutomaticEnquiry()
         $mail->AltBody = $email_body_plain;
         $mail->prepForOutbound();
         $mail->AddAddress($email_address);
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $email_address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
@@ -1373,7 +1374,7 @@ function campaignForDiscountsForData()
         $mail->AltBody = $email_body_plain;
         $mail->prepForOutbound();
         $mail->AddAddress($email_address);
-        if ($mail->Send()) {
+        if (!empty($email_address) && $mail->Send()) {
             $emailObj->to_addrs = $email_address;
             $emailObj->type = 'out';
             $emailObj->deleted = '0';
