@@ -1006,7 +1006,7 @@ function sendCustomerFirstFollowUp()
               AND contacts_cstm.last_shipment_date_c > '2014-06-01'
               AND (contacts_cstm.last_shipment_date_c IS NOT NULL  OR last_shipment_date_c != '')
               AND (contacts_cstm.first_followup_c IS NULL OR contacts_cstm.first_followup_c = '')
-          ORDER by contacts_cstm.last_shipment_date_c";
+          ORDER by contacts_cstm.last_shipment_date_c LIMIT 100";
     $result = $db->query($sql);
     while ($contactRow = $db->fetchByAssoc($result)) {
 
@@ -1094,7 +1094,7 @@ function sendCustomerSecondFollowUp()
               AND contacts_cstm.last_shipment_date_c > '2014-06-01'
               AND (contacts_cstm.last_shipment_date_c IS NOT NULL OR last_shipment_date_c != '')
               AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '')
-          ORDER by contacts_cstm.last_shipment_date_c";
+          ORDER by contacts_cstm.last_shipment_date_c LIMIT 100";
 
     $result = $db->query($sql);
     while ($contactRow = $db->fetchByAssoc($result)) {
@@ -1180,7 +1180,7 @@ function sendCustomerSecondFollowUpMonthly()
           WHERE contacts.deleted = 0
               AND contacts_cstm.type_c IN('One_time_customer')
               AND (contacts_cstm.last_shipment_date_c IS NULL OR last_shipment_date_c = '')
-              AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '')";
+              AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '') LIMIT 300";
 
 
     $result = $db->query($sql);
@@ -1274,7 +1274,7 @@ function campaignForAutomaticEnquiry()
                               AND DATEDIFF(CURDATE(),con.date_modified) > '21'
                               AND ea.email_address IS NOT NULL
                               AND (con_cstm.automatic_enquiry_c IS NULL OR con_cstm.automatic_enquiry_c = '')
-                          GROUP by ea.email_address ");
+                          GROUP by ea.email_address  LIMIT 100");
     while ($result_query = $db->fetchByAssoc($result)) {
         $email_body = $emailtemplate->body_html;
         $email_body_plain = $emailtemplate->body;
@@ -1352,7 +1352,7 @@ function campaignForDiscountsForData()
                                 AND ea.email_address IS NOT NULL
                                 AND (con_cstm.discounts_followup_c IS NULL OR con_cstm.discounts_followup_c = '')
                           GROUP by ea.email_address
-                          ORDER by con_cstm.last_shipment_date_c");
+                          ORDER by con_cstm.last_shipment_date_c LIMIT 100");
     while ($result_query = $db->fetchByAssoc($result)) {
         $email_body = $emailtemplate->body_html;
         $email_body_plain = $emailtemplate->body;
