@@ -208,9 +208,11 @@ class HomeController extends SugarController
 
         $name = serialize($name);
         $result = $name . "||" . $curr_user;
-        $updateSql = $db->query("UPDATE notification_queue
+        /*$updateSql = $db->query("UPDATE notification_queue
                                         SET is_notify = 1
-                                       WHERE is_notify = 0 AND userid = '{$current_user->id}'");
+                                       WHERE is_notify = 0 AND userid = '{$current_user->id}'");*/
+        //Delete instead
+        $db->query("DELETE FROM notification_queue WHERE is_notify = 0 AND userid = '{$current_user->id}'");
 
         echo $result;
         exit;
