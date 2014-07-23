@@ -61,7 +61,7 @@ var $objectName = 'Contact';
  */
 public function getDuplicateQuery($prefix='')
 {
-	/*$query = 'SELECT id, first_name, last_name, title FROM contacts where deleted = 0 AND ';
+	$query = 'SELECT id, first_name, last_name, title FROM contacts where deleted = 0 AND ';
 	if(isset($_POST[$prefix.'first_name']) && strlen($_POST[$prefix.'first_name']) != 0 && isset($_POST[$prefix.'last_name']) && strlen($_POST[$prefix.'last_name']) != 0){
 		$query .= " first_name LIKE '". $_POST[$prefix.'first_name'] . "%' AND last_name = '". $_POST[$prefix.'last_name'] ."'";
 	} else {
@@ -71,8 +71,8 @@ public function getDuplicateQuery($prefix='')
 	if(!empty($_POST[$prefix.'record'])) {
 		$query .= " AND  id != '". $_POST[$prefix.'record'] ."'";
 	}
-    return $query;*/
-    return ' ';
+    return $query;
+    //return ' ';
 }
 
 
