@@ -995,18 +995,35 @@ function sendCustomerFirstFollowUp()
     require_once 'include/SugarPHPMailer.php';
 
     $sql = "SELECT
-            contacts_cstm.last_shipment_date_c,
-            contacts.id
-          FROM contacts
-            JOIN contacts_cstm
-              ON contacts.id = contacts_cstm.id_c
-          WHERE contacts.deleted = 0
-               AND DATEDIFF(DATE(CURDATE()), contacts_cstm.last_shipment_date_c) > 10
-              AND contacts_cstm.type_c IN('Regular_Customer','One_time_customer')
-              AND contacts_cstm.last_shipment_date_c > '2014-06-01'
-              AND (contacts_cstm.last_shipment_date_c IS NOT NULL  OR last_shipment_date_c != '')
-              AND (contacts_cstm.first_followup_c IS NULL OR contacts_cstm.first_followup_c = '')
-          ORDER by contacts_cstm.last_shipment_date_c LIMIT 100";
+              contacts_cstm.last_shipment_date_c,
+              contacts.id
+            FROM contacts
+              JOIN contacts_cstm
+                ON contacts.id = contacts_cstm.id_c
+              JOIN (SELECT
+                      contacts_cases.contact_id
+                    FROM `cases`
+                      LEFT JOIN cases_cstm
+                        ON cases_cstm.id_c = cases.id
+                      LEFT JOIN contacts_cases
+                        ON contacts_cases.case_id = cases.id
+                          AND contacts_cases.deleted = 0
+                    WHERE cases.deleted = 0
+                        AND cases.status <> 'Closed'
+                        AND cases_cstm.technical_c = 'Complaint'
+                        AND contacts_cases.contact_id IS NOT NULL
+                    GROUP BY contacts_cases.contact_id) AS complaint_cases
+                ON complaint_cases.contact_id <> contacts.id
+            WHERE contacts.deleted = 0
+                AND DATEDIFF(DATE(CURDATE()), contacts_cstm.last_shipment_date_c) > 10
+                AND contacts_cstm.type_c IN('Regular_Customer','One_time_customer')
+                AND contacts_cstm.last_shipment_date_c > '2014-06-01'
+                AND (contacts_cstm.last_shipment_date_c IS NOT NULL
+                      OR last_shipment_date_c != '')
+                AND (contacts_cstm.first_followup_c IS NULL
+                      OR contacts_cstm.first_followup_c = '')
+            ORDER BY contacts_cstm.last_shipment_date_c
+            LIMIT 100";
     $result = $db->query($sql);
     while ($contactRow = $db->fetchByAssoc($result)) {
 
@@ -1083,18 +1100,35 @@ function sendCustomerSecondFollowUp()
     require_once 'include/SugarPHPMailer.php';
 
     $sql = "SELECT
-            contacts_cstm.last_shipment_date_c,
-            contacts.id
-          FROM contacts
-            JOIN contacts_cstm
-              ON contacts.id = contacts_cstm.id_c
-          WHERE contacts.deleted = 0
-              AND DATEDIFF(DATE(CURDATE()), contacts_cstm.last_shipment_date_c) > 20
-              AND contacts_cstm.type_c IN('One_time_customer')
-              AND contacts_cstm.last_shipment_date_c > '2014-06-01'
-              AND (contacts_cstm.last_shipment_date_c IS NOT NULL OR last_shipment_date_c != '')
-              AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '')
-          ORDER by contacts_cstm.last_shipment_date_c LIMIT 100";
+              contacts_cstm.last_shipment_date_c,
+              contacts.id
+            FROM contacts
+              JOIN contacts_cstm
+                ON contacts.id = contacts_cstm.id_c
+              JOIN (SELECT
+                      contacts_cases.contact_id
+                    FROM `cases`
+                      LEFT JOIN cases_cstm
+                        ON cases_cstm.id_c = cases.id
+                      LEFT JOIN contacts_cases
+                        ON contacts_cases.case_id = cases.id
+                          AND contacts_cases.deleted = 0
+                    WHERE cases.deleted = 0
+                        AND cases.status <> 'Closed'
+                        AND cases_cstm.technical_c = 'Complaint'
+                        AND contacts_cases.contact_id IS NOT NULL
+                    GROUP BY contacts_cases.contact_id) AS complaint_cases
+                ON complaint_cases.contact_id <> contacts.id
+            WHERE contacts.deleted = 0
+                AND DATEDIFF(DATE(CURDATE()), contacts_cstm.last_shipment_date_c) > 20
+                AND contacts_cstm.type_c IN('One_time_customer')
+                AND contacts_cstm.last_shipment_date_c > '2014-06-01'
+                AND (contacts_cstm.last_shipment_date_c IS NOT NULL
+                      OR last_shipment_date_c != '')
+                AND (contacts_cstm.second_followup_c IS NULL
+                      OR contacts_cstm.second_followup_c = '')
+            ORDER BY contacts_cstm.last_shipment_date_c
+            LIMIT 100";
 
     $result = $db->query($sql);
     while ($contactRow = $db->fetchByAssoc($result)) {
@@ -1172,15 +1206,32 @@ function sendCustomerSecondFollowUpMonthly()
     require_once 'include/SugarPHPMailer.php';
 
     $sql = "SELECT
-            contacts_cstm.last_shipment_date_c,
-            contacts.id
-          FROM contacts
-            JOIN contacts_cstm
-              ON contacts.id = contacts_cstm.id_c
-          WHERE contacts.deleted = 0
-              AND contacts_cstm.type_c IN('One_time_customer')
-              AND (contacts_cstm.last_shipment_date_c IS NULL OR last_shipment_date_c = '')
-              AND (contacts_cstm.second_followup_c IS NULL OR contacts_cstm.second_followup_c = '') LIMIT 300";
+              contacts_cstm.last_shipment_date_c,
+              contacts.id
+            FROM contacts
+              JOIN contacts_cstm
+                ON contacts.id = contacts_cstm.id_c
+              JOIN (SELECT
+                      contacts_cases.contact_id
+                    FROM `cases`
+                      LEFT JOIN cases_cstm
+                        ON cases_cstm.id_c = cases.id
+                      LEFT JOIN contacts_cases
+                        ON contacts_cases.case_id = cases.id
+                          AND contacts_cases.deleted = 0
+                    WHERE cases.deleted = 0
+                        AND cases.status <> 'Closed'
+                        AND cases_cstm.technical_c = 'Complaint'
+                        AND contacts_cases.contact_id IS NOT NULL
+                    GROUP BY contacts_cases.contact_id) AS complaint_cases
+                ON complaint_cases.contact_id <> contacts.id
+            WHERE contacts.deleted = 0
+                AND contacts_cstm.type_c IN('One_time_customer')
+                AND (contacts_cstm.last_shipment_date_c IS NULL
+                      OR last_shipment_date_c = '')
+                AND (contacts_cstm.second_followup_c IS NULL
+                      OR contacts_cstm.second_followup_c = '')
+            LIMIT 300";
 
 
     $result = $db->query($sql);
@@ -1257,25 +1308,41 @@ function campaignForAutomaticEnquiry()
     $sendMailDate = TimeDate::getInstance()->nowDbDate();
     //CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
     $result = $db->query("SELECT
-                            con.id                        AS ID,
-                            con.first_name AS NAME,
-                            ea.email_address              AS Email
-                          FROM contacts con
-                            LEFT JOIN contacts_cstm con_cstm
-                              ON con.id = con_cstm.id_c
-                                AND con.deleted = 0
-                            LEFT JOIN email_addr_bean_rel AS ear
-                              ON ear.bean_id = con.id
-                                AND ear.deleted = 0
-                            LEFT JOIN email_addresses ea
-                              ON ea.id = ear.email_address_id
-                                AND ea.deleted = 0
-                          WHERE con.deleted = 0
-                              AND con_cstm.type_c IN('Enquiry')
-                              AND DATEDIFF(CURDATE(),con.date_modified) > '21'
-                              AND ea.email_address IS NOT NULL
-                              AND (con_cstm.automatic_enquiry_c IS NULL OR con_cstm.automatic_enquiry_c = '')
-                          GROUP by ea.email_address  LIMIT 100");
+                              con.id           AS ID,
+                              con.first_name   AS NAME,
+                              ea.email_address AS Email
+                            FROM contacts con
+                              LEFT JOIN contacts_cstm con_cstm
+                                ON con.id = con_cstm.id_c
+                                  AND con.deleted = 0
+                              LEFT JOIN email_addr_bean_rel AS ear
+                                ON ear.bean_id = con.id
+                                  AND ear.deleted = 0
+                              LEFT JOIN email_addresses ea
+                                ON ea.id = ear.email_address_id
+                                  AND ea.deleted = 0
+                              JOIN (SELECT
+                                      contacts_cases.contact_id
+                                    FROM `cases`
+                                      LEFT JOIN cases_cstm
+                                        ON cases_cstm.id_c = cases.id
+                                      LEFT JOIN contacts_cases
+                                        ON contacts_cases.case_id = cases.id
+                                          AND contacts_cases.deleted = 0
+                                    WHERE cases.deleted = 0
+                                        AND cases.status <> 'Closed'
+                                        AND cases_cstm.technical_c = 'Complaint'
+                                        AND contacts_cases.contact_id IS NOT NULL
+                                    GROUP BY contacts_cases.contact_id) AS complaint_cases
+                                ON complaint_cases.contact_id <> con.id
+                            WHERE con.deleted = 0
+                                AND con_cstm.type_c IN('Enquiry')
+                                AND DATEDIFF(CURDATE(),con.date_modified) > '21'
+                                AND ea.email_address IS NOT NULL
+                                AND (con_cstm.automatic_enquiry_c IS NULL
+                                      OR con_cstm.automatic_enquiry_c = '')
+                            GROUP BY ea.email_address
+                            LIMIT 100");
     while ($result_query = $db->fetchByAssoc($result)) {
         $email_body = $emailtemplate->body_html;
         $email_body_plain = $emailtemplate->body;
@@ -1332,29 +1399,45 @@ function campaignForDiscountsForData()
     $sendMailDate = TimeDate::getInstance()->nowDbDate();
     //CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
     $result = $db->query("SELECT
-                            con.id                        AS ID,
-                            con.first_name AS NAME,
-                            ea.email_address              AS Email,
-                            con_cstm.last_shipment_date_c
-                          FROM contacts con
-                            LEFT JOIN contacts_cstm con_cstm
-                              ON con.id = con_cstm.id_c
-                                AND con.deleted = 0
-                            LEFT JOIN email_addr_bean_rel AS ear
-                              ON ear.bean_id = con.id
-                                AND ear.deleted = 0
-                            LEFT JOIN email_addresses ea
-                              ON ea.id = ear.email_address_id
-                                AND ea.deleted = 0
-                          WHERE con.deleted = 0
+                              con.id                        AS ID,
+                              con.first_name                AS NAME,
+                              ea.email_address              AS Email,
+                              con_cstm.last_shipment_date_c
+                            FROM contacts con
+                              LEFT JOIN contacts_cstm con_cstm
+                                ON con.id = con_cstm.id_c
+                                  AND con.deleted = 0
+                              LEFT JOIN email_addr_bean_rel AS ear
+                                ON ear.bean_id = con.id
+                                  AND ear.deleted = 0
+                              LEFT JOIN email_addresses ea
+                                ON ea.id = ear.email_address_id
+                                  AND ea.deleted = 0
+                              JOIN (SELECT
+                                      contacts_cases.contact_id
+                                    FROM `cases`
+                                      LEFT JOIN cases_cstm
+                                        ON cases_cstm.id_c = cases.id
+                                      LEFT JOIN contacts_cases
+                                        ON contacts_cases.case_id = cases.id
+                                          AND contacts_cases.deleted = 0
+                                    WHERE cases.deleted = 0
+                                        AND cases.status <> 'Closed'
+                                        AND cases_cstm.technical_c = 'Complaint'
+                                        AND contacts_cases.contact_id IS NOT NULL
+                                    GROUP BY contacts_cases.contact_id) AS complaint_cases
+                                ON complaint_cases.contact_id <> con.id
+                            WHERE con.deleted = 0
                                 AND con_cstm.type_c IN('One_time_customer','Regular_Customer')
                                 AND IF(con_cstm.last_shipment_date_c IS NULL
                                         OR con_cstm.last_shipment_date_c = '', DATEDIFF(CURDATE(),IF(con_cstm.second_followup_c IS NOT NULL, con_cstm.second_followup_c, con_cstm.first_followup_c)) > '28', DATEDIFF(CURDATE(),con_cstm.last_shipment_date_c) > '42')
                                 AND IF(con_cstm.last_shipment_date_c IS NOT NULL, con_cstm.last_shipment_date_c > '2014-05-01', TRUE)
                                 AND ea.email_address IS NOT NULL
-                                AND (con_cstm.discounts_followup_c IS NULL OR con_cstm.discounts_followup_c = '')
-                          GROUP by ea.email_address
-                          ORDER by con_cstm.last_shipment_date_c LIMIT 100");
+                                AND (con_cstm.discounts_followup_c IS NULL
+                                      OR con_cstm.discounts_followup_c = '')
+                            GROUP by ea.email_address
+                            ORDER by con_cstm.last_shipment_date_c
+                            LIMIT 100");
     while ($result_query = $db->fetchByAssoc($result)) {
         $email_body = $emailtemplate->body_html;
         $email_body_plain = $emailtemplate->body;
