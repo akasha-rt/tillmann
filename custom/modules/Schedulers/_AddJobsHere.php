@@ -1020,7 +1020,7 @@ function sendCustomerFirstFollowUp()
         $email_body = $emailtemplate->body_html;
         //for plain text supported email client
         $email_body_plain = $emailtemplate->body;
-        $email_body = str_replace('$contact_first_name', $bean->name, $email_body);
+        $email_body = str_replace('$contact_first_name', $bean->first_name, $email_body);
 
         //Correct the subject
         $mailSubject = $emailtemplate->subject;
@@ -1109,7 +1109,7 @@ function sendCustomerSecondFollowUp()
         $email_body = $emailtemplate->body_html;
         //for plain text supported email client
         $email_body_plain = $emailtemplate->body;
-        $email_body = str_replace('$contact_first_name', $bean->name, $email_body);
+        $email_body = str_replace('$contact_first_name', $bean->first_name, $email_body);
 
         //Correct the subject
         $mailSubject = $emailtemplate->subject;
@@ -1196,7 +1196,7 @@ function sendCustomerSecondFollowUpMonthly()
         $email_body = $emailtemplate->body_html;
         //for plain text supported email client
         $email_body_plain = $emailtemplate->body;
-        $email_body = str_replace('$contact_first_name', $bean->name, $email_body);
+        $email_body = str_replace('$contact_first_name', $bean->first_name, $email_body);
 
         //Correct the subject
         $mailSubject = $emailtemplate->subject;
@@ -1255,9 +1255,10 @@ function campaignForAutomaticEnquiry()
     $emailtemplate->retrieve($sugar_config['auto_enquiry_camp_template']);
     $mailSubject = $emailtemplate->subject;
     $sendMailDate = TimeDate::getInstance()->nowDbDate();
+    //CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
     $result = $db->query("SELECT
                             con.id                        AS ID,
-                            CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
+                            con.first_name AS NAME,
                             ea.email_address              AS Email
                           FROM contacts con
                             LEFT JOIN contacts_cstm con_cstm
@@ -1329,9 +1330,10 @@ function campaignForDiscountsForData()
     $emailtemplate->retrieve($sugar_config['discounts_for_data_template']);
     $mailSubject = $emailtemplate->subject;
     $sendMailDate = TimeDate::getInstance()->nowDbDate();
+    //CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
     $result = $db->query("SELECT
                             con.id                        AS ID,
-                            CONCAT(con.first_name, IF(con.last_name IS NOT NULL, CONCAT(' ' , con.last_name), '')) AS NAME,
+                            con.first_name AS NAME,
                             ea.email_address              AS Email,
                             con_cstm.last_shipment_date_c
                           FROM contacts con
