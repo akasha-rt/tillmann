@@ -78,7 +78,7 @@ class NewProductComplaintDashlet extends CustomDashletGeneric {
                                           ON cases.id = cases_cstm.id_c
                                           LEFT JOIN bc_storedata ON  FIND_IN_SET(bc_storedata.sku,cases_cstm.product_c) WHERE cases.deleted = 0
                                         AND cases_cstm.technical_c = 'Complaint'
-                                        AND cases_cstm.product_c IS NOT NULL
+                                        AND (cases_cstm.product_c IS NOT NULL or cases_cstm.product_c <> '')
                                          GROUP BY bc_storedata.sku
                                         HAVING COUNT(bc_storedata.sku) >= 2 ) AS a",
             'custom_order_by' => $orderBy,
