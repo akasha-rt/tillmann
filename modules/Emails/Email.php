@@ -2212,7 +2212,15 @@ class Email extends SugarBean {
     }
 
     function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
-
+        if($_REQUEST['action'] == 'UnifiedSearch' && !empty($_REQUEST['query_string'])){
+            return array(
+                'select' => 'SELECT  emails.id  , emails.name , emails.status , emails.date_entered , emails.assigned_user_id ',
+                'from' => 'FROM emails LEFT JOIN emails_cstm ON emails.id = emails_cstm.id_c INNER JOIN emails_text ON emails_text.email_id = emails.id AND emails_text.deleted = 0 ',
+                'from_min' => 'FROM emails ',
+                'where' => "WHERE (MATCH(description)AGAINST('{$_REQUEST['query_string']}') OR MATCH(NAME)AGAINST('{$_REQUEST['query_string']}')) AND emails.deleted = 0 ",
+                'order_by' => 'ORDER BY emails.date_entered DESC '
+            );
+        }else{
         if ($return_array) {
             return parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
         }
@@ -2253,7 +2261,7 @@ class Email extends SugarBean {
             $query .= " ORDER BY $order_by";
         else
             $query .= " ORDER BY date_sent DESC";
-
+        }
         return $query;
     }
 
