@@ -455,3 +455,9 @@ ALTER TABLE `contacts_cstm` ADD `second_followup_c`  DATE NULL DEFAULT NULL;
 ALTER TABLE `contacts_cstm` ADD `discounts_followup_c` DATE NULL DEFAULT NULL; 
 ALTER TABLE `contacts_cstm` ADD `automatic_enquiry_c` DATE NULL DEFAULT NULL;
 
+
+@dhaval - 22_08_2014
+CREATE TABLE IF NOT EXISTS `product_complaint_tbl` (
+  `complaint_product` varchar(255) DEFAULT NULL,
+  `complaint` int(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

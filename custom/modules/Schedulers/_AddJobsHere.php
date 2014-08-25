@@ -24,6 +24,7 @@ $job_strings[] = 'sendCustomerSecondFollowUp';
 $job_strings[] = 'sendCustomerSecondFollowUpMonthly';
 $job_strings[] = 'campaignForDiscountsForData';
 $job_strings[] = 'campaignForAutomaticEnquiry';
+$job_strings[] = 'updateProductComplaintsData';
 
 //Function to call when the new job is called from cronjob
 function createOppFromCase()
@@ -1482,6 +1483,45 @@ function campaignForDiscountsForData()
             $mail_msg = $mail->ErrorInfo;
         }
     }
+    return true;
+}
+
+function updateProductComplaintsData()
+{
+    global $db;
+    $selectQuery = "SELECT
+                            id,
+                            product_c AS product
+                          FROM cases
+                            JOIN cases_cstm
+                              ON cases.id = cases_cstm.id_c
+                          WHERE cases.deleted = 0
+                              AND cases_cstm.technical_c = 'Complaint'
+                              AND cases_cstm.product_c IS NOT NULL
+                              AND cases_cstm.product_c != ''";
+
+    $query_Run = $db->query($selectQuery);
+    $complaintDataArray = array();
+    $complaintData = array();
+    while ($result = $db->fetchByAssoc($query_Run)) {
+        $prod = explode(',', $result['product']);
+        foreach ($prod as $product) {
+            $complaintData[] = $product;
+        }
+    }
+    $complaintData = array_filter($complaintData);
+    $product_complaint_count = array_count_values($complaintData);
+    $product_complaint_count = array_filter($product_complaint_count, function ($value, $key) {
+        return ($value >= 2);
+    });
+    foreach ($product_complaint_count as $product => $complaintCount) {
+        $insertData[] = "('{$product}', '{$complaintCount}')";
+    }
+    $values = implode(", ", $insertData);
+    $deleteQuery = "Delete from product_complaint_tbl";
+    $db->query($deleteQuery);
+    $insertData = "Insert Into product_complaint_tbl (complaint_product,complaint) Values {$values}";
+    $db->query($insertData);
     return true;
 }
 
