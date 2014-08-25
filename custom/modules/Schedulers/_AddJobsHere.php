@@ -1001,6 +1001,12 @@ function sendCustomerFirstFollowUp()
             FROM contacts
               JOIN contacts_cstm
                 ON contacts.id = contacts_cstm.id_c
+                 LEFT JOIN email_addr_bean_rel AS ear
+                                ON ear.bean_id = contacts.id
+                                  AND ear.deleted = 0
+                              LEFT JOIN email_addresses ea
+                                ON ea.id = ear.email_address_id
+                                  AND ea.deleted = 0
               JOIN (SELECT
                       contacts_cases.contact_id
                     FROM `cases`
@@ -1022,6 +1028,7 @@ function sendCustomerFirstFollowUp()
                 AND (contacts_cstm.last_shipment_date_c IS NOT NULL
                       OR last_shipment_date_c != '')
                 AND (contacts_cstm.first_followup_c IS NULL
+                AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                       OR contacts_cstm.first_followup_c = '')
             ORDER BY contacts_cstm.last_shipment_date_c
             LIMIT 100";
@@ -1106,6 +1113,12 @@ function sendCustomerSecondFollowUp()
             FROM contacts
               JOIN contacts_cstm
                 ON contacts.id = contacts_cstm.id_c
+                LEFT JOIN email_addr_bean_rel AS ear
+                                ON ear.bean_id = contacts.id
+                                  AND ear.deleted = 0
+                              LEFT JOIN email_addresses ea
+                                ON ea.id = ear.email_address_id
+                                  AND ea.deleted = 0
               JOIN (SELECT
                       contacts_cases.contact_id
                     FROM `cases`
@@ -1127,6 +1140,7 @@ function sendCustomerSecondFollowUp()
                 AND (contacts_cstm.last_shipment_date_c IS NOT NULL
                       OR last_shipment_date_c != '')
                 AND (contacts_cstm.second_followup_c IS NULL
+                AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                       OR contacts_cstm.second_followup_c = '')
             ORDER BY contacts_cstm.last_shipment_date_c
             LIMIT 100";
@@ -1212,6 +1226,12 @@ function sendCustomerSecondFollowUpMonthly()
             FROM contacts
               JOIN contacts_cstm
                 ON contacts.id = contacts_cstm.id_c
+                LEFT JOIN email_addr_bean_rel AS ear
+                                ON ear.bean_id = contacts.id
+                                  AND ear.deleted = 0
+                              LEFT JOIN email_addresses ea
+                                ON ea.id = ear.email_address_id
+                                  AND ea.deleted = 0
               JOIN (SELECT
                       contacts_cases.contact_id
                     FROM `cases`
@@ -1231,6 +1251,7 @@ function sendCustomerSecondFollowUpMonthly()
                 AND (contacts_cstm.last_shipment_date_c IS NULL
                       OR last_shipment_date_c = '')
                 AND (contacts_cstm.second_followup_c IS NULL
+                AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                       OR contacts_cstm.second_followup_c = '')
             LIMIT 300";
 
@@ -1339,7 +1360,7 @@ function campaignForAutomaticEnquiry()
                             WHERE con.deleted = 0
                                 AND con_cstm.type_c IN('Enquiry')
                                 AND DATEDIFF(CURDATE(),con.date_modified) > '21'
-                                AND ea.email_address IS NOT NULL
+                                AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                                 AND (con_cstm.automatic_enquiry_c IS NULL
                                       OR con_cstm.automatic_enquiry_c = '')
                             GROUP BY ea.email_address
@@ -1433,7 +1454,7 @@ function campaignForDiscountsForData()
                                 AND IF(con_cstm.last_shipment_date_c IS NULL
                                         OR con_cstm.last_shipment_date_c = '', DATEDIFF(CURDATE(),IF(con_cstm.second_followup_c IS NOT NULL, con_cstm.second_followup_c, con_cstm.first_followup_c)) > '28', DATEDIFF(CURDATE(),con_cstm.last_shipment_date_c) > '42')
                                 AND IF(con_cstm.last_shipment_date_c IS NOT NULL, con_cstm.last_shipment_date_c > '2014-05-01', TRUE)
-                                AND ea.email_address IS NOT NULL
+                                AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                                 AND (con_cstm.discounts_followup_c IS NULL
                                       OR con_cstm.discounts_followup_c = '')
                             GROUP by ea.email_address
