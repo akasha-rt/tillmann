@@ -296,6 +296,8 @@ class Contact extends Person {
                          $query = "SELECT
                                 contacts.*,email_addresses.email_address email_address,
                                 accounts.name as account_name,
+                                email_addresses.opt_out email_opt_out,
+                                email_addresses.invalid_email invalid_email,
                                 users.user_name as assigned_user_name ";
 						if($custom_join){
    							$query .= $custom_join['select'];

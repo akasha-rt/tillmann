@@ -109,7 +109,8 @@ function export($type, $records = null, $members = false, $sample=false) {
 		,"alt_address_state"=>"Other Address State"
 		,"alt_address_postalcode"=>"Other Address Postalcode"
 		,"alt_address_country"=>"Other Address Country"
-		,"description"=>"Description"
+		,"description"=>"Description",
+        "invalid_email"=>"Invalid Email"
 	);
 
 	$account_fields = array(
