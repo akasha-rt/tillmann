@@ -59,7 +59,7 @@ var $objectName = 'Contact';
  * @param $prefix String value of prefix that may be present in $_POST variables
  * @return SQL String of the query that should be used for the initial duplicate lookup check
  */
-public function getDuplicateQuery($prefix='')
+/*public function getDuplicateQuery($prefix='')
 {
 	$query = 'SELECT id, first_name, last_name, title FROM contacts where deleted = 0 AND ';
 	if(isset($_POST[$prefix.'first_name']) && strlen($_POST[$prefix.'first_name']) != 0 && isset($_POST[$prefix.'last_name']) && strlen($_POST[$prefix.'last_name']) != 0){
@@ -73,6 +73,32 @@ public function getDuplicateQuery($prefix='')
 	}
     return $query;
     //return ' ';
+}*/
+public function getDuplicateQuery($prefix='')
+{
+
+        $query = 'SELECT
+                    contacts.id,
+                    contacts.first_name,
+                    contacts.last_name,
+                    contacts.title
+                  FROM contacts
+                    LEFT JOIN email_addr_bean_rel
+                      ON email_addr_bean_rel.bean_id = contacts.id
+                        AND email_addr_bean_rel.deleted = 0
+                    LEFT JOIN email_addresses
+                      ON email_addresses.id = email_addr_bean_rel.email_address_id
+                        AND email_addresses.deleted = 0
+                  WHERE contacts.deleted = 0
+                      AND ';
+
+        $query .= " email_addresses.email_address = '". $_POST['Contacts0emailAddress0'] ."'";
+
+        if(!empty($_POST[$prefix.'record'])) {
+            $query .= " AND  id != '". $_POST[$prefix.'record'] ."'";
+        }
+        return $query;
+        //return ' ';
 }
 
 
