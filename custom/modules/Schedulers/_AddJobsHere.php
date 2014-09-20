@@ -1030,6 +1030,7 @@ function sendCustomerFirstFollowUp()
                 AND (contacts_cstm.first_followup_c IS NULL
                 AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                       OR contacts_cstm.first_followup_c = '')
+            GROUP by ea.email_address
             ORDER BY contacts_cstm.last_shipment_date_c
             LIMIT 100";
     $result = $db->query($sql);
@@ -1142,6 +1143,7 @@ function sendCustomerSecondFollowUp()
                 AND (contacts_cstm.second_followup_c IS NULL
                 AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                       OR contacts_cstm.second_followup_c = '')
+            GROUP by ea.email_address
             ORDER BY contacts_cstm.last_shipment_date_c
             LIMIT 100";
 
@@ -1253,6 +1255,7 @@ function sendCustomerSecondFollowUpMonthly()
                 AND (contacts_cstm.second_followup_c IS NULL
                 AND ea.email_address IS NOT NULL AND ea.opt_out = 0
                       OR contacts_cstm.second_followup_c = '')
+            GROUP by ea.email_address
             LIMIT 300";
 
 
