@@ -140,6 +140,7 @@ class Importer
         $this->ifs->createdBeans = array();
         $this->importSource->resetRowErrorCounter();
         $do_save = true;
+        $allColumnArray = $this->importColumns;
 
         for ( $fieldNum = 0; $fieldNum < $_REQUEST['columncount']; $fieldNum++ )
         {
@@ -273,10 +274,34 @@ class Importer
                 $rowValue = get_module_from_singular($rowValue);
             }
 
+            /* Change By Bc:- Update Import record if email same. */
+            if (!in_array('id', $allColumnArray)
+                && $field == 'email1'
+                && $this->isUpdateOnly
+                && $_REQUEST['import_module'] == 'Contacts') {
+                $result = $focus->db->fetchByAssoc
+                ( $focus->db->query
+                    (
+                        "SELECT
+                                    contacts.id
+                                  FROM contacts
+                                    LEFT JOIN email_addr_bean_rel
+                                      ON email_addr_bean_rel.bean_id = contacts.id
+                                        AND email_addr_bean_rel.deleted = 0
+                                    LEFT JOIN email_addresses
+                                      ON email_addresses.id = email_addr_bean_rel.email_address_id
+                                        AND email_addresses.deleted = 0
+                                  WHERE email_addresses.email_address = '{$rowValue}'
+                                      AND contacts.deleted = 0"
+                    )
+                );
+                $focus->id = $result['id'];
+            }
+
             $focus->$field = $rowValue;
             unset($defaultRowValue);
         }
-
+        /* End */
         // Now try to validate flex relate fields
         if ( isset($focus->field_defs['parent_name']) && isset($focus->parent_name) && ($focus->field_defs['parent_name']['type'] == 'parent') )
         {
