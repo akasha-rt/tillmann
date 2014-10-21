@@ -127,6 +127,7 @@ function checkOpportunitySalesData()
     while ($oppData = $db->fetchByAssoc($oppDataSql)) {
         $oppSoapData[$oppData['id']]['country'] = $oppData['country'];
         $oppSoapData[$oppData['id']]['product_sku'] = $oppData['product_sku'];
+        $oppSoapData[$oppData['id']]['cust_email'] = $oppData['email_address'];
         $contactData[$oppData['id']]['assigned_user_name'] = $oppData['assigned_user_name'];
         $contactData[$oppData['id']]['Contact_name'] = $oppData['contact_name'];
         $contactData[$oppData['id']]['email_address'] = $oppData['email_address'];
