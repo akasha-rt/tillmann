@@ -2,11 +2,9 @@
 
 require_once('custom/include/Dashlets/DashletGenericBarChart.php');
 
-class WonOppByMonth extends DashletGenericBarChart
-{
+class WonOppByMonth extends DashletGenericBarChart {
 
-    protected function getDataset()
-    {
+    protected function getDataset() {
         global $db;
         $returnArrayWonOppBYMonth = array();
 
@@ -16,32 +14,41 @@ class WonOppByMonth extends DashletGenericBarChart
             $index = $row['month'];
             $returnArrayWonOppBYMonth[$index] = $row['total_opp'];
         }
+        $curr_month = date('M',strtotime('next month'));
         $mappingMonths = array(
-            '1' => 'Jan',
-            '2' => 'Feb',
-            '3' => 'March',
-            '4' => 'April',
-            '5' => 'May',
-            '6' => 'June',
-            '7' => 'July',
-            '8' => 'Aug',
-            '9' => 'Sept',
-            '10' => 'Oct',
-            '11' => 'Nov',
-            '12' => 'Dec',
+            'Jan' => 'Jan',
+            'Feb' => 'Feb',
+            'Mar' => 'March',
+            'Apr' => 'April',
+            'May' => 'May',
+            'Jun' => 'June',
+            'Jul' => 'July',
+            'Aug' => 'Aug',
+            'Sep' => 'Sept',
+            'Oct' => 'Oct',
+            'Nov' => 'Nov',
+            'Dec' => 'Dec',
         );
-        foreach ($returnArrayWonOppBYMonth as $key => $value) {
-            $returnArray[$mappingMonths[$key]] = $value;
+
+        foreach ($mappingMonths as $key => $value) {
+            if ($key != $curr_month  || $curr_month == 'Jan') {
+                if (array_key_exists($key, $returnArrayWonOppBYMonth)) {
+                    $returnArray[$mappingMonths[$key]] = $returnArrayWonOppBYMonth[$key];
+                } else {
+                    $returnArray[$mappingMonths[$key]] = 0;
+                }
+            }else{
+                break;
+            }
         }
 
 
         return $returnArray;
     }
 
-    protected function getWonOppByMonth()
-    {
+    protected function getWonOppByMonth() {
         return "SELECT 
-                    MONTH(opportunities.date_entered) AS month,
+                    DATE_FORMAT(opportunities.date_entered, '%b') AS month,
                     COUNT(opportunities.id) AS total_opp
                 FROM
                     opportunities
