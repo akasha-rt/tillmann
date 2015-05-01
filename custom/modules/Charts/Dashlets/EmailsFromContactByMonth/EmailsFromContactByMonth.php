@@ -52,18 +52,25 @@ class EmailsFromContactByMonth extends DashletGenericBarChart {
                 FROM
                     emails
                         JOIN
-                    contacts ON contacts.id = emails.parent_id
-                        AND emails.parent_type = 'Contacts'
+                    emails_email_addr_rel ON emails_email_addr_rel.email_id = emails.id
+                        AND emails_email_addr_rel.deleted = 0
                         AND emails.deleted = 0
-                        AND contacts.deleted = 0
-                        AND emails.type = 'out'
-                        AND emails.status = 'sent'
+                        JOIN
+                    email_addresses ON email_addresses.id = emails_email_addr_rel.email_address_id
+                        AND email_addresses.deleted = 0
+                        JOIN
+                    email_addr_bean_rel ON email_addr_bean_rel.email_address_id = email_addresses.id
+                        AND email_addr_bean_rel.deleted = 0
+                        JOIN
+                    contacts ON contacts.id = email_addr_bean_rel.bean_id
+                        AND email_addr_bean_rel.bean_module = 'Contacts'
                         AND contacts.lead_source = 'EB15'
                 WHERE
                     YEAR(emails.date_sent) = YEAR(CURDATE())
+                        AND emails.type = 'inbound'
                 GROUP BY MONTH(emails.date_sent)";
     }
-
+    
 }
 
 ?>
