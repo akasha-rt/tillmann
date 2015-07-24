@@ -2650,9 +2650,10 @@ class InboundEmail extends SugarBean {
 
     function handleCaseAssignment($email) {
         $c = new aCase();
-        //Reena Sattani 24-2-2012
-        //if($caseId = $this->getCaseIdFromCaseNumber($email->name, $c)) {
-        if ($caseId = $this->getCaseIdFromCaseNumber($email->description, $c)) {
+        //Reena Sattani 24-2-2012 
+        // Changed By Govind On 24-7-2015 // For display email and note in case....
+        if($caseId = $this->getCaseIdFromCaseNumber($email->name, $c)) {
+       // if ($caseId = $this->getCaseIdFromCaseNumber($email->description, $c)) {
             $c->retrieve($caseId);
             $c->load_relationship('emails');
             $c->emails->add($email->id);
@@ -4107,7 +4108,8 @@ class InboundEmail extends SugarBean {
                 }
             }
             //added by Reena Sattani 24-2-2012
-            $forDisplay = false;
+            // Changed By Govind On 24-7-2015 // For display email and note in case....
+            //  $forDisplay = false;
             //end
             if (!$forDisplay) {
                 $email->save();
