@@ -2652,8 +2652,8 @@ class InboundEmail extends SugarBean {
         $c = new aCase();
         //Reena Sattani 24-2-2012 
         // Changed By Govind On 24-7-2015 // For display email and note in case....
-        if($caseId = $this->getCaseIdFromCaseNumber($email->name, $c)) {
-       // if ($caseId = $this->getCaseIdFromCaseNumber($email->description, $c)) {
+       // if($caseId = $this->getCaseIdFromCaseNumber($email->name, $c)) {
+        if ($caseId = $this->getCaseIdFromCaseNumber($email->description, $c)) {
             $c->retrieve($caseId);
             $c->load_relationship('emails');
             $c->emails->add($email->id);
