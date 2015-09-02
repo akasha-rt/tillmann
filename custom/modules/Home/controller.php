@@ -51,8 +51,8 @@ class HomeController extends SugarController
                 FROM bc_storedata
                 LEFT JOIN bc_storedata_cstm
                     ON bc_storedata_cstm.id_c = bc_storedata.id
-                WHERE MATCH(name, description, catalognumber, sku, supplierid, immunogen, purchasingemail, purchasingname, supportemail, supportname) AGAINST ('{$searchString}')
-                  OR MATCH(order_number_c, customer_po_number_c, order_status_c, other_notes_c, supplier_url_c, admin_immunogen_c) AGAINST ('{$searchString}')
+                WHERE (MATCH(name, description, catalognumber, sku, supplierid, immunogen, purchasingemail, purchasingname, supportemail, supportname) AGAINST ('{$searchString}')
+                  OR MATCH(order_number_c, customer_po_number_c, order_status_c, other_notes_c, supplier_url_c, admin_immunogen_c) AGAINST ('{$searchString}'))
                   AND deleted = 0";
 
         $lookUpResult = $db->query($lookUpSql);
