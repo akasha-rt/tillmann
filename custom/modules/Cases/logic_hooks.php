@@ -20,7 +20,8 @@ $hook_array['before_save'][] = Array(4, 'Sync Case with external Office', 'custo
 $hook_array['after_save'] = Array();
 $hook_array['after_save'][] = Array(1, 'Close Emails', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'closeEmails');
 $hook_array['after_save'][] = Array(2, 'Save WorkFlow Task List', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'saveWorkFlowTask');
-
+/*
 $hook_array['after_relationship_add'] = Array();
 $hook_array['after_relationship_add'][] = Array(1, 'Open Case on new Email', 'custom/modules/Cases/CaseLogicHook.php', 'CaseLogicHook', 'openCaseOnNewEmail');
+ */
 ?>
