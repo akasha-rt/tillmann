@@ -1381,7 +1381,16 @@ class Email extends SugarBean {
         if (empty($text)) {
             return '';
         }
-        $text = str_replace("\n", "\n<BR/>", $text);
+        /* Put Condtion For Remove Extra Spaces from html body when you click on "Reply" button In 
+         * Email DetailView.
+         * Date: 21-03-2016
+         * @ Govind S Rathore.
+         */
+        if ($_REQUEST['module'] == 'Emails' && $_REQUEST['action'] == 'DetailView') {
+            // $text = str_replace("\n", "\n<BR/>", $text);
+        } else {
+            $text = str_replace("\n", "\n<BR/>", $text);
+        }
         $out = "<div style='border-left:1px solid #00c; padding:5px; margin-left:10px;'>{$text}</div>";
 
         return $out;
