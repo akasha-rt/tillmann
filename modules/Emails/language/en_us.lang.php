@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -70,12 +73,13 @@ $mod_strings = array (
 	'ERR_TIME_SENT'				=> 'Time Sent',
 	'LBL_ACCOUNTS_SUBPANEL_TITLE'=> 'Accounts',
 	'LBL_ADD_ANOTHER_FILE'		=> 'Add Another File',
-    'LBL_ADD_DASHLETS'          => 'Add Sugar Dashlets',
+    'LBL_ADD_DASHLETS'          => 'Add SuiteCRM Dashlets',
 	'LBL_ADD_DOCUMENT'			=> 'Add Documents',
 	'LBL_ADD_ENTRIES'           => 'Add Entries',
 	'LBL_ADD_FILE'				=> 'Add Files',
 	'LBL_ARCHIVED_EMAIL'		=> 'Archived Email',
 	'LBL_ARCHIVED_MODULE_NAME'	=> 'Create Archived Emails',
+    'LBL_ARCHIVED_EMAILS_CREATE'  => 'Create',
 	'LBL_ATTACHMENTS'			=> 'Attachments:',
 	'LBL_HAS_ATTACHMENT'		=> 'Has Attachment?:',
 	'LBL_BCC'					=> 'Bcc:',
@@ -99,7 +103,8 @@ $mod_strings = array (
 	'LBL_EDIT_MY_SETTINGS'		=> 'Edit My Settings',
 	'LBL_EMAIL_ATTACHMENT'		=> 'Email Attachment',
 	'LBL_EMAIL_EDITOR_OPTION'	=> 'Send HTML Email',
-	'LBL_EMAIL_SELECTOR'		=> 'Select',
+	'LBL_EMAIL_SELECTOR_SELECT' => 'Select',
+	'LBL_EMAIL_SELECTOR_CLEAR'  => 'Clear',
 	'LBL_EMAIL'					=> 'Email Address:',
 	'LBL_EMAILS_ACCOUNTS_REL'	=> 'Emails:Accounts',
 	'LBL_EMAILS_BUGS_REL'		=> 'Emails:Bugs',
@@ -140,14 +145,14 @@ $mod_strings = array (
     'LBL_RAW'                  => 'Raw Email',
 	'LBL_SAVE_AS_DRAFT_BUTTON_KEY'=> 'R',
 	'LBL_SAVE_AS_DRAFT_BUTTON_LABEL'=> 'Save Draft',
-	'LBL_SAVE_AS_DRAFT_BUTTON_TITLE'=> 'Save Draft [Alt+R]',
+	'LBL_SAVE_AS_DRAFT_BUTTON_TITLE'=> 'Save Draft',
 	'LBL_SEARCH_FORM_DRAFTS_TITLE'=> 'Search Drafts',
 	'LBL_SEARCH_FORM_SENT_TITLE'=> 'Search Sent Emails',
 	'LBL_SEARCH_FORM_TITLE'		=> 'Email Search',
 	'LBL_SEND_ANYWAYS'			=> 'This email has no subject.  Send/save anyway?',
 	'LBL_SEND_BUTTON_KEY'		=> 'S',
 	'LBL_SEND_BUTTON_LABEL'		=> 'Send',
-	'LBL_SEND_BUTTON_TITLE'		=> 'Send [Alt+S]',
+	'LBL_SEND_BUTTON_TITLE'		=> 'Send',
 	'LBL_SEND'					=> 'SEND',
 	'LBL_SENT_MODULE_NAME'		=> 'Sent Emails',
 	'LBL_SHOW_ALT_TEXT'			=> 'Show Plain Text',
@@ -202,21 +207,22 @@ $mod_strings = array (
 	'WARNING_UPLOAD_DIR_NOT_WRITABLE'	=> 'Attachments may fail: An incorrect or unusable value for "upload_tmp_dir" was detected.  Please correct this in your php.ini file.',
 
     // for All emails
-    'LBL_BUTTON_RAW_TITLE'   => 'Show Raw Message [Alt+E]',
+    'LBL_BUTTON_RAW_TITLE'   => 'Show Raw Message',
     'LBL_BUTTON_RAW_KEY'     => 'e',
     'LBL_BUTTON_RAW_LABEL'   => 'Show Raw',
     'LBL_BUTTON_RAW_LABEL_HIDE' => 'Hide Raw',
 
 	// for InboundEmail
 	'LBL_BUTTON_CHECK'			=> 'Check Mail',
-	'LBL_BUTTON_CHECK_TITLE'	=> 'Check For New Email [Alt+C]',
+	'LBL_BUTTON_CHECK_TITLE'	=> 'Check For New Email',
 	'LBL_BUTTON_CHECK_KEY'		=> 'c',
 	'LBL_BUTTON_FORWARD'		=> 'Forward',
-	'LBL_BUTTON_FORWARD_TITLE'	=> 'Forward This Email [Alt+F]',
+	'LBL_BUTTON_FORWARD_TITLE'	=> 'Forward This Email',
 	'LBL_BUTTON_FORWARD_KEY'	=> 'f',
 	'LBL_BUTTON_REPLY_KEY'		=> 'r',
-	'LBL_BUTTON_REPLY_TITLE'	=> 'Reply [Alt+R]',
+	'LBL_BUTTON_REPLY_TITLE'	=> 'Reply',
 	'LBL_BUTTON_REPLY'			=> 'Reply',
+        'LBL_BUTTON_REPLY_ALL'		=> 'Reply All',
 	'LBL_CASES_SUBPANEL_TITLE'	=> 'Cases',
 	'LBL_INBOUND_TITLE'			=> 'Inbound Email',
 	'LBL_INTENT'				=> 'Intent',
@@ -238,10 +244,10 @@ $mod_strings = array (
 	'LBL_ASSIGN_WARN'			=> 'Ensure that all 2 options are selected.',
 	'LBL_BACK_TO_GROUP'			=> 'Back to Group Inbox',
 	'LBL_BUTTON_DISTRIBUTE_KEY'	=> 'a',
-	'LBL_BUTTON_DISTRIBUTE_TITLE'=> 'Assign [Alt+A]',
+	'LBL_BUTTON_DISTRIBUTE_TITLE'=> 'Assign',
 	'LBL_BUTTON_DISTRIBUTE'		=> 'Assign',
 	'LBL_BUTTON_GRAB_KEY'		=> 't',
-	'LBL_BUTTON_GRAB_TITLE'		=> 'Take from Group [Alt+T]',
+	'LBL_BUTTON_GRAB_TITLE'		=> 'Take from Group',
 	'LBL_BUTTON_GRAB'			=> 'Take from Group',
 	'LBL_CREATE_BUG'			=> 'Create Bug',
 	'LBL_CREATE_CASE'			=> 'Create Case',
@@ -324,6 +330,7 @@ $mod_strings = array (
     'LBL_EMAIL_SETTINGS_OUTBOUND' => 'Outgoing Email',
     'LBL_ADD_CC' => 'Add Cc',
     'LBL_ADD_BCC' => 'Add Bcc',
+    'LBL_MOVE_TO_BCC' => 'Move To Bcc',
     'LBL_ADD_TO_ADDR' => 'Add To',
     'LBL_SELECTED_ADDR' => 'Selected',
     'LBL_ADD_CC_BCC_SEP' => '|',
@@ -340,16 +347,13 @@ $mod_strings = array (
     'LBL_ADDRESS_BOOK_SEARCH_HELP' => 'Enter an email address, First Name, Last Name or Account Name to find recipients.',
     'LBL_TEST_SETTINGS'     => 'Test Settings',
     'LBL_EMPTY_EMAIL_BODY'  => '<p><span style="color: #888888;"><em>This Message Has No Content</em></span></p>',
-    'LBL_TEST_EMAIL_SUBJECT' => 'Test Email from Sugar',
+    'LBL_TEST_EMAIL_SUBJECT' => 'Test Email from SuiteCRM',
     'LBL_NO_SUBJECT' =>'(no subject)',
     'LBL_CHECKING_ACCOUNT'	=> 'Checking Account',
     'LBL_OF'	=> 'of',
-    'LBL_TEST_EMAIL_BODY' => 'This email was sent in order to test the outgoing mail server information provided in the Sugar application.  A successful receipt of this email indicates that the outgoing mail server information provided is valid.',
+    'LBL_TEST_EMAIL_BODY' => 'This email was sent in order to test the outgoing mail server information provided in the SuiteCRM application.  A successful receipt of this email indicates that the outgoing mail server information provided is valid.',
 
     // for outbound email dialog
-    'LBL_MAIL_SMTPUSER'	=> 'Username',
-	'LBL_MAIL_SMTPPASS'	=> 'Password',
-	'LBL_MAIL_SMTPSERVER' => 'SMTP Mail Server',
 	'LBL_SMTP_SERVER_HELP' => 'This SMTP Mail Server can be used for outgoing mail. Provide a username and password for your email account in order to use the mail server.',
     'LBL_MISSING_DEFAULT_OUTBOUND_SMTP_SETTINGS' => 'The administator has not yet configured the default outbound account.  Unable to send test email.',
     'LBL_MAIL_SMTPAUTH_REQ'				=> 'Use SMTP Authentication?',

@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -95,8 +95,13 @@ class SugarWebServiceUtilv3 extends SoapHelperWebServices {
 		$bean->load_relationship($link_field_name);
 		if (isset($bean->$link_field_name)) {
 			//First get all the related beans
-            $related_beans = $bean->$link_field_name->getBeans();
-			//Create a list of field/value rows based on $link_module_fields
+            $params = array();
+            if (!empty($optional_where))
+            {
+                $params['where'] = $optional_where;
+            }
+            $related_beans = $bean->$link_field_name->getBeans($params);
+            //Create a list of field/value rows based on $link_module_fields
 			$list = array();
             $filterFields = array();
             if (!empty($order_by) && !empty($related_beans))
@@ -127,6 +132,7 @@ class SugarWebServiceUtilv3 extends SoapHelperWebServices {
                 if(is_a($bean, 'User') && $current_user->id != $bean->id && isset($row['user_hash'])) {
                     $row['user_hash'] = "";
                 }
+                $row = clean_sensitive_data($bean->field_defs, $row);
                 $list[] = $row;
             }
             $GLOBALS['log']->info('End: SoapHelperWebServices->getRelationshipResults');
@@ -248,13 +254,6 @@ class SugarWebServiceUtilv3 extends SoapHelperWebServices {
 	    $results = array();
 	    switch ($type)
 	    {
-	        case 'wireless':
-	            if (file_exists('custom/modules/'.$module.'/metadata/wireless.subpaneldefs.php'))
-	                 require_once('custom/modules/'.$module.'/metadata/wireless.subpaneldefs.php');
-	            else if (file_exists('modules/'.$module.'/metadata/wireless.subpaneldefs.php'))
-	                 require_once('modules/'.$module.'/metadata/wireless.subpaneldefs.php');
-	            break;
-
 	        case 'default':
 	        default:
 	            if (file_exists ('modules/'.$module.'/metadata/subpaneldefs.php' ))
@@ -285,28 +284,6 @@ class SugarWebServiceUtilv3 extends SoapHelperWebServices {
         $results = array();
         $view = strtolower($view);
         switch (strtolower($type)){
-            case 'wireless':
-                if( $view == 'list'){
-                    require_once('include/SugarWireless/SugarWirelessListView.php');
-                    $GLOBALS['module'] = $module_name; //WirelessView keys off global variable not instance variable...
-                    $v = new SugarWirelessListView();
-                    $results = $v->getMetaDataFile();
-                }
-                elseif ($view == 'subpanel')
-                    $results = $this->get_subpanel_defs($module_name, $type);
-                else{
-                    require_once('include/SugarWireless/SugarWirelessView.php');
-                    $v = new SugarWirelessView();
-                    $v->module = $module_name;
-                    $fullView = ucfirst($view) . 'View';
-                    $meta = $v->getMetaDataFile('Wireless' . $fullView);
-                    $metadataFile = $meta['filename'];
-                    require_once($metadataFile);
-                    //Wireless detail metadata may actually be just edit metadata.
-                    $results = isset($viewdefs[$meta['module_name']][$fullView] ) ? $viewdefs[$meta['module_name']][$fullView] : $viewdefs[$meta['module_name']]['EditView'];
-                }
-
-                break;
             case 'default':
             default:
                 if ($view == 'subpanel')
@@ -327,30 +304,6 @@ class SugarWebServiceUtilv3 extends SoapHelperWebServices {
         }
 
         return $results;
-    }
-
-    /**
-     * Examine the wireless_module_registry to determine which modules have been enabled for the mobile view.
-     *
-     * @param array $availModules An array of all the modules the user already has access to.
-     * @return array Modules enalbed for mobile view.
-     */
-    function get_visible_mobile_modules($availModules){
-        $enabled_modules = array();
-        $availModulesKey = array_flip($availModules);
-        foreach ( array ( '','custom/') as $prefix)
-        {
-        	if(file_exists($prefix.'include/MVC/Controller/wireless_module_registry.php'))
-        		require $prefix.'include/MVC/Controller/wireless_module_registry.php' ;
-        }
-
-        foreach ( $wireless_module_registry as $e => $def )
-        {
-        	if( isset($availModulesKey[$e]) )
-                $enabled_modules[] = $e;
-        }
-
-        return $enabled_modules;
     }
 
     /**

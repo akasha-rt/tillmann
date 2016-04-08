@@ -1,7 +1,7 @@
  {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -94,12 +94,12 @@
 			        <tr>
 			           <td>
 			               <b>{$name}</b>
-			               <input id='value_{$name}' value='{$name}' type = 'hidden'>
+			               <input id='value_{$name}' value='{$val}' type = 'hidden'>
 			               <span class='fieldValue' id='span_{$name}'>
 			                   {if (!isset($val) || $val =='')}[{$MOD.LBL_BLANK}]{else}[{$val}]{/if}
 			               </span>
 			               <span class='fieldValue' id='span_edit_{$name}' style='display:none'>
-			                   <input type='text' id='input_{$name}' value="{$val|escape}" onBlur='SimpleList.setDropDownValue("{$name}", this.value, true)' >
+			                   <input type='text' id='input_{$name}' value="{$val}" onBlur='SimpleList.setDropDownValue("{$name}", this.value, true)' >
 			               </span>
 			           </td>
 			           <td align='right'>

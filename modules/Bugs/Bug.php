@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -91,13 +94,13 @@ class Bug extends SugarBean {
 	var $assigned_user_name;
 	var $type;
 
-	//BEGIN Additional fields being added to Bug Tracker
+	//BEGIN Additional fields being added to Bugs
 	
 	var $fixed_in_release;
 	var $work_log;
 	var $source;
 	var $product_category;
-	//END Additional fields being added to Bug Tracker
+	//END Additional fields being added to Bugs
 	
 	var $module_dir = 'Bugs';
 	var $table_name = "bugs";
@@ -143,7 +146,7 @@ class Bug extends SugarBean {
 		// Fill in the assigned_user_name
 //		$this->assigned_user_name = get_assigned_user_name($this->assigned_user_id);
 
-		$custom_join = $this->custom_fields->getJOIN();
+        $custom_join = $this->getCustomJoin();
 		
                 $query = "SELECT ";
                 
@@ -151,9 +154,7 @@ class Bug extends SugarBean {
                                bugs.*
 
                                 ,users.user_name as assigned_user_name, releases.id release_id, releases.name release_name";
-                                 if($custom_join){
-                               		 $query .= $custom_join['select'];
-                                }
+        $query .= $custom_join['select'];
                                 $query .= " FROM bugs ";
                                
 
@@ -161,9 +162,7 @@ class Bug extends SugarBean {
 								LEFT JOIN users
                                 ON bugs.assigned_user_id=users.id";
                                 $query .= "  ";
-								if($custom_join){
-                               		 $query .= $custom_join['join'];
-                                }
+        $query .= $custom_join['join'];
             $where_auto = '1=1';
 			if($show_deleted == 0){
             	$where_auto = " $this->table_name.deleted=0 ";
@@ -186,27 +185,22 @@ class Bug extends SugarBean {
 		return $query;
 	}
 
-        function create_export_query(&$order_by, &$where, $relate_link_join='')
+        function create_export_query($order_by, $where, $relate_link_join='')
         {
-        	$custom_join = $this->custom_fields->getJOIN(true, true,$where);
-			if($custom_join)
-				$custom_join['join'] .= $relate_link_join;
+            $custom_join = $this->getCustomJoin(true, true, $where);
+            $custom_join['join'] .= $relate_link_join;
                 $query = "SELECT
                                 bugs.*,
                                 r1.name found_in_release_name,
                                 r2.name fixed_in_release_name,
                                 users.user_name assigned_user_name";
-                                 if($custom_join){
-									$query .=  $custom_join['select'];
-								}
+            $query .=  $custom_join['select'];
                                 $query .= " FROM bugs ";
 		$query .= "				LEFT JOIN releases r1 ON bugs.found_in_release = r1.id
 								LEFT JOIN releases r2 ON bugs.fixed_in_release = r2.id
 								LEFT JOIN users
                                 ON bugs.assigned_user_id=users.id";
-                                 if($custom_join){
-									$query .=  $custom_join['join'];
-								}
+            $query .=  $custom_join['join'];
                                 $query .= "";
                 $where_auto = "  bugs.deleted=0
                 ";
@@ -323,13 +317,11 @@ class Bug extends SugarBean {
         // The new listview code only fetches columns that we're displaying and not all
         // the columns so we need these checks. 
 	   $the_array['NAME'] = (($this->name == "") ? "<em>blank</em>" : $this->name);
-        if (!empty($this->priority))
-    	   $the_array['PRIORITY'] = $app_list_strings['bug_priority_dom'][$this->priority];
-        if (!empty($this->status))           
-    	   $the_array['STATUS'] =$app_list_strings['bug_status_dom'][$this->status];
+        $the_array['PRIORITY'] = empty($this->priority)? "" : (!isset($app_list_strings[$this->field_name_map['priority']['options']][$this->priority]) ? $this->priority : $app_list_strings[$this->field_name_map['priority']['options']][$this->priority]);
+        $the_array['STATUS'] = empty($this->status)? "" : (!isset($app_list_strings[$this->field_name_map['status']['options']][$this->status]) ? $this->status : $app_list_strings[$this->field_name_map['status']['options']][$this->status]);
+        $the_array['TYPE'] = empty($this->type)? "" : (!isset($app_list_strings[$this->field_name_map['type']['options']][$this->type]) ? $this->type : $app_list_strings[$this->field_name_map['type']['options']][$this->type]);
+       
 	   $the_array['RELEASE']= $this->release_name;
-        if (!empty($this->type))           
-        	$the_array['TYPE']=  $app_list_strings['bug_type_dom'][$this->type];
 	   $the_array['BUG_NUMBER'] = $this->bug_number;
 	   $the_array['ENCODED_NAME']=$this->name;
     			

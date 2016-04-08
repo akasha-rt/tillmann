@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -44,6 +44,10 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 require_once("include/entryPoint.php");
 
+if (!is_admin($GLOBALS['current_user'])) {
+    sugar_die($GLOBALS['app_strings']['ERR_NOT_ADMIN']);
+}
+
 $json = getJSONObj();
 $out = "";
 
@@ -52,9 +56,12 @@ switch($_REQUEST['adminAction']) {
 	////	REPAIRXSS
 	case "refreshEstimate":
 		include("include/modules.php"); // provide $moduleList
-		$target = $_REQUEST['bean'];
-		
-		$count = 0;
+        $target = '';
+        if (!empty($_REQUEST['bean'])) {
+            $target = $_REQUEST['bean'];
+        }
+
+        $count = 0;
 		$toRepair = array();
 		
 		if($target == 'all') {
@@ -129,7 +136,7 @@ switch($_REQUEST['adminAction']) {
 			foreach($ids as $id) {
 				if(!empty($id)) {
 					$bean = new $beanList[$target]();
-					$bean->retrieve($id);
+					$bean->retrieve($id,true,false);
 					$bean->new_with_id = false;
 					$bean->save(); // cleanBean() is called on save()
 					$count++;

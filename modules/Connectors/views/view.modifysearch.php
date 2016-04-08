@@ -3,7 +3,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -77,14 +77,15 @@ class ViewModifySearch extends SugarView
 		$this->ss->assign('APP', $app_strings);
 		$connectors = ConnectorUtils::getConnectors();
 		foreach($connectors as $id=>$source) {
-			    $s = SourceFactory::getSource($id);
-			    if(!$s->isEnabledInWizard()) {
-			       unset($connectors[$id]);
-			    }
+            $s = SourceFactory::getSource($id);
+            if(!$s->isEnabledInAdminSearch() || !$s->isEnabledInWizard())
+            {
+               unset($connectors[$id]);
+            }
 		}		
 
 		$this->ss->assign('SOURCES', $connectors);
 	    echo $this->getModuleTitle(false);
-		$this->ss->display('modules/Connectors/tpls/modify_search.tpl');	
+		$this->ss->display($this->getCustomFilePathIfExists('modules/Connectors/tpls/modify_search.tpl'));
     }
 }

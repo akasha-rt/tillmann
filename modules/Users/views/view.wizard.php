@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -45,14 +48,10 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 require_once('modules/Users/Forms.php');
 require_once('modules/Configurator/Configurator.php');
 
-/**
- * ViewWireless_Login extends SugarWirelessView and is the login view.
- */
 class ViewWizard extends SugarView
 {
 	/**
-	 * Constructor for the view, it runs the constructor of SugarWirelessView and
-	 * sets the footer option to true (it is off in the SugarWirelessView constructor)
+	 * Constructor.
 	 */
 	public function __construct()
 	{
@@ -126,6 +125,7 @@ class ViewWizard extends SugarView
         if ( empty($use_real_names) )
             $current_user->setPreference('use_real_names', 'on');
         $current_user->setPreference('reminder_time', 1800);
+        $current_user->setPreference('email_reminder_time', 3600);
         $current_user->setPreference('mailmerge_on', 'on');
 
 		//// Timezone
@@ -164,12 +164,9 @@ class ViewWizard extends SugarView
 			$this->ss->assign("CURRENCY", $selectCurrency);
         }
 
-        $currenciesVars = "";
-        $i=0;
-        foreach($locale->currencies as $id => $arrVal) {
-            $currenciesVars .= "currencies[{$i}] = '{$arrVal['symbol']}';\n";
-            $i++;
-        }
+        $currenciesArray = $locale->currencies;
+        $currenciesVars = $this->correctCurrenciesSymbolsSort($currenciesArray);
+
         $currencySymbolsJs = <<<eoq
 var currencies = new Object;
 {$currenciesVars}
@@ -262,6 +259,46 @@ eoq;
 
         $this->ss->assign('HIDE_IF_CAN_USE_DEFAULT_OUTBOUND',$hide_if_can_use_default);
         $this->ss->assign('langHeader', get_language_header());
-		$this->ss->display('modules/Users/tpls/wizard.tpl');
+		$this->ss->display($this->getCustomFilePathIfExists('modules/Users/tpls/wizard.tpl'));
 	}
+
+    /**
+     * Function to sort currencies in array alphabetically, except for US Dollar which must remain as first element
+     * in the array.
+     *
+     * @param array $currenciesArray Array of currencies to sort
+     * @return array|string Array of sorted currencies with the US Dollar as the first
+     */
+    public function correctCurrenciesSymbolsSort($currenciesArray)
+    {
+        $baseCurrencyId = '-99';
+        $newCurrenciesArray = array ();
+
+        $newCurrenciesArray[] = $currenciesArray[$baseCurrencyId]['symbol'];
+        array_shift($currenciesArray);
+        $currenciesArray = array_csort($currenciesArray);
+        foreach ($currenciesArray as $value)
+        {
+            $newCurrenciesArray[] = $value['symbol'];
+        }
+        return $this->pushCurrencyArrayToString($newCurrenciesArray);
+    }
+
+    /**
+     * Generates javascript array from a php array
+     *
+     * @see correctCurrenciesSymbolsSort
+     * @param $array
+     * @return array|string Javascript code snippet of currencies array
+     */
+    public function pushCurrencyArrayToString($array)
+    {
+        $return = '';
+        foreach($array as $key => $value)
+        {
+            $return .= "currencies[{$key}] = '{$value}';\n";
+        }
+        return $return;
+    }
 }
+

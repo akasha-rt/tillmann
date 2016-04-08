@@ -1,41 +1,49 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 *}
 <!-- END METADATA GENERATED CONTENT -->
+
+{{if $useTabs}}
+    <!-- include a closing div if the useTabs variable is set to true -->
+    </div>
+{{/if}}
             <div id="email_options">
             <table width="100%" border="0" cellspacing="1" cellpadding="0" class="edit view">
                             <tr>
@@ -111,8 +119,9 @@
                                 </th>
                             </tr>
                         </table>
-                            <!-- hide field if user is admin -->
-                            <div id='generate_password_old_password' {if ($IS_ADMIN)} style='display:none' {/if}>
+                            <!-- hide field if user is admin that is not editing themselves -->
+                            <div id='generate_password_old_password' {if ($IS_ADMIN && !$ADMIN_EDIT_SELF)} style='display:none' {/if}>
+
                                  <table width='100%' cellspacing='0' cellpadding='0' border='0' >
                                     <tr>
                                         <td width='35%' scope="row">
@@ -150,7 +159,7 @@
                                 <div id="comfirm_pwd_match" class="error" style="display: none;">{$MOD.ERR_PASSWORD_MISMATCH}</div>
                                      {*<span id="ext-gen63" class="x-panel-header-text">
                                         Requirements
-                                        <span id="Filter.1_help" onmouseout="return nd();" onmouseover="return overlib(help(), FGCLASS, 'olFgClass', CGCLASS, 'olCgClass', BGCLASS, 'olBgClass', TEXTFONTCLASS, 'olFontClass', CAPTIONFONTCLASS, 'olCapFontClass', CLOSEFONTCLASS, 'olCloseFontClass' );">
+                                        <span id="Filter.1_help" onclick="return SUGAR.util.showHelpTips(this,help());">
                                             <img src="themes/default/images/help.gif"/>
                                         </span>
                                     </span>*}
@@ -235,13 +244,20 @@
                             <slot>{$MOD.LBL_REMINDER}:</slot>&nbsp;{sugar_help text=$MOD.LBL_REMINDER_TEXT }
                             </td>
                             <td valign="top"  nowrap>
-                                <slot>
-                                <input tabindex='12' name='mailmerge_on' type='hidden' value='0'>
-                                <input name='should_remind' size='2' maxlength='2' tabindex='12' onclick='toggleDisplay("should_remind_list");' type="checkbox" class="checkbox" value='1' {$REMINDER_CHECKED}>
-                                <div id='should_remind_list' style='display:{$REMINDER_TIME_DISPLAY}'>
-                                    <select tabindex='12' name='reminder_time'  >{$REMINDER_TIME_OPTIONS}</select></div></slot>
+								<!--
+                                <slot>{include file="modules/Meetings/tpls/reminders.tpl"}</slot>
+								-->
+								<slot>{include file="modules/Reminders/tpls/remindersDefaults.tpl"}</slot>
                             </td>
                         </tr>
+            <tr>
+                <td></td><td></td><td></td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-sm" onClick="Alerts.prototype.enable()">
+                        {$MOD.LBL_ENABLE_NOTIFICATIONS}
+                    </button>
+                </td>
+            </tr>
                         <tr>
                             <td scope="row" valign="top"><slot>{$MOD.LBL_USE_REAL_NAMES}:</slot>&nbsp;{sugar_help text=$MOD.LBL_USE_REAL_NAMES_DESC }</td>
                             <td ><slot><input tabindex='12' type="checkbox" name="use_real_names" {$USE_REAL_NAMES}></slot></td>
@@ -283,17 +299,9 @@
                                     </table>
                                 </td>
                             </tr>
-                            <tr>
-                                <td width="17%" scope="row"><span scope="row">{$MOD.LBL_MAX_TAB}:</span>&nbsp;{sugar_help text=$MOD.LBL_MAX_TAB_DESCRIPTION }</td>
-                                <td width="83%" colspan="3">
-                                    <select name="user_max_tabs" tabindex='12'>
-                                    {html_options values=$MAX_TAB_OPTIONS output=$MAX_TAB_OPTIONS selected=$MAX_TAB}
-                                    </select>
-                                </td>
-							</tr>
 							<tr>
-                                <td scope="row"><span>{$MOD.LBL_SUBPANEL_TABS}:</span>&nbsp;{sugar_help text=$MOD.LBL_SUBPANEL_TABS_DESCRIPTION }</td>
-                                <td colspan="3"><input type="checkbox" name="user_subpanel_tabs" {$SUBPANEL_TABS} tabindex='13'></td>
+                                <td width="17%" scope="row"><span>{$MOD.LBL_SUBPANEL_TABS}:</span>&nbsp;{sugar_help text=$MOD.LBL_SUBPANEL_TABS_DESCRIPTION }</td>
+                                <td width="83%" colspan="3"><input type="checkbox" name="user_subpanel_tabs" {$SUBPANEL_TABS} tabindex='13'></td>
                             </tr>
                         </table>
         </div>
@@ -364,12 +372,6 @@
                                     onkeydown='setSigDigits();' onkeyup='setSigDigits();'>
                             </slot></td>
                         </tr>
-                        <tr>
-                            <td width="17%" scope="row"><slot>{$MOD.LBL_FDOW}:</slot>&nbsp;{sugar_help text=$MOD.LBL_FDOW_TEXT}</td>
-                            <td ><slot>
-                                <select tabindex='14' name='fdow'>{html_options options=$FDOWOPTIONS selected=$FDOWCURRENT}</select>
-                            </slot></td>
-                        </tr>
                     </table>
         </div>
 
@@ -380,8 +382,26 @@
             </tr>
                         <tr>
                             <td width="17%" scope="row"><slot>{$MOD.LBL_PUBLISH_KEY}:</slot>&nbsp;{sugar_help text=$MOD.LBL_CHOOSE_A_KEY}</td>
-                            <td width="20%" ><slot><input name='calendar_publish_key' tabindex='17' size='25' maxlength='25' type="text" value="{$CALENDAR_PUBLISH_KEY}"></slot></td>
+                            <td width="20%" ><slot><input id='calendar_publish_key' name='calendar_publish_key' tabindex='17' size='25' maxlength='36' type="text" value="{$CALENDAR_PUBLISH_KEY}"></slot></td>
                             <td width="63%" ><slot>&nbsp;</slot></td>
+                        </tr>
+                        <tr>
+                            <td width="15%" scope="row"><slot><nobr>{$MOD.LBL_YOUR_PUBLISH_URL|strip_semicolon}:</nobr></slot></td>
+                            <td colspan=2><span class="calendar_publish_ok">{$CALENDAR_PUBLISH_URL}</span><span class="calendar_publish_none" style="display: none">{$MOD.LBL_NO_KEY}</span></td>
+                        </tr>
+                        <tr>
+                            <td width="17%" scope="row"><slot>{$MOD.LBL_SEARCH_URL|strip_semicolon}:</slot></td>
+                            <td colspan=2><span class="calendar_publish_ok">{$CALENDAR_SEARCH_URL}</span><span class="calendar_publish_none" style="display: none">{$MOD.LBL_NO_KEY}</span></td>
+                        </tr>
+                        <tr>
+                            <td width="15%" scope="row"><slot>{$MOD.LBL_ICAL_PUB_URL|strip_semicolon}: {sugar_help text=$MOD.LBL_ICAL_PUB_URL_HELP}</slot></td>
+                            <td colspan=2><span class="calendar_publish_ok">{$CALENDAR_ICAL_URL}</span><span class="calendar_publish_none" style="display: none">{$MOD.LBL_NO_KEY}</span></td>
+                        </tr>
+                        <tr>
+                            <td width="17%" scope="row"><slot>{$MOD.LBL_FDOW}:</slot>&nbsp;{sugar_help text=$MOD.LBL_FDOW_TEXT}</td>
+                            <td ><slot>
+                                <select tabindex='14' name='fdow'>{html_options options=$FDOWOPTIONS selected=$FDOWCURRENT}</select>
+                            </slot></td>
                         </tr>
                     </table>
         </div>
@@ -394,7 +414,7 @@
 </div>
 
 <script type="text/javascript">
-<!--
+
 var mail_smtpport = '{$MAIL_SMTPPORT}';
 var mail_smtpssl = '{$MAIL_SMTPSSL}';
 {literal}
@@ -408,8 +428,30 @@ function Admin_check(){
 	else
 		return true;
 }
+
+
+$(document).ready(function() {
+	var checkKey = function(key) {
+		if(key != '') {
+			$(".calendar_publish_ok").css('display', 'inline');
+			$(".calendar_publish_none").css('display', 'none');
+	        $('#cal_pub_key_span').html( key );
+	        $('#ical_pub_key_span').html( key );
+	        $('#search_pub_key_span').html( key );
+		} else {
+			$(".calendar_publish_ok").css('display', 'none');
+			$(".calendar_publish_none").css('display', 'inline');
+		}
+	};
+    $('#calendar_publish_key').keyup(function(){
+    	checkKey($(this).val());
+    });
+    $('#calendar_publish_key').change(function(){
+    	checkKey($(this).val());
+    });
+    checkKey($('#calendar_publish_key').val());
+});
 {/literal}
--->
 </script>
 {$JAVASCRIPT}
 {literal}
@@ -421,6 +463,8 @@ currencies = {$currencySymbolJSON};
 themeGroupList = {$themeGroupListJSON};
 
 onUserEditView();
+
+
 </script>
 
 </form>
@@ -450,17 +494,18 @@ onUserEditView();
 		</form>
 	</div>
 </div>
-
-<table width="100%" cellpadding="0" cellspacing="0" border="0" class="actionsContainer">
+{literal}
+<style>
+    .actionsContainer.footer td {
+        height:120px;
+        vertical-align: top;
+    }
+</style>
+{/literal}
+<table width="100%" cellpadding="0" cellspacing="0" border="0" class="actionsContainer footer">
     <tr>
         <td>
-            <input	id="Save" title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}"
-                    class="button primary" onclick="if (!set_password(document.forms['EditView'],newrules('{$PWDSETTINGS.minpwdlength}','{$PWDSETTINGS.maxpwdlength}','{$REGEX}'))) return false; if (!Admin_check()) return false; document.forms['EditView'].action.value='Save'; {$CHOOSER_SCRIPT} {$REASSIGN_JS} if(verify_data(EditView)) document.forms['EditView'].submit();"
-                    type="button" name="button" value="{$APP.LBL_SAVE_BUTTON_LABEL}" >
-            <input	title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}"
-                    class="button" onclick="document.forms['EditView'].action.value='{$RETURN_ACTION}'; document.forms['EditView'].module.value='{$RETURN_MODULE}'; document.forms['EditView'].record.value='{$RETURN_ID}'; document.forms['EditView'].submit()"
-                    type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}">
-            {$BUTTONS}
+        {sugar_action_menu id="userEditActions" class="clickMenu fancymenu" buttons=$ACTION_BUTTON_FOOTER flat=true}
         </td>
         <td align="right" nowrap>
             <span class="required">{$APP.LBL_REQUIRED_SYMBOL}</span> {$APP.NTC_REQUIRED}

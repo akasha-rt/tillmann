@@ -1,6 +1,6 @@
 <?php
-$searchdefs ['Cases'] = 
-array (
+// created: 2016-04-08 13:46:17
+$searchdefs['Cases'] = array (
   'layout' => 
   array (
     'basic_search' => 
@@ -23,32 +23,32 @@ array (
     ),
     'advanced_search' => 
     array (
-      'case_number' => 
+      0 => 
       array (
         'name' => 'case_number',
         'default' => true,
         'width' => '10%',
       ),
-      'name' => 
+      1 => 
       array (
         'name' => 'name',
         'default' => true,
         'width' => '10%',
       ),
-      'status' => 
+      2 => 
       array (
         'name' => 'status',
         'default' => true,
         'width' => '10%',
       ),
-      'product_c' => 
+      3 => 
       array (
         'label' => 'LBL_PRODUCT',
         'width' => '10%',
         'name' => 'product_c',
         'default' => true,
       ),
-      'assigned_user_id' => 
+      4 => 
       array (
         'name' => 'assigned_user_id',
         'type' => 'enum',
@@ -64,20 +64,20 @@ array (
         'default' => true,
         'width' => '10%',
       ),
-      'priority' => 
+      5 => 
       array (
         'name' => 'priority',
         'default' => true,
         'width' => '10%',
       ),
-      'supplier_c' => 
+      6 => 
       array (
         'label' => 'LBL_SUPPLIER',
         'width' => '10%',
         'name' => 'supplier_c',
         'default' => true,
-    ),
-      'review_c' => 
+      ),
+      7 => 
       array (
         'type' => 'enum',
         'default' => true,
@@ -85,8 +85,8 @@ array (
         'label' => 'LBL_REVIEW',
         'width' => '10%',
         'name' => 'review_c',
-  ),
-      'technical_c' => 
+      ),
+      8 => 
       array (
         'type' => 'enum',
         'default' => true,
@@ -108,4 +108,3 @@ array (
     ),
   ),
 );
-?>

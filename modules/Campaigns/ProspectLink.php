@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -93,7 +93,7 @@ class ProspectLink extends Link2
             // join list targets
             $join .= ' '.$join_type.' prospect_lists_prospects '.$alias_prefix.'_plp ON';
             $join .= ' '.$alias_prefix.'_plp.prospect_list_id = '.$alias_prefix.'_plc.prospect_list_id AND';
-            $join .= ' '.$alias_prefix.'_plp.related_type = "'.$module.'"'."\n";
+            $join .= ' '.$alias_prefix.'_plp.related_type = '.$GLOBALS['db']->quoted($module)."\n";
 
             // join target
             $join .= ' '.$join_type.' '.$table_with_alias.' ON';

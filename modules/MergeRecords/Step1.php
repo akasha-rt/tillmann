@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -108,8 +108,8 @@ foreach($temp_field_array as $field_array)
 //Print the master record header to the page
 $params = array();
 $params[] = "<a href='index.php?module={$focus->merge_bean->module_dir}&action=index'>{$GLOBALS['app_list_strings']['moduleList'][$focus->merge_bean->module_dir]}</a>";
-$params[] = "<a href='index.php?module={$focus->merge_bean->module_dir}&action=DetailView&record={$focus->merge_bean->id}'>{$focus->merge_bean->name}</a>";
 $params[] = $mod_strings['LBL_LBL_MERGE_RECORDS_STEP_1'];
+$params[] = $focus->merge_bean->name;
 echo getClassicModuleTitle($focus->merge_bean->module_dir, $params, true);
 
 $xtpl = new XTemplate ('modules/MergeRecords/Step1.html');

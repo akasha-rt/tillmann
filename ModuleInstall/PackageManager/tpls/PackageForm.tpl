@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,6 +35,9 @@
  ********************************************************************************/
 
  *}
+{if $ERR_SUHOSIN == true}
+{$APP_STRINGS.ERR_SUHOSIN}
+{else}
 {$scripts}
 {$TREEHEADER}
 {literal}
@@ -101,6 +104,4 @@ pre {
 </script>
 {/literal}
 {/if}
-
-
-
+{/if}

@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 define ( 'MB_TEMPLATES', 'include/SugarObjects/templates' ) ;
@@ -44,15 +47,15 @@ class MBModule
 {
     public $name = '' ;
     public $config = array (
-    'assignable' => 1 , 'acl' => 1 , 'has_tab' => 1 , 'studio' => 1 , 'audit' => 1 ) ;
+    'assignable' => 1 , 'security_groups' => 1, 'acl' => 1 , 'has_tab' => 1 , 'studio' => 1 , 'audit' => 1 ) ;
     public $mbpublicdefs ;
     public $errors = array ( ) ;
     public $path = '' ;
     public $implementable = array (
     'has_tab' => 'Navigation Tab' ) ;
-    public $always_implement = array ( 'assignable' => 'Assignable' , 'acl' => 'Access Controls' , 'studio' => 'Studio Support' , 'audit' => 'Audit Table' ) ;
+    public $always_implement = array ( 'assignable' => 'Assignable', 'security_groups' => 'Security Groups' , 'acl' => 'Access Controls' , 'studio' => 'Studio Support' , 'audit' => 'Audit Table' ) ;
     public $iTemplate = array (
-    'assignable' ) ;
+    'assignable', 'security_groups' ) ;
 
     public $config_md5 = null ;
 
@@ -92,6 +95,9 @@ class MBModule
         return $this->package;
     }
 
+    /**
+     * @return UndeployedRelationships
+     */
     function getRelationships()
     {
         return $this->relationships;
@@ -175,7 +181,7 @@ class MBModule
 
     function fieldExists ($name = '' , $type = '')
     {
-        $vardefs = $this->mbvardefs->getVardef () ;
+        $vardefs = $this->getVardefs();
         if (! empty ( $vardefs ))
         {
             if (empty ( $type ) && empty ( $name ))
@@ -408,6 +414,7 @@ class MBModule
 
     function build ($basepath)
     {
+        global $app_list_strings;
         $path = $basepath . '/modules/' . $this->key_name ;
         if (mkdir_recursive ( $path ))
         {
@@ -418,6 +425,7 @@ class MBModule
             $this->copyMetaRecursive ( $this->path . '/metadata/', $path . '/metadata/', true ) ;
             $this->copyMetaRecursive ( $this->path . '/Dashlets/' . $this->key_name . 'Dashlet/',
             						   $path . '/Dashlets/' . $this->key_name . 'Dashlet/', true ) ;
+            $app_list_strings['moduleList'][$this->key_name] = $this->mblanguage->label;
             $this->relationships->build ( $basepath ) ;
             $this->mblanguage->build ( $path ) ;
         }
@@ -450,6 +458,7 @@ class MBModule
             $class [ 'requires' ] [] = MB_TEMPLATES . '/' . $template . '/' . ucfirst ( $template ) . '.php' ;
         }
         $class [ 'importable' ] = $this->config [ 'importable' ] ;
+        $class [ 'inline_edit' ] = $this->config [ 'inline_edit' ] ;
         $this->mbvardefs->updateVardefs () ;
         $class [ 'fields' ] = $this->mbvardefs->vardefs [ 'fields' ] ;
         $class [ 'fields_string' ] = var_export_helper ( $this->mbvardefs->vardef [ 'fields' ] ) ;
@@ -826,6 +835,59 @@ class MBModule
 			if ($parser->removeField ( $fieldName ) )
 	            $parser->handleSave(false) ; 
         }
+    }
+
+    /**
+     * Returns an array of fields defs with all the link fields for this module.
+     * @return array
+     */
+    public function getLinkFields(){
+        $list = $this->relationships->getRelationshipList();
+        $field_defs = array();
+        foreach($list as $name){
+            $rel = $this->relationships->get($name);
+            $relFields = $rel->buildVardefs();
+            $relDef = $rel->getDefinition();
+            $relLabels = $rel->getLabels();
+            $relatedModule = $this->key_name == $relDef['rhs_module'] ? $relDef['lhs_module'] : $relDef['rhs_module'];
+            if (!empty($relFields[$this->key_name]))
+            {
+                //Massage the result of getVardefs to look like field_defs
+                foreach($relFields[$this->key_name] as $def) {
+                    $def['module'] = $relatedModule;
+                    $def['translated_label'] = empty($relLabels[$this->key_name][$def['vname']]) ?
+                        $name : $relLabels[$this->key_name][$def['vname']];
+                    $field_defs[$def['name']] = $def;
+                }
+            }
+        }
+        
+        return $field_defs;
+    }
+
+    /**
+     * Returns a TemplateField object by name
+     * Returns a TemplateField object by name or null if field not exists. If type not set use text type as default
+     *
+     * @param string $name
+     * @return TemplateField|null
+     *
+     */
+    public function getField($name)
+    {
+        $field = null;
+        $varDefs = $this->getVardefs();
+        if (isset($varDefs['fields'][$name])){
+            $fieldVarDefs = $varDefs['fields'][$name];
+            if (!isset($fieldVarDefs['type'])){
+                $fieldVarDefs['type'] = 'varchar';
+            }
+            $field = get_widget($fieldVarDefs['type']);
+            foreach($fieldVarDefs AS $key => $opt){
+                $field->$key = $opt;
+            }
+        }
+        return $field;
     }
 
 }

@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -37,7 +37,17 @@
 
 class DropDownBrowser
 {
- 
+    // Restrict the full dropdown list to remove some options that shouldn't be edited by the end users
+    public static $restrictedDropdowns = array(
+        'eapm_list',
+        'eapm_list_documents',
+        'eapm_list_import',
+        'extapi_meeting_password',
+        'Elastic_boost_options',
+        // 'moduleList', // We may want to put this in at a later date
+        // 'moduleListSingular', // Same with this
+    );
+
     function getNodes()
     {
 	    global $mod_strings, $app_list_strings;
@@ -51,11 +61,19 @@ class DropDownBrowser
         		unset($my_list_strings[$key]);
         	}
         }
+
+        foreach ( self::$restrictedDropdowns as $restrictedDropdown ) {
+            unset($my_list_strings[$restrictedDropdown]);
+        }
+
         $dropdowns = array_keys($my_list_strings);
         asort($dropdowns);
         foreach($dropdowns as $dd)
         {
-        	$nodes[$dd] = array( 'name'=>$dd, 'action'=>"module=ModuleBuilder&action=dropdown&view_package=studio&dropdown_name=$dd",'imageTitle' => 'SPSync', 'help' => 'editDropDownBtn');       	
+            if (!empty($dd))
+            {
+                $nodes[$dd] = array( 'name'=>$dd, 'action'=>"module=ModuleBuilder&action=dropdown&view_package=studio&dropdown_name=$dd",'imageTitle' => 'SPSync', 'help' => 'editDropDownBtn');
+            }
         }
         return $nodes;
     }

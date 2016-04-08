@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -148,7 +148,7 @@
 addForm('CreatePackage');
 addToValidate('CreatePackage', 'name', 'DBName', true, '{/literal}{$mod_strings.LBL_JS_VALIDATE_NAME}{literal}');
 addToValidateIsInArray('CreatePackage', 'name', 'in_array', false, '{/literal}{$mod_strings.LBL_JS_VALIDATE_PACKAGE_NAME}','{$package_labels}'{literal}, 'u==');
-addToValidate('CreatePackage', 'key', 'DBName', true, '{/literal}{$mod_strings.LBL_JS_VALIDATE_KEY}{literal}');
+addToValidate('CreatePackage', 'key', 'DBNameRaw', true, '{/literal}{$mod_strings.LBL_JS_VALIDATE_KEY}{literal}');
 
 ModuleBuilder.helpRegister('CreatePackage');
 ModuleBuilder.helpRegisterByID('CreatePackage','td');

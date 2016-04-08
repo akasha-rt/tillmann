@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -349,7 +349,7 @@ FRA;
      * return a bool
      */
     function checkTemplate($cacheRowFile){
-        if(!empty($GLOBALS['sugar_config']['developerMode']) || !empty($_SESSION['developerMode'])){
+        if(inDeveloperMode() || !empty($_SESSION['developerMode'])){
             return false;
         }
         return file_exists($cacheRowFile);
@@ -363,7 +363,7 @@ FRA;
     function createQuickSearchCode($returnAsJavascript = true){
         $sqs_objects = array();
         require_once('include/QuickSearchDefaults.php');
-        $qsd = new QuickSearchDefaults();
+        $qsd = QuickSearchDefaults::getQuickSearchDefaults();
         $qsd->setFormName($this->form_name);
         for($i=0; $i<$this->numFields; $i++){
             $name1 = "{$this->form_name}_{$this->name}_collection_{$i}";

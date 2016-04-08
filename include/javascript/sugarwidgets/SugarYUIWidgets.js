@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -36,7 +36,7 @@ YAHOO.namespace("SUGAR");(function(){var sw=YAHOO.SUGAR,Event=YAHOO.util.Event,C
 else if((config['type']&&config['type']=="plain")){myConf['buttons']=[];}
 for(var i in config){myConf[i]=config[i];}
 if(sw.MessageBox.panel){sw.MessageBox.panel.destroy();}
-sw.MessageBox.panel=new YAHOO.widget.SimpleDialog(myConf.id,{width:myConf.width+'px',close:myConf.close,modal:myConf.modal,visible:true,fixedcenter:true,constraintoviewport:true,draggable:true,buttons:myConf.buttons});if(myConf.type=="progress"){sw.MessageBox.panel.setBody(sw.MessageBox.progressTemplate.replace(/\{body\}/gi,myConf.msg));}else if(myConf.type=="prompt"){sw.MessageBox.panel.setBody(sw.MessageBox.promptTemplate.replace(/\{body\}/gi,myConf.msg));}else if(myConf.type=="confirm"){sw.MessageBox.panel.setBody(myConf.msg);}else{sw.MessageBox.panel.setBody(myConf.msg);}
+sw.MessageBox.panel=new YAHOO.widget.SimpleDialog(myConf.id,{width:myConf.width+'px',close:myConf.close,modal:myConf.modal,visible:false,fixedcenter:true,constraintoviewport:true,draggable:true,buttons:myConf.buttons});if(myConf.type=="progress"){sw.MessageBox.panel.setBody(sw.MessageBox.progressTemplate.replace(/\{body\}/gi,myConf.msg));}else if(myConf.type=="prompt"){sw.MessageBox.panel.setBody(sw.MessageBox.promptTemplate.replace(/\{body\}/gi,myConf.msg));}else if(myConf.type=="confirm"){sw.MessageBox.panel.setBody(myConf.msg);}else{sw.MessageBox.panel.setBody(myConf.msg);}
 sw.MessageBox.panel.setHeader(myConf.title);if(myConf.beforeShow){sw.MessageBox.panel.beforeShowEvent.subscribe(function(){myConf.beforeShow();});}
 if(myConf.beforeHide){sw.MessageBox.panel.beforeHideEvent.subscribe(function(){myConf.beforeHide();});}
 sw.MessageBox.panel.render(document.body);sw.MessageBox.panel.show();},updateProgress:function(percent,message){if(!sw.MessageBox.config.type=="progress")return;if(typeof message=="string"){sw.MessageBox.panel.setBody(sw.MessageBox.progressTemplate.replace(/\{body\}/gi,message));}
@@ -45,7 +45,8 @@ percent=100;else if(percent<0)
 percent=0;barEl.style.width=percent+"%";},hide:function(){if(sw.MessageBox.panel)
 sw.MessageBox.panel.hide();}};sw.Template=function(content){this._setContent(content);};sw.Template.prototype={regex:/\{([\w\.]*)\}/gim,append:function(target,args){var tEl=Dom.get(target);if(tEl)tEl.innerHTML+=this.exec(args);else if(typeof(console)!="undefined"&&typeof(console.log)=="function")
 console.log("Warning, unable to find target:"+target);},exec:function(args){var out=this.content;for(var i in this.vars){var val=this._getValue(i,args);var reg=new RegExp("\\{"+i+"\\}","g");out=out.replace(reg,val);}
-return out;},_setContent:function(content){this.content=content;var lastIndex=-1;var result=this.regex.exec(content);this.vars={};while(result&&result.index>lastIndex){lastIndex=result.index;this.vars[result[1]]=true;result=this.regex.exec(content);}},_getValue:function(v,scope){return function(e){return eval("this."+e);}.call(scope,v);}};sw.SelectionGrid=function(containerEl,columns,dataSource,config){sw.SelectionGrid.superclass.constructor.call(this,containerEl,columns,dataSource,config);this.subscribe("rowMouseoverEvent",this.onEventHighlightRow);this.subscribe("rowMouseoutEvent",this.onEventUnhighlightRow);this.subscribe("rowClickEvent",this.onEventSelectRow);this.selectRow(this.getTrEl(0));this.focus();}
+return out;},_setContent:function(content){this.content=content;var lastIndex=-1;var result=this.regex.exec(content);this.vars={};while(result&&result.index>lastIndex){lastIndex=result.index;this.vars[result[1]]=true;result=this.regex.exec(content);}},_getValue:function(v,scope){return function(e){return eval("this."+e);}.call(scope,v);}};sw.SelectionGrid=function(containerEl,columns,dataSource,config){sw.SelectionGrid.superclass.constructor.call(this,containerEl,columns,dataSource,config);this.subscribe("rowMouseoverEvent",this.onEventHighlightRow);this.subscribe("rowMouseoutEvent",this.onEventUnhighlightRow);if(config.forceMulti){this.subscribe("rowClickEvent",function(o){o.event.preventDefault();this.clearTextSelection();o.event=SUGAR.util.clone(o.event);o.event.ctrlKey=o.event.metaKey=true;this.onEventSelectRow(o);});}else{this.subscribe("rowClickEvent",this.onEventSelectRow);}
+this.selectRow(this.getTrEl(0));this.focus();}
 YAHOO.extend(sw.SelectionGrid,YAHOO.widget.ScrollingDataTable,{getColumn:function(column){var oColumn=this._oColumnSet.getColumn(column);if(!oColumn){var elCell=this.getTdEl(column);if(elCell&&(!column.tagName||column.tagName.toUpperCase()!="TH")){oColumn=this._oColumnSet.getColumn(elCell.cellIndex);}
 else{elCell=this.getThEl(column);if(elCell){var allColumns=this._oColumnSet.flat;for(var i=0,len=allColumns.length;i<len;i++){if(allColumns[i].getThEl().id===elCell.id){oColumn=allColumns[i];}}}}}
 if(!oColumn){YAHOO.log("Could not get Column for column at "+column,"info",this.toString());}
@@ -66,7 +67,7 @@ this.newTable=this.newIndex=null
 var clickEl=this.getEl();Dom.setStyle(clickEl,"opacity","");}});sw.AsyncPanel=function(el,params){if(params)
 sw.AsyncPanel.superclass.constructor.call(this,el,params);else
 sw.AsyncPanel.superclass.constructor.call(this,el);}
-YAHOO.extend(sw.AsyncPanel,YAHOO.widget.Panel,{loadingText:"Loading...",failureText:"Error loading content.",load:function(url,method,callback){method=method?method:"GET";this.setBody(this.loadingText);if(Connect.url)url=Connect.url+"&"+url;this.callback=callback;Connect.asyncRequest(method,url,{success:this._updateContent,failure:this._loadFailed,scope:this});},_updateContent:function(o){var w=this.cfg.config.width.value+"px";this.setBody(o.responseText);if(!SUGAR.isIE)
+YAHOO.extend(sw.AsyncPanel,YAHOO.widget.Panel,{loadingText:"Loading...",failureText:"Error loading content.",load:function(url,method,callback,postdata){method=method?method:"GET";this.setBody(this.loadingText);if(Connect.url)url=Connect.url+"&"+url;this.callback=callback;Connect.asyncRequest(method,url,{success:this._updateContent,failure:this._loadFailed,scope:this},postdata);},_updateContent:function(o){var w=this.cfg.config.width.value+"px";this.setBody(o.responseText);if(!SUGAR.isIE)
 this.body.style.width=w
 if(this.callback!=null)
 this.callback(o);},_loadFailed:function(o){this.setBody(this.failureText);}});sw.ClosableTab=function(el,parent,conf){this.closeEvent=new YAHOO.util.CustomEvent("close",this);if(conf)

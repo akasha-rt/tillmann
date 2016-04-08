@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -43,6 +43,7 @@ class TemplateCurrency extends TemplateRange
 {
     var $max_size = 25;
     var $len = 26 ;
+    var $precision = 6;
     var $type='currency';
 
     function delete($df){
@@ -66,6 +67,12 @@ class TemplateCurrency extends TemplateRange
     	$currency_id->label = $currency_id->vname;
     	$currency_id->save($df);
     	//$df->addLabel($currency_id->vname);
+    }
+
+    function get_field_def(){
+    	$def = parent::get_field_def();
+		$def['precision'] = (!empty($this->precision)) ? $this->precision : 6;
+    	return $def;
     }
 
 	function get_db_type()

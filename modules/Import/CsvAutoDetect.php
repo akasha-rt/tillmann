@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -249,7 +249,7 @@ class CsvAutoDetect {
      * @param bool $heading true of it has header, false if not
      * @return bool true if header is found, false if error
      */
-    public function hasHeader(&$heading, $module) {
+    public function hasHeader(&$heading, $module, $encoding = null) {
 
         if (!$this->_parsed) {
             return false;
@@ -270,26 +270,39 @@ class CsvAutoDetect {
 
         $mod_strings = return_module_language($GLOBALS['current_language'], $module);
 
+        global $locale;
         // process only the first row
-        foreach ($this->_parser->data[0] as $val) {
-            foreach ($bean->field_defs as $field_name=>$defs) {
+        foreach ($this->_parser->data[0] as $val)
+        {
+            if (!empty($encoding))
+            {
+                // Convert all values to UTF-8
+                $val = $locale->translateCharset($val, $encoding);
+            }
+            
+            // bug51433 - everything relies on $val having a value so if it's empty,
+            // we can skip this iteration and not get warnings
+            if( !empty( $val ) )
+            {
+                foreach ($bean->field_defs as $field_name=>$defs) {
 
-                // check if the CSV item matches field name
-                if (!strcasecmp($val, $field_name)) {
-                    $match_count++;
-                    break;
-                }
-                // check if the CSV item is part of the label or vice versa
-                else if (isset($defs['vname']) && isset($mod_strings[$defs['vname']])) {
-                    if (stripos(trim($mod_strings[$defs['vname']],':'), $val) !== false || stripos($val, trim($mod_strings[$defs['vname']],':')) !== false) {
+                    // check if the CSV item matches field name
+                    if (!strcasecmp($val, $field_name)) {
                         $match_count++;
                         break;
                     }
-                }
-                else if (isset($defs['vname']) && isset($GLOBALS['app_strings'][$defs['vname']])) {
-                    if (stripos(trim($GLOBALS['app_strings'][$defs['vname']],':'), $val) !== false || stripos($val, trim($GLOBALS['app_strings'][$defs['vname']],':')) !== false) {
-                        $match_count++;
-                        break;
+                    // check if the CSV item is part of the label or vice versa
+                    else if (isset($defs['vname']) && isset($mod_strings[$defs['vname']])) {
+                        if (stripos(trim($mod_strings[$defs['vname']],':'), $val) !== false || stripos($val, trim($mod_strings[$defs['vname']],':')) !== false) {
+                            $match_count++;
+                            break;
+                        }
+                    }
+                    else if (isset($defs['vname']) && isset($GLOBALS['app_strings'][$defs['vname']])) {
+                        if (stripos(trim($GLOBALS['app_strings'][$defs['vname']],':'), $val) !== false || stripos($val, trim($GLOBALS['app_strings'][$defs['vname']],':')) !== false) {
+                            $match_count++;
+                            break;
+                        }
                     }
                 }
             }

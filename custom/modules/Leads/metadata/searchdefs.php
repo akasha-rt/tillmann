@@ -1,6 +1,6 @@
 <?php
-$searchdefs ['Leads'] = 
-array (
+// created: 2016-04-08 13:46:17
+$searchdefs['Leads'] = array (
   'layout' => 
   array (
     'basic_search' => 
@@ -28,13 +28,13 @@ array (
     ),
     'advanced_search' => 
     array (
-      'first_name' => 
+      0 => 
       array (
         'name' => 'first_name',
         'default' => true,
         'width' => '10%',
       ),
-      'email' => 
+      1 => 
       array (
         'name' => 'email',
         'label' => 'LBL_ANY_EMAIL',
@@ -42,7 +42,7 @@ array (
         'default' => true,
         'width' => '10%',
       ),
-      'phone' => 
+      2 => 
       array (
         'name' => 'phone',
         'label' => 'LBL_ANY_PHONE',
@@ -50,13 +50,13 @@ array (
         'default' => true,
         'width' => '10%',
       ),
-      'last_name' => 
+      3 => 
       array (
         'name' => 'last_name',
         'default' => true,
         'width' => '10%',
       ),
-      'address_street' => 
+      4 => 
       array (
         'name' => 'address_street',
         'label' => 'LBL_ANY_ADDRESS',
@@ -64,7 +64,7 @@ array (
         'default' => true,
         'width' => '10%',
       ),
-      'address_city' => 
+      5 => 
       array (
         'name' => 'address_city',
         'label' => 'LBL_CITY',
@@ -72,7 +72,7 @@ array (
         'default' => true,
         'width' => '10%',
       ),
-      'primary_address_country' => 
+      6 => 
       array (
         'name' => 'primary_address_country',
         'label' => 'LBL_COUNTRY',
@@ -81,7 +81,7 @@ array (
         'default' => true,
         'width' => '10%',
       ),
-      'address_state' => 
+      7 => 
       array (
         'name' => 'address_state',
         'label' => 'LBL_STATE',
@@ -89,19 +89,19 @@ array (
         'default' => true,
         'width' => '10%',
       ),
-      'status' => 
+      8 => 
       array (
         'name' => 'status',
         'default' => true,
         'width' => '10%',
       ),
-      'lead_source' => 
+      9 => 
       array (
         'name' => 'lead_source',
         'default' => true,
         'width' => '10%',
       ),
-      'assigned_user_id' => 
+      10 => 
       array (
         'name' => 'assigned_user_id',
         'type' => 'enum',
@@ -130,4 +130,3 @@ array (
     ),
   ),
 );
-?>

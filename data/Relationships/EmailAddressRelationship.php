@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -62,6 +62,11 @@ class EmailAddressRelationship extends M2MRelationship
             return false;
         }
 
+            if ($lhs->$lhsLinkName->beansAreLoaded())
+                $lhs->$lhsLinkName->addBean($rhs);
+
+            $this->callBeforeAdd($lhs, $rhs, $lhsLinkName);
+
         //Many to many has no additional logic, so just add a new row to the table and notify the beans.
         $dataToInsert = $this->getRowToInsert($lhs, $rhs, $additionalFields);
 
@@ -74,6 +79,8 @@ class EmailAddressRelationship extends M2MRelationship
                 $lhs->$lhsLinkName->addBean($rhs);
 
             $this->callAfterAdd($lhs, $rhs, $lhsLinkName);
+
+        return true;
     }
 
     public function remove($lhs, $rhs)
@@ -93,6 +100,16 @@ class EmailAddressRelationship extends M2MRelationship
             $GLOBALS['log']->fatal("could not load LHS $lhsLinkName");
             return false;
         }
+
+        if (empty($_SESSION['disable_workflow']) || $_SESSION['disable_workflow'] != "Yes")
+        {
+            if (!empty($lhs->$lhsLinkName))
+            {
+                $lhs->$lhsLinkName->load();
+                $this->callBeforeDelete($lhs, $rhs, $lhsLinkName);
+            }
+        }
+
         $dataToRemove = array(
             $this->def['join_key_lhs'] => $lhs->id,
             $this->def['join_key_rhs'] => $rhs->id
@@ -111,5 +128,31 @@ class EmailAddressRelationship extends M2MRelationship
                 $this->callAfterDelete($lhs, $rhs, $lhsLinkName);
             }
         }
+
+        return true;
+    }
+
+    /**
+     * Gets the relationship role column check for the where clause
+     * This overload adds additional bean check for the primary_address variable.
+     * @param string $table
+     * @param bool $ignore_role_filter
+     * @return string
+     */
+    protected function getRoleWhere($table = "", $ignore_role_filter = false)
+    {
+        $roleCheck = parent::getRoleWhere($table, $ignore_role_filter);
+
+        if ($this->def['relationship_role_column'] == 'primary_address' &&
+            $this->def["relationship_role_column_value"] == '1') {
+            if (empty($table)) {
+                $roleCheck .= " AND bean_module";
+            } else {
+                $roleCheck .= " AND $table.bean_module";
+            }
+            $roleCheck .= " = '" . $this->getLHSModule() . "'";
+        }
+
+        return $roleCheck;
     }
 }

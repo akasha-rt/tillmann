@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -42,19 +42,19 @@ class SugarWidgetFieldEnum extends SugarWidgetReportField
         parent::SugarWidgetReportField($layout_manager);
     }
 
-	public function queryFilterEmpty($layout_def)
-	{
-	    $column = $this->_get_column_select($layout_def);
-	    return "($column IS NULL OR $column LIKE '' OR $column = '^^')";
-	}
+    public function queryFilterEmpty($layout_def)
+    {
+        $column = $this->_get_column_select($layout_def);
+        return "(coalesce(" . $this->reporter->db->convert($column, "length") . ",0) = 0 OR $column = '^^')";
+    }
 
     public function queryFilterNot_Empty($layout_def)
-	{
-	    $column = $this->_get_column_select($layout_def);
-		return "( $column IS NOT NULL AND $column <> '' AND $column != '^^' )\n";
-	}
+    {
+        $column = $this->_get_column_select($layout_def);
+        return "(coalesce(" . $this->reporter->db->convert($column, "length") . ",0) > 0 AND $column != '^^' )\n";
+    }
 
-	public function queryFilteris($layout_def) {
+    public function queryFilteris($layout_def) {
 		$input_name0 = $layout_def['input_name0'];
 		if (is_array($layout_def['input_name0'])) {
 			$input_name0 = $layout_def['input_name0'][0];
@@ -220,5 +220,3 @@ class SugarWidgetFieldEnum extends SugarWidgetReportField
         return $str;
     }
 }
-
-?>

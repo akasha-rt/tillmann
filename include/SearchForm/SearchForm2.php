@@ -1,48 +1,50 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
 require_once('include/tabs.php');
 require_once('include/ListView/ListViewSmarty.php');
-
 require_once('include/TemplateHandler/TemplateHandler.php');
 require_once('include/EditView/EditView2.php');
 
 
- class SearchForm extends EditView{
+ class SearchForm{
  	var $seed = null;
  	var $module = '';
  	var $action = 'index';
@@ -74,7 +76,13 @@ require_once('include/EditView/EditView2.php');
 
     var $displayType = 'searchView';
 
- 	function SearchForm($seed, $module, $action = 'index'){
+	/**
+     * @var array
+     */
+    protected $options;
+
+    public function SearchForm($seed, $module, $action = 'index', $options = array())
+    {
  		$this->th = new TemplateHandler();
  		$this->th->loadSmarty();
 		$this->seed = $seed;
@@ -92,7 +100,8 @@ require_once('include/EditView/EditView2.php');
                             'displayDiv'   => 'display:none'),
                        );
         $this->searchColumns = array () ;
- 	}
+        $this->setOptions($options);
+    }
 
  	function setup($searchdefs, $searchFields = array(), $tpl, $displayView = 'basic_search', $listViewDefs = array()){
 		$this->searchdefs =  $searchdefs[$this->module];
@@ -103,13 +112,13 @@ require_once('include/EditView/EditView2.php');
  		$this->view = $this->view.'_'.$displayView;
  		$tokens = explode('_', $this->displayView);
  		$this->parsedView = $tokens[0];
+                $this->searchFields = $searchFields[$this->module];
  		if($this->displayView != 'saved_views'){
  			$this->_build_field_defs();
  		}
 
-        $this->searchFields = $searchFields[$this->module];
 
-        // Setub the tab array
+        // Setup the tab array.
         $this->tabs = array();
         if($this->showBasic){
             $this->nbTabs++;
@@ -184,7 +193,7 @@ require_once('include/EditView/EditView2.php');
                 $this->tabs[$tabkey]['displayDiv']='';
                 //if this is advanced tab, use form with saved search sub form built in
                 if($viewName=='advanced'){
-                    $this->tpl = 'include/SearchForm/tpls/SearchFormGenericAdvanced.tpl';
+                    $this->tpl = 'SearchFormGenericAdvanced.tpl';
                     if ($this->action =='ListView') {
                         $this->th->ss->assign('DISPLAY_SEARCH_HELP', true);
                     }
@@ -232,21 +241,75 @@ require_once('include/EditView/EditView2.php');
         if ($this->module == 'Documents'){
             $this->th->ss->assign('DOCUMENTS_MODULE', true);
         }
-        $return_txt = $this->th->displayTemplate($this->seed->module_dir, 'SearchForm_'.$this->parsedView, $this->tpl);
+
+        $return_txt = $this->th->displayTemplate($this->seed->module_dir, 'SearchForm_'.$this->parsedView, $this->locateFile($this->tpl));
+
         if($header){
 			$this->th->ss->assign('return_txt', $return_txt);
-			$header_txt = $this->th->displayTemplate($this->seed->module_dir, 'SearchFormHeader', 'include/SearchForm/tpls/header.tpl');
+			$header_txt = $this->th->displayTemplate($this->seed->module_dir, 'SearchFormHeader', $this->locateFile('header.tpl'));
             //pass in info to render the select dropdown below the form
-            $footer_txt = $this->th->displayTemplate($this->seed->module_dir, 'SearchFormFooter', 'include/SearchForm/tpls/footer.tpl');
+            $footer_txt = $this->th->displayTemplate($this->seed->module_dir, 'SearchFormFooter', $this->locateFile('footer.tpl'));
 			$return_txt = $header_txt.$footer_txt;
 		}
 		return $return_txt;
  	}
 
-  function displaySavedSearch(){
+ 	/**
+ 	 * Set options
+ 	 * @param array $options
+ 	 * @return SearchForm2
+ 	 */
+    public function setOptions($options = null)
+    {
+        $defaults = array(
+            'locator_class' => 'FileLocator',
+            'locator_class_params' => array(
+                array(
+                    'custom/modules/' . $this->module . '/tpls/SearchForm',
+                    'modules/' . $this->module . '/tpls/SearchForm',
+                    'custom/include/SearchForm/tpls',
+                    'include/SearchForm/tpls'
+                )
+            )
+        );
+
+        $this->options = empty($options) ? $defaults : $options;
+        return $this;
+    }
+
+    /**
+     * Get Options
+     * @return array
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
+
+ 	/**
+      * Locate a file in the custom or stock folders.  Look in the custom folders first.
+      *
+      * @param string $file         The file we are looking for
+      * @return bool|string         If the file is found return the path, False if not
+      */
+     protected function locateFile($file)
+     {
+        $paths = isset($this->options['locator_class_params'])?$this->options['locator_class_params'][0]:array();
+        foreach ($paths as $path) {
+             if (is_file($path . '/' . $file)) {
+                 return $path . '/' . $file;
+             }
+         }
+
+         return false;
+     }
+
+     function displaySavedSearch()
+     {
         $savedSearch = new SavedSearch($this->listViewDefs[$this->module], $this->lv->data['pageData']['ordering']['orderBy'], $this->lv->data['pageData']['ordering']['sortOrder']);
         return $savedSearch->getForm($this->module, false);
-    }
+     }
 
 
   function displaySavedSearchSelect(){
@@ -342,9 +405,13 @@ require_once('include/EditView/EditView2.php');
 	                // fill in enums
                     $this->fieldDefs[$fvName]['options'] = $GLOBALS['app_list_strings'][$this->fieldDefs[$fvName]['options']];
                     //Hack to add blanks for parent types on search views
-                    if ($this->fieldDefs[$fvName]['type'] == "parent_type" || $this->fieldDefs[$fvName]['type'] == "parent")
+                    //53131 - add blank option for SearchField options with def 'options_add_blank' set to true
+                    if ($this->fieldDefs[$fvName]['type'] == "parent_type" || $this->fieldDefs[$fvName]['type'] == "parent" || (isset($this->searchFields[$name]['options_add_blank']) && $this->searchFields[$name]['options_add_blank']) )
                     {
-                        $this->fieldDefs[$fvName]['options'] = array_merge(array(""=>""), $this->fieldDefs[$fvName]['options']);
+                        if (!array_key_exists('', $this->fieldDefs[$fvName]['options'])) {
+                            $this->fieldDefs[$fvName]['options'] =
+                                array('' => '') + $this->fieldDefs[$fvName]['options'];
+                        }
                     }
 	            }
 
@@ -368,11 +435,11 @@ require_once('include/EditView/EditView2.php');
 						if(!empty($this->fieldDefs[$fvName]['function']['include'])){
 								require_once($this->fieldDefs[$fvName]['function']['include']);
 						}
-						$value = $function_name($this->seed, $name, $value, $this->view);
+						$value = call_user_func($function_name, $this->seed, $name, $value, $this->view);
 						$this->fieldDefs[$fvName]['value'] = $value;
 					}else{
 						if(!isset($function['params']) || !is_array($function['params'])) {
-							$this->fieldDefs[$fvName]['options'] = $function_name($this->seed, $name, $value, $this->view);
+							$this->fieldDefs[$fvName]['options'] = call_user_func($function_name, $this->seed, $name, $value, $this->view);
 						} else {
 							$this->fieldDefs[$fvName]['options'] = call_user_func_array($function_name, $function['params']);
 						}
@@ -437,27 +504,28 @@ require_once('include/EditView/EditView2.php');
                         }
                     }
                 }
-
             }else{
 
             	$fromMergeRecords = isset($array['merge_module']);
 
                 foreach($this->searchFields as $name => $params) {
-					$long_name = $name.'_'.$SearchName;           
+					$long_name = $name.'_'.$SearchName;
 					/*nsingh 21648: Add additional check for bool values=0. empty() considers 0 to be empty Only repopulates if value is 0 or 1:( */
-                	if(isset($array[$long_name]) && !$this->isEmptyDropdownField($long_name, $array[$long_name]) && ( $array[$long_name] !== '' || (isset($this->fieldDefs[$long_name]['type']) && $this->fieldDefs[$long_name]['type'] == 'bool'&& ($array[$long_name]=='0' || $array[$long_name]=='1'))))
-					{ 				
+                    if (isset($array[$long_name]) && ( $array[$long_name] !== '' || (isset($this->fieldDefs[$long_name]['type']) && $this->fieldDefs[$long_name]['type'] == 'bool'&& ($array[$long_name]=='0' || $array[$long_name]=='1'))))
+					{
                         $this->searchFields[$name]['value'] = $array[$long_name];
                         if(empty($this->fieldDefs[$long_name]['value'])) {
                         	$this->fieldDefs[$long_name]['value'] = $array[$long_name];
                         }
-                    }else if(!empty($array[$name]) && !$fromMergeRecords && !$this->isEmptyDropdownField($name, $array[$name])) { //basic        	
+                    }
+                    else if(!empty($array[$name]) && !$fromMergeRecords) // basic
+                    {
                     	$this->searchFields[$name]['value'] = $array[$name];
                         if(empty($this->fieldDefs[$long_name]['value'])) {
                         	$this->fieldDefs[$long_name]['value'] = $array[$name];
                         }
                     }
-                    
+
                     if(!empty($params['enable_range_search']) && isset($this->searchFields[$name]['value']))
 					{
 						if(preg_match('/^range_(.*?)$/', $long_name, $match) && isset($array[$match[1].'_range_choice']))
@@ -472,7 +540,7 @@ require_once('include/EditView/EditView2.php');
                         // FG - bug 45287 - to db conversion is ok, but don't adjust timezone (not now), otherwise you'll jump to the day before (if at GMT-xx)
 						$date_value = $timedate->to_db_date($this->searchFields[$name]['value'], false);
 						$this->searchFields[$name]['value'] = $date_value == '' ? $this->searchFields[$name]['value'] : $date_value;
-					}                    
+					}
                 }
 
                 if((empty($array['massupdate']) || $array['massupdate'] == 'false') && $addAllBeanFields) {
@@ -480,23 +548,22 @@ require_once('include/EditView/EditView2.php');
                     	if($key != 'assigned_user_name' && $key != 'modified_by_name')
                     	{
                     		$long_name = $key.'_'.$SearchName;
-                    		
-	                    	if(in_array($key.'_'.$SearchName, $arrayKeys) && !in_array($key, $searchFieldsKeys) && !$this->isEmptyDropdownField($long_name, $array[$long_name])) 
-	                    	{  	                    		
-	                    		
+
+	                        if(in_array($key.'_'.$SearchName, $arrayKeys) && !in_array($key, $searchFieldsKeys))
+	                    	{
 	                        	$this->searchFields[$key] = array('query_type' => 'default', 'value' => $array[$long_name]);
-	                        	
+
                                 if (!empty($params['type']) && $params['type'] == 'parent'
                                     && !empty($params['type_name']) && !empty($this->searchFields[$key]['value']))
                                 {
                                 	    require_once('include/SugarFields/SugarFieldHandler.php');
 										$sfh = new SugarFieldHandler();
                    						$sf = $sfh->getSugarField('Parent');
-                                	
+
                                         $this->searchFields[$params['type_name']] = array('query_type' => 'default',
                                                                                           'value'      => $sf->getSearchInput($params['type_name'], $array));
                                 }
-                                
+
                                 if(empty($this->fieldDefs[$long_name]['value'])) {
                                     $this->fieldDefs[$long_name]['value'] =  $array[$long_name];
                                 }
@@ -504,7 +571,6 @@ require_once('include/EditView/EditView2.php');
                         }
                     }
                 }
-
             }
         }
 
@@ -515,7 +581,7 @@ require_once('include/EditView/EditView2.php');
                    $this->searchFields[$fieldName]['value'] = trim($field['value']);
                }
            }
-       } 
+       }
 
     }
 
@@ -534,14 +600,21 @@ require_once('include/EditView/EditView2.php');
      * Parse date expression and return WHERE clause
      * @param string $operator Date expression operator
      * @param string DB field name
+      * @param string DB field type
      */
-    protected function parseDateExpression($operator, $db_field)
+    protected function parseDateExpression($operator, $db_field, $field_type = '')
     {
-        $dates = TimeDate::getInstance()->parseDateRange($operator);
+        if ($field_type == "date") {
+            $type = "date";
+            $adjForTZ = false;
+        } else {
+            $type = "datetime";
+            $adjForTZ = true;
+        }
+        $dates = TimeDate::getInstance()->parseDateRange($operator, null, $adjForTZ);
         if(empty($dates)) return '';
-
-        $start = $this->seed->db->convert($this->seed->db->quoted($dates[0]->asDb()), "datetime");
-        $end = $this->seed->db->convert($this->seed->db->quoted($dates[1]->asDb()), "datetime");
+        $start = $this->seed->db->convert($this->seed->db->quoted($dates[0]->asDb()), $type);
+        $end = $this->seed->db->convert($this->seed->db->quoted($dates[1]->asDb()), $type);
         return "($db_field >= $start AND $db_field <= $end)";
     }
 
@@ -564,6 +637,7 @@ require_once('include/EditView/EditView2.php');
          $values = $this->searchFields;
 
          $where_clauses = array();
+         $like_char = '%';
          $table_name = $this->seed->object_name;
          $this->seed->fill_in_additional_detail_fields();
 
@@ -600,6 +674,9 @@ require_once('include/EditView/EditView2.php');
 
                          $field = $real_field;
                          unset($this->searchFields[$end_field]['value']);
+                     }else{
+                         //if both start and end ranges have not been defined, skip this filter.
+                        continue;
                      }
                  } else if (preg_match('/^range_(.*?)$/', $field, $match) && isset($this->searchFields[$field]['value'])) {
                      $real_field = $match[1];
@@ -664,10 +741,21 @@ require_once('include/EditView/EditView2.php');
                          // construct the query for multenums
                          // use the 'like' query as both custom and OOB multienums are implemented with types that cannot be used with an 'in'
                          $operator = 'custom_enum';
-                         $table_name = $this->seed->table_name ;
-                         if ($customField)
-                             $table_name .= "_cstm" ;
-                         $db_field = $table_name . "." . $field;
+			// Relationshipfields get their field name directly from the field name map,
+			// this alias-name is automatically replaced by the join table and rname through sugarbean::create_new_list_query
+			if (isset($this->seed->field_name_map[$field]) && 
+				isset($this->seed->field_name_map[$field]['source']) && 
+				$this->seed->field_name_map[$field]['source'] == 'non-db')
+			{
+				$db_field = $this->seed->field_name_map[$field]['name'];
+			}
+			else
+			{
+				$table_name = $this->seed->table_name ;
+				if ($customField)
+					$table_name .= "_cstm" ;
+				$db_field = $table_name . "." . $field;
+			}
 
                          foreach($parms['value'] as $val) {
                              if($val != ' ' and $val != '') {
@@ -746,7 +834,6 @@ require_once('include/EditView/EditView2.php');
                              if ($type == 'relate' && !empty($this->seed->field_name_map[$field]['link'])
                                  && !empty($this->seed->field_name_map[$field]['rname'])) {
                                      $link = $this->seed->field_name_map[$field]['link'];
-                                     $relname = $link['relationship'];
                                      if (($this->seed->load_relationship($link))){
                                          //Martin fix #27494
                                          $db_field = $this->seed->field_name_map[$field]['name'];
@@ -776,7 +863,8 @@ require_once('include/EditView/EditView2.php');
                             else if(!$customField){
                                 if ( !empty($this->seed->field_name_map[$field]['db_concat_fields']) )
                                     $db_field = $db->concat($this->seed->table_name, $this->seed->field_name_map[$db_field]['db_concat_fields']);
-                                else
+                                // Relationship fields get the name directly from the field_name_map
+                                else if (!(isset($this->seed->field_name_map[$db_field]) && isset($this->seed->field_name_map[$db_field]['source']) && $this->seed->field_name_map[$db_field]['source'] == 'non-db'))
                                     $db_field = $this->seed->table_name .  "." . $db_field;
                              }else{
                                  if ( !empty($this->seed->field_name_map[$field]['db_concat_fields']) )
@@ -931,42 +1019,58 @@ require_once('include/EditView/EditView2.php');
                                      $stringFormatParams = array(0 => $field_value, 1 => $GLOBALS['current_user']->id);
                                      $where .= "{$db_field} $in (".string_format($parms['subquery'], $stringFormatParams).")";
                                  }else{
-                                     $where .= "{$db_field} $in ({$parms['subquery']} ".$this->seed->db->quoted($field_value.'%').")";
+                                     //Bug#37087: Re-write our sub-query to it is executed first and contents stored in a derived table to avoid mysql executing the query
+                                     //outside in. Additional details: http://bugs.mysql.com/bug.php?id=9021
+                                     $selectCol = ' * ';
+                                     //use the select column in the subquery if it exists
+                                     if(!empty($parms['subquery'])){
+                                         $selectCol = $this->getSelectCol($parms['subquery']);
+                                     }
+                                    $where .= "{$db_field} $in (select $selectCol from ({$parms['subquery']} ".$this->seed->db->quoted($field_value.'%').") {$field}_derived)";
                                  }
 
                                  break;
 
                              case 'like':
-                                 if($type == 'bool' && $field_value == 0) {
+                                 if($type == 'bool' && $field_value == 0)
+                                 {
                                      // Bug 43452 - FG - Added parenthesis surrounding the OR (without them the WHERE clause would be broken)
                                      $where .=  "( " . $db_field . " = '0' OR " . $db_field . " IS NULL )";
                                  }
-                                 else {
-                                     //check to see if this is coming from unified search or not
+                                 else
+                                 {
+                                     // check to see if this is coming from unified search or not
                                      $UnifiedSearch = !empty($parms['force_unifiedsearch']);
                                      if(isset($_REQUEST['action']) && $_REQUEST['action'] == 'UnifiedSearch'){
                                          $UnifiedSearch = true;
                                      }
-
-                                     //check to see if this is a universal search OR the field has db_concat_fields set in vardefs, AND the field name is "last_name"
-                                     //BUG 45709: Tasks Advanced Search: Contact Name field does not return matches on full names
-                                     //Frank: Adding Surabhi's fix back which seem to have gone missing in CottonCandy merge
-                                     if(($UnifiedSearch || !empty($this->seed->field_name_map[$field]['db_concat_fields'])) && strpos($db_field, 'last_name') !== false){
-                                         //split the string value, and the db field name
-                                         $string = explode(' ', $field_value);
-                                         $column_name =  explode('.', $db_field);
-                                         //when a search is done with a space, we concatenate and search against the full name.
-                                         if(count($string)>1){
-                                             //add where clause against concatenated fields
-                                             $where .= $this->seed->db->concat($column_name[0],array('first_name','last_name')) . " LIKE ".$this->seed->db->quoted($field_value.'%');
-                                             $where .= ' OR ' . $this->seed->db->concat($column_name[0],array('last_name','first_name')) . " LIKE ".$this->seed->db->quoted($field_value.'%');
-                                         }else{
-                                             //no space was found, add normal where clause
-                                             $where .=  $db_field . " like ".$this->seed->db->quoted($field_value.'%');
+                                     
+                                     // If it is a unified search and if the search contains more then 1 word (contains space)
+                                     // and if it's the last element from db_field (so we do the concat only once, not for every db_field element)
+                                     // we concat the db_field array() (both original, and in reverse order) and search for the whole string in it  
+                                     if ( $UnifiedSearch && strpos($field_value, ' ') !== false && strpos($db_field, $parms['db_field'][count($parms['db_field']) - 1]) !== false )
+                                     {
+                                         // Get the table name used for concat
+                                         $concat_table = explode('.', $db_field);
+                                         $concat_table = $concat_table[0];
+                                         // Get the fields for concatenating
+                                         $concat_fields = $parms['db_field'];
+                                         
+                                         // If db_fields (e.g. contacts.first_name) contain table name, need to remove it
+                                         for ($i = 0; $i < count($concat_fields); $i++)
+                                         {
+                                         	if (strpos($concat_fields[$i], $concat_table) !== false)
+                                         	{
+                                         		$concat_fields[$i] = substr($concat_fields[$i], strlen($concat_table) + 1);
+                                         	}
                                          }
-
-                                     }else {
-
+                                         
+                                         // Concat the fields and search for the value
+                                         $where .= $this->seed->db->concat($concat_table, $concat_fields) . " LIKE " . $this->seed->db->quoted($field_value . $like_char);
+                                         $where .= ' OR ' . $this->seed->db->concat($concat_table, array_reverse($concat_fields)) . " LIKE " . $this->seed->db->quoted($field_value . $like_char);
+                                     }
+                                     else
+                                     {
                                          //Check if this is a first_name, last_name search
                                          if(isset($this->seed->field_name_map) && isset($this->seed->field_name_map[$db_field]))
                                          {
@@ -977,7 +1081,7 @@ require_once('include/EditView/EditView2.php');
                                                    {
                                                       foreach($GLOBALS['app_list_strings']['salutation_dom'] as $salutation)
                                                       {
-                                                         if(!empty($salutation) && strpos($field_value, $salutation) == 0)
+                                                         if(!empty($salutation) && strpos($field_value, $salutation) === 0)
                                                          {
                                                             $field_value = trim(substr($field_value, strlen($salutation)));
                                                             break;
@@ -988,7 +1092,7 @@ require_once('include/EditView/EditView2.php');
                                          }
 
                                          //field is not last name or this is not from global unified search, so do normal where clause
-                                         $where .=  $db_field . " like ".$this->seed->db->quoted($field_value.'%');
+                                         $where .=  $db_field . " like ".$this->seed->db->quoted(sql_like_string($field_value, $like_char));
                                      }
                                  }
                                  break;
@@ -1059,7 +1163,11 @@ require_once('include/EditView/EditView2.php');
                              case 'this_year':
                              case 'last_year':
                              case 'next_year':
-                                 $where .= $this->parseDateExpression(strtolower($operator), $db_field);
+                                 if (!empty($field) && !empty($this->seed->field_name_map[$field]['type'])) {
+                                     $where .= $this->parseDateExpression(strtolower($operator), $db_field, $this->seed->field_name_map[$field]['type']);
+                                 } else {
+                                     $where .= $this->parseDateExpression(strtolower($operator), $db_field);
+                                 }
                                  break;
                              case 'isnull':
                                  $where .=  "($db_field IS NULL OR $db_field = '')";
@@ -1084,14 +1192,14 @@ require_once('include/EditView/EditView2.php');
          return $where_clauses;
      }
 
-    
-    
+
+
     /**
      * isEmptyDropdownField
-     * 
+     *
      * This function checks to see if a blank dropdown field was supplied.  This scenario will occur where
      * a dropdown select is in single selection mode
-     * 
+     *
      * @param $value Mixed dropdown value
      */
     private function isEmptyDropdownField($name='', $value=array())
@@ -1099,6 +1207,89 @@ require_once('include/EditView/EditView2.php');
     	$result = is_array($value) && isset($value[0]) && $value[0] == '';
     	$GLOBALS['log']->debug("Found empty value for {$name} dropdown search key");
     	return $result;
-    }    
- }
+    }
 
+     /**
+      * Return the search defs for a particular module.
+      *
+      * @static
+      * @param $module
+      */
+     public static function retrieveSearchDefs($module)
+     {
+         $searchdefs = array();
+         $searchFields = array();
+
+         if(file_exists('custom/modules/'.$module.'/metadata/metafiles.php'))
+         {
+             require('custom/modules/'.$module.'/metadata/metafiles.php');
+         }
+         elseif(file_exists('modules/'.$module.'/metadata/metafiles.php'))
+         {
+             require('modules/'.$module.'/metadata/metafiles.php');
+         }
+
+         if (file_exists('custom/modules/'.$module.'/metadata/searchdefs.php'))
+         {
+             require('custom/modules/'.$module.'/metadata/searchdefs.php');
+         }
+         elseif (!empty($metafiles[$module]['searchdefs']))
+         {
+             require($metafiles[$module]['searchdefs']);
+         }
+         elseif (file_exists('modules/'.$module.'/metadata/searchdefs.php'))
+         {
+             require('modules/'.$module.'/metadata/searchdefs.php');
+         }
+
+
+         if(!empty($metafiles[$module]['searchfields']))
+         {
+             require($metafiles[$module]['searchfields']);
+         }
+         elseif(file_exists('modules/'.$module.'/metadata/SearchFields.php'))
+         {
+             require('modules/'.$module.'/metadata/SearchFields.php');
+         }
+         if(file_exists('custom/modules/'.$module.'/metadata/SearchFields.php'))
+         {
+             require('custom/modules/'.$module.'/metadata/SearchFields.php');
+         }
+
+         return array('searchdefs' => $searchdefs, 'searchFields' => $searchFields );
+     }
+
+    /**
+      * this function will take the subquery string and return the columns to be used in the select of the derived table
+      *
+      * @param string $subquery the subquery string to parse through
+      * @return string the retrieved column list
+      */
+    protected function getSelectCol($subquery)
+    {
+        $selectCol = '';
+
+        if (empty($subquery)) {
+            return $selectCol;
+        }
+        $subquery = strtolower($subquery);
+        //grab the values between the select and from
+        $select = stripos($subquery, 'select');
+        $from = stripos($subquery, 'from');
+        if ($select !==false && $from!==false && $select+6 < $from) {
+            $selectCol = substr($subquery, $select+6, $from-$select-6);
+        }
+        //remove table names if they exist
+        $columns = explode(',', $selectCol);
+        $i = 0;
+        foreach ($columns as $column) {
+            $dot = strpos($column, '.');
+            if ($dot > 0) {
+                $columns[$i] = substr($column, $dot+1);
+            }
+            $i++;
+        }
+        $selectCol = implode(',', $columns);
+        return $selectCol;
+    }
+ }

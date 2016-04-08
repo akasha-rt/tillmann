@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -47,16 +47,18 @@ class CalendarViewSaveSettings extends SugarView {
 	}
 	
 	function display(){
-		global $current_user;		
-
+		global $current_user;
+		
 		$db_start = $this->to_db_time($_REQUEST['day_start_hours'],$_REQUEST['day_start_minutes'],$_REQUEST['day_start_meridiem']);
 		$db_end = $this->to_db_time($_REQUEST['day_end_hours'],$_REQUEST['day_end_minutes'],$_REQUEST['day_end_meridiem']);
 		
 		$current_user->setPreference('day_start_time', $db_start, 0, 'global', $current_user);
 		$current_user->setPreference('day_end_time', $db_end, 0, 'global', $current_user);
-		
+
+		$current_user->setPreference('calendar_display_timeslots', $_REQUEST['display_timeslots'], 0, 'global', $current_user);
 		$current_user->setPreference('show_tasks', $_REQUEST['show_tasks'], 0, 'global', $current_user);
 		$current_user->setPreference('show_calls', $_REQUEST['show_calls'], 0, 'global', $current_user);
+		$current_user->setPreference('show_completed', $_REQUEST['show_completed'], 0, 'global', $current_user);
 
 		if(isset($_REQUEST['day']) && !empty($_REQUEST['day']))
 			header("Location: index.php?module=Calendar&action=index&view=".$_REQUEST['view']."&hour=0&day=".$_REQUEST['day']."&month=".$_REQUEST['month']."&year=".$_REQUEST['year']);
@@ -81,7 +83,7 @@ class CalendarViewSaveSettings extends SugarView {
 		if($minutes < 10)
 			$minutes = "0".$minutes;	
 		return $hours . ":". $minutes; 
-	}	
+	}
 	
 
 }

@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => 'Bugs are defects in products and services','duplicate_merge'=>true
@@ -48,7 +51,10 @@ $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => '
     'comment' => 'The software or service release that manifested the bug',
     'duplicate_merge' => 'disabled',
     'audited' =>true,
-  	'studio' => array('fields' => 'false', 'listview' => false, 'wirelesslistview' => false ), // tyoung bug 16442 - don't show in studio fields list
+    'studio' => array(
+        'fields' => 'false',  // tyoung bug 16442 - don't show in studio fields list
+        'listview' => false,
+    ),
     'massupdate' => true,
   	),
 'release_name'=>
@@ -73,13 +79,6 @@ $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => '
        'quickcreate' => false, 
        'basic_search' => false, 
        'advanced_search' => false,
-	   //BEGIN SUGARCRM flav=pro
-	   'wirelesseditview' => false,
-	   'wirelessdetailview' => false,
-	   'wirelesslistview' => 'visible',
-	   'wireless_basic_search' => false,
-	   'wireless_advanced_search' => false,
-	   //END SUGARCRM flav=pro
 	   ),
   ),
 
@@ -93,7 +92,10 @@ $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => '
     'comment' => 'The software or service release that corrected the bug',
     'duplicate_merge' => 'disabled',
     'audited' =>true,
-  	'studio' => array('fields' => 'false', 'listview' => false, 'wirelesslistview' => false), // tyoung bug 16442 - don't show in studio fields list
+    'studio' => array(
+        'fields' => 'false', // tyoung bug 16442 - don't show in studio fields list
+        'listview' => false,
+    ),
   	'massupdate' => true,
   	),
    'fixed_in_release_name'=>
@@ -118,13 +120,6 @@ $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => '
        'quickcreate' => false, 
        'basic_search' => false, 
        'advanced_search' => false,
-       //BEGIN SUGARCRM flav=pro
-       'wirelesseditview' => false,
-       'wirelessdetailview' => false,
-       'wirelesslistview' => 'visible',
-       'wireless_basic_search' => false,
-       'wireless_advanced_search' => false,
-       //END SUGARCRM flav=pro
        ),
   ),
     'source' =>
@@ -219,6 +214,14 @@ $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => '
     'source'=>'non-db',
 		'vname'=>'LBL_CASES'
   ),
+  'project' =>
+  array (
+  	'name' => 'project',
+        'type' => 'link',
+        'relationship' => 'projects_bugs',
+        'source'=>'non-db',
+        'vname'=>'LBL_PROJECTS',
+  ),
   'release_link' =>
   array (
         'name' => 'release_link',
@@ -241,15 +244,6 @@ $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => '
     'bean_name'=>'Release',
     'source'=>'non-db',
   ),
-
-	'projects' =>
-	array (
-	    'name' => 'projects',
-	    'type' => 'link',
-	    'relationship' => 'projects_bugs',
-	    'source'=>'non-db',
-	    'vname'=>'LBL_PROJECTS',
-	),
 
 )
                                                       , 'indices' => array (
@@ -310,7 +304,7 @@ $dictionary['Bug'] = array('table' => 'bugs',    'audited'=>true, 'comment' => '
 	'optimistic_locking'=>true,
                             );
 
-VardefManager::createVardef('Bugs','Bug', array('default', 'assignable',
+VardefManager::createVardef('Bugs','Bug', array('default', 'assignable', 'security_groups',
 'issue',
 ));
 

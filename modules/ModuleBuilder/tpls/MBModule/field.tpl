@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -95,13 +95,13 @@ addForm('popup_form');
                 {$field_types[$vardef.type]}
             {/if}
             {if empty($field_types[$vardef.type]) && !empty($vardef.type)}({$vardef.type}){/if}
-            <input type='hidden' name='type' value={$vardef.type}>
+            <input type='hidden' name='type' value={$vardef.type} />
     </td>
 </tr>
 </table>
 {$fieldLayout}
-
 </form>
+
 <script>
 {literal}
 function validate_type_selection(){
@@ -120,4 +120,4 @@ function validate_type_selection(){
 {/literal}
 ModuleBuilder.helpSetup('fieldsEditor','{$help_group}');
 </script>
-<script>//Need this to work in FF4. Bug where last script isn't executed.</script>
+{* <script>//Need this to work in FF4. Bug where last script isn't executed.</script> *}

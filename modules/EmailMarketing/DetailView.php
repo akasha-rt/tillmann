@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -110,6 +110,8 @@ $xtpl->assign("ID", $focus->id);
 $xtpl->assign("NAME", $focus->name);
 $xtpl->assign("FROM_NAME", $focus->from_name);
 $xtpl->assign("FROM_ADDR", $focus->from_addr);
+$xtpl->assign("REPLY_TO_NAME", $focus->reply_to_name);
+$xtpl->assign("REPLY_TO_ADDR", $focus->reply_to_addr);
 $xtpl->assign("DATE_START", $focus->date_start);
 $xtpl->assign("TIME_START", $focus->time_start);
 

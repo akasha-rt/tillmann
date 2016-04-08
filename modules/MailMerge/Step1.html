@@ -1,7 +1,7 @@
 <!--
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -93,7 +93,7 @@
 
 <p><table width="100%" cellpadding="2" cellspacing="0" border="0"><tr> 
 	<td align="right">
-	<input title="{MOD.LBL_NEXT}" accessKey="" class="button" type="submit" id="btnNext" name="button" value="  {MOD.LBL_NEXT}" onClick="return validateForm();" {DISABLE_NEXT_BUTTON}></td>
+	<input title="{MOD.LBL_NEXT}"  class="button" type="submit" id="btnNext" name="button" value="  {MOD.LBL_NEXT}" onClick="return validateForm();" {DISABLE_NEXT_BUTTON}></td>
 </tr>
 </table> </p>
 	</form>
@@ -112,13 +112,13 @@ function browserCheck()
 	{
 		button = document.getElementById("btnNext");
 		button.disabled = true;
-		alert("This requires IE 6.0 or greater for Windows.");
+        alert(SUGAR.language.get('MailMerge', 'LBL_BROWSER_REQUIREMENT'));
 	}
 	else if(document.layers || (!document.all && document.getElementById))
 	{
 		button = document.getElementById("btnNext");
 		button.disabled = true;
-		alert("This requires IE 6.0 or greater for Windows.");
+        alert(SUGAR.language.get('MailMerge', 'LBL_BROWSER_REQUIREMENT'));
 	}	
 }
 function clearSpan()
@@ -141,7 +141,7 @@ function validateForm()
 			}
 		}
 	}
-	alert("Please select a template.");
+	alert(SUGAR.language.get('MailMerge', 'LBL_FORM_SELECT_TEMPLATE'));
 	return false;	
 }
 

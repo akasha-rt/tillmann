@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -84,8 +87,7 @@ EOHTML;
 <td colspan='10' width='100%'><IMG height='1' width='1' src='$blankImageURL' alt=''></td>
 </tr>
 <tr>
-<td align='left' valign='middle' nowrap style='padding-bottom: 2px;'>$other_text</td>
-<td width='100%'><IMG height='1' width='1' src='$blankImageURL' alt=''></td>
+<td width='100%' align='left' valign='middle' nowrap style='padding-bottom: 2px;'>$other_text</td>
 EOHTML;
         if ($show_help) {
             $the_form .= "<td align='right' nowrap>";
@@ -252,7 +254,6 @@ function getClassicModuleTitle($module, $params, $show_create=false, $index_url_
     global $app_strings;
 
 	$module_title = '';
-	$count = count($params);
 	$index = 0;
 
     $module = preg_replace("/ /","",$module);
@@ -271,20 +272,8 @@ function getClassicModuleTitle($module, $params, $show_create=false, $index_url_
     	array_unshift ($params,"<a href='{$url}'><img src='{$iconPath}' ". "alt='".$module."' title='".$module."' align='absmiddle'></a>");
 	}
 
-	$new_params = array();
-	$i = 0;
-	foreach ($params as $value) {
-	  if ((!is_null($value)) && ($value !== "")) {
-	    $new_params[$i] = $value;
-	    $i++;
-	  }
-	}
-
-	if(SugarThemeRegistry::current()->directionality == "rtl") {
-		$new_params = array_reverse($new_params);
-	}
-
-	$module_title = join(SugarView::getBreadCrumbSymbol(),$new_params);
+	$new_params = array_pop($params);
+    if(!is_null($new_params) && ($new_params !== "")) $module_title = $new_params;
     if(!empty($module_title)){
         $the_title .= "<h2>".$module_title."</h2>\n";//removing empty H2 tag for 508 compliance
     }
@@ -310,7 +299,7 @@ EOHTML;
         $the_title .= '</span>';
     }
 
-    $the_title .= "</div>\n";
+    $the_title .= "<div class='clear'></div></div>\n";
     return $the_title;
 
 }
@@ -330,9 +319,6 @@ function insert_popup_header(
 {
     global $app_strings, $sugar_config;
 
-    $charset = isset($app_strings['LBL_CHARSET'])
-        ? $app_strings['LBL_CHARSET'] : $sugar_config['default_charset'];
-
     $themeCSS = SugarThemeRegistry::current()->getCSS();
 
     $langHeader = get_language_header();
@@ -341,19 +327,31 @@ function insert_popup_header(
     if ($includeJS)
     {
         echo <<<EOHTML
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML>
 <html {$langHeader}>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset="{$charset}">
 EOHTML;
     }
+
+    if (isset($sugar_config['meta_tags']) && isset($sugar_config['meta_tags']['IE_COMPAT_MODE']))
+    {
+        echo $sugar_config['meta_tags']['IE_COMPAT_MODE'];
+    }
+
     echo "<title>{$app_strings['LBL_BROWSER_TITLE']}</title>" . $themeCSS;
     if ($includeJS)
     {
+        $charset = isset($app_strings['LBL_CHARSET']) ? $app_strings['LBL_CHARSET'] : $sugar_config['default_charset'];
+        echo '<meta http-equiv="Content-Type" content="text/html; charset="{$charset}">';
         echo '<script type="text/javascript" src="' . getJSPath('cache/include/javascript/sugar_grp1_yui.js') . '"></script>';
         echo '<script type="text/javascript" src="' . getJSPath('cache/include/javascript/sugar_grp1.js') . '"></script>';
-        echo '</head>';
     }
+    /* Fix to include files required to make pop-ups responsive */
+    echo '<meta http-equiv="X-UA-Compatible" content="IE=edge">';
+    echo '<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />';
+    echo '<link href="themes/SuiteR/css/bootstrap.min.css" rel="stylesheet">';
+    echo '<link href="themes/SuiteR/css/colourSelector.php" rel="stylesheet">';
+    echo '</head>';
     echo  '<body class="popupBody">';
 }
 

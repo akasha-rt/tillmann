@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -51,8 +51,8 @@
 <input type="hidden" name="return_action" value="{$smarty.request.return_action}">
 <input type="hidden" name="return_id" value="{$smarty.request.return_id}">
 <input type="hidden" name="contact_role">
-{if !empty($smarty.request.return_module)}
-<input type="hidden" name="relate_to" value="{if $smarty.request.return_relationship}{$smarty.request.return_relationship}{elseif empty($isDCForm)}{$smarty.request.return_module}{/if}">
+{if !empty($smarty.request.return_module) || !empty($smarty.request.relate_to)}
+<input type="hidden" name="relate_to" value="{if $smarty.request.return_relationship}{$smarty.request.return_relationship}{elseif $smarty.request.relate_to && empty($smarty.request.from_dcmenu)}{$smarty.request.relate_to}{elseif empty($isDCForm) && empty($smarty.request.from_dcmenu)}{$smarty.request.return_module}{/if}">
 <input type="hidden" name="relate_id" value="{$smarty.request.return_id}">
 {/if}
 <input type="hidden" name="offset" value="{$offset}">
@@ -64,11 +64,11 @@
 
 {* -- Begin QuickCreate Specific -- *}
 {if $smarty.request.action != 'SubpanelEdits'}
-<input type="hidden" name="primary_address_street" value="{$smarty.request.primary_address_street}">
-<input type="hidden" name="primary_address_city" value="{$smarty.request.primary_address_city}">
-<input type="hidden" name="primary_address_state" value="{$smarty.request.primary_address_state}">
-<input type="hidden" name="primary_address_country" value="{$smarty.request.primary_address_country}">
-<input type="hidden" name="primary_address_postalcode" value="{$smarty.request.primary_address_postalcode}">
+<input type="hidden" name="primary_address_street" value="{$fields.primary_address_street.value}">
+<input type="hidden" name="primary_address_city" value="{$fields.primary_address_city.value}">
+<input type="hidden" name="primary_address_state" value="{$fields.primary_address_state.value}">
+<input type="hidden" name="primary_address_country" value="{$fields.primary_address_country.value}">
+<input type="hidden" name="primary_address_postalcode" value="{$fields.primary_address_postalcode.value}">
 {/if}
 <input type="hidden" name="is_ajax_call" value="1">
 <input type="hidden" name="to_pdf" value="1">

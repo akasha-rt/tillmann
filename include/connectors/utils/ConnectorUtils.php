@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 define('CONNECTOR_DISPLAY_CONFIG_FILE', 'custom/modules/Connectors/metadata/display_config.php');
@@ -252,7 +255,7 @@ class ConnectorUtils
         $refresh = false
         )
     {
-        if ( isset($GLOBALS['sugar_config']['developerMode']) ) {
+        if (inDeveloperMode()) {
             $refresh = true;
         }
 
@@ -281,7 +284,15 @@ class ConnectorUtils
           }
           if(file_exists($src4)) {
               require($src4);
-              $sources = array_merge($sources, $connectors);
+
+            //define connectors if it doesn't exist or is not an array
+            if (!isset($connectors) || !is_array($connectors)){
+                $connectors = array();
+                $err_str = string_format($GLOBALS['app_strings']['ERR_CONNECTOR_NOT_ARRAY'],array($src4));
+                $GLOBALS['log']->error($err_str);
+            }
+
+            $sources = array_merge($sources, $connectors);
           }
 
           if(!self::saveConnectors($sources, $src4)) {
@@ -307,6 +318,11 @@ class ConnectorUtils
             if(defined('TEMPLATE_URL')) {
                 $toFile = SugarTemplateUtilities::getFilePath($toFile);
             }
+        }
+
+        if(!is_array($connectors))
+        {
+            $connectors = array();
         }
 
         if(!write_array_to_file('connectors', $connectors, $toFile)) {
@@ -600,7 +616,7 @@ class ConnectorUtils
         return true;
     }
 
-    public function removeHoverField(
+    public static function removeHoverField(
         &$viewdefs,
         $module
         )
@@ -730,91 +746,29 @@ class ConnectorUtils
         )
     {
         $module = $displayParams['module'];
-        require_once('include/connectors/utils/ConnectorUtils.php');
         $modules_sources = self::getDisplayConfig();
-        global $current_language, $app_strings;
-        $mod_strings = return_module_language($current_language, 'Connectors');
-        $menuParams = 'var menuParams = "';
+        $code = '';
         $shown_sources = array();
-        if(!empty($module) && !empty($displayParams['connectors'])) {
-            foreach($displayParams['connectors'] as $id) {
-                if(!empty($modules_sources[$module]) && in_array($id, $modules_sources[$module])){
+        if (!empty($module) && !empty($displayParams['connectors']))
+        {
+            foreach ($displayParams['connectors'] as $id)
+             {
+                if (!empty($modules_sources[$module]) && in_array($id, $modules_sources[$module]))
+                {
                     $shown_sources[] = $id;
                 }
-              }
+             }
 
-              if(empty($shown_sources)) {
+              if(empty($shown_sources))
+              {
                     return '';
               }
 
-              require_once('include/connectors/formatters/FormatterFactory.php');
-              $code = '';
 
-              //If there is only one source, just show the icon or some standalone view
-              if(count($shown_sources) == 1) {
-                  $formatter = FormatterFactory::getInstance($shown_sources[0]);
-                  $formatter->setModule($module);
-                  $formatter->setSmarty($smarty);
-                  $formatter_code = $formatter->getDetailViewFormat();
-                  if(!empty($formatter_code)) {
-                      $iconFilePath = $formatter->getIconFilePath();
-                      $iconFilePath = empty($iconFilePath) ? 'themes/default/images/MoreDetail.png' : $iconFilePath;
-
-                      $code = '<!--not_in_theme!--><img id="dswidget_img" border="0" src="' . $iconFilePath .'" alt="' . $shown_sources[0] .'" onmouseover="show_' . $shown_sources[0] . '(event);">';
-
-                      $code .= "<script type='text/javascript' src='{sugar_getjspath file='include/connectors/formatters/default/company_detail.js'}'></script>";
-                      $code .= $formatter->getDetailViewFormat();
-                      $code .= $formatter_code;
-                  }
-                  return $code;
-              } else {
-
-                  $formatterCode = '';
-                  $sourcesDisplayed = 0;
-                  $singleIcon = '';
-                  foreach($shown_sources as $id) {
-                      $formatter = FormatterFactory::getInstance($id);
-                      $formatter->setModule($module);
-                      $formatter->setSmarty($smarty);
-                      $buttonCode = $formatter->getDetailViewFormat();
-                      if(!empty($buttonCode)) {
-                          $sourcesDisplayed++;
-                          $singleIcon = $formatter->getIconFilePath();
-                          $source = SourceFactory::getSource($id);
-                          $config = $source->getConfig();
-                          $name = !empty($config['name']) ? $config['name'] : $id;
-                          //Create the menu item to call show_[source id] method in javascript
-                          $menuParams .= '<a href=\'#\' style=\'width:150px\' class=\'menuItem\' onmouseover=\'hiliteItem(this,\"yes\");\' onmouseout=\'unhiliteItem(this);\' onclick=\'show_' . $id . '(event);\'>' . $name . '</a>';
-                          $formatterCode .= $buttonCode;
-                      }
-                  } //for
-
-                  if(!empty($formatterCode)) {
-                      if($sourcesDisplayed > 1) {
-                      	$dswidget_img = SugarThemeRegistry::current()->getImageURL('MoreDetail.png');
-                        $code = '<!--not_in_theme!--><img id="dswidget_img" src="'.$dswidget_img.'" width="11" height="7" border="0" alt="'.$app_strings['LBL_CONNECTORS_POPUPS'].'" onmouseover="return showConnectorMenu2();" onmouseout="return nd(1000);">';
-
-                      } else {
-                       	  $dswidget_img = SugarThemeRegistry::current()->getImageURL('MoreDetail.png');
-                          $singleIcon = empty($singleIcon) ? $dswidget_img : $singleIcon;
-                          $code = '<!--not_in_theme!--><img id="dswidget_img" border="0" src="' . $singleIcon . '" alt="'.$app_strings['LBL_CONNECTORS_POPUPS'].'" onmouseover="return showConnectorMenu2();" onmouseout="return nd(1000);">';
-
-                      }
-                      $code .= "{overlib_includes}\n";
-                      $code .= "<script type='text/javascript' src='{sugar_getjspath file='include/connectors/formatters/default/company_detail.js'}'></script>\n";
-                      $code .= "<script type='text/javascript'>\n";
-                      $code .= "function showConnectorMenu2() {literal} { {/literal}\n";
-
-                      $menuParams .= '";';
-                      $code .= $menuParams . "\n";
-                      $code .= "return overlib(menuParams, CENTER, STICKY, MOUSEOFF, 3000, WIDTH, 110, FGCLASS, 'olOptionsFgClass', CGCLASS, 'olOptionsCgClass', BGCLASS, 'olBgClass', TEXTFONTCLASS, 'olFontClass', CAPTIONFONTCLASS, 'olOptionsCapFontClass', CLOSEFONTCLASS, 'olOptionsCloseFontClass');\n";
-                      $code .= "{literal} } {/literal}\n";
-                      $code .= "</script>\n";
-                      $code .= $formatterCode;
-                  }
-                  return $code;
-              } //if-else
+            require_once('include/connectors/utils/ConnectorHtmlHelperFactory.php');
+            $code = ConnectorHtmlHelperFactory::build()->getConnectorButtonCode($shown_sources, $module, $smarty);
         } //if
+        return $code;
     }
 
 
@@ -845,6 +799,30 @@ class ConnectorUtils
         }
     }
 
+     /**
+     * setConnectorStrings
+     * This method outputs the language Strings for a given connector instance
+     *
+     * @param String $source_id String value of the connector id to write language strings for (e.g., ext_soap_marketo)
+     * @param String $connector_strings array value of the connector_strings
+     * @param String $language optional String value for the language to use (defaults to $GLOBALS['current_language'])
+    */
+    public static function setConnectorStrings(
+        $source_id,
+        $connector_strings,
+        $language = ''
+        )
+    {
+        $lang = empty($language) ? $GLOBALS['current_language'] : $language;
+        $lang .= '.lang.php';
+        $dir = str_replace('_', '/', $source_id);
+
+      if (!write_array_to_file("connector_strings", $connector_strings, "custom/modules/Connectors/connectors/sources/{$dir}/language/{$lang}")) {
+           //Log error and return empty array
+           $GLOBALS['log']->fatal("Cannot write connectory_strings to file custom/modules/Connectors/connectors/sources/{$dir}/language/{$lang}");
+           return false;
+        }
+    }
 
     /**
      * installSource

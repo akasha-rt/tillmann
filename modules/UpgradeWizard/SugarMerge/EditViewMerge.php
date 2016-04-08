@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -192,9 +192,13 @@ class EditViewMerge{
             'Meetings' => array('created_by_name'=>'date_entered', 'modified_by_name'=>'date_modified'),
  			'ProspectLists' => array('created_by_name'=>'date_entered', 'modified_by_name'=>'date_modified'),
             'Prospects' => array('created_by_name'=>'date_entered', 'modified_by_name'=>'date_modified'),
-            'Tasks' => array('created_by_name'=>'date_entered', 'modified_by_name'=>'date_modified'),
 	);
-	
+
+    /**
+     * @var SugarMerge
+     */
+    public $sugarMerge = null;
+
 	/**
 	 * Clears out the values of the arrays so that the same object can be utilized
 	 *

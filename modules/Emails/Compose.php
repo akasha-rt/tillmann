@@ -1,49 +1,42 @@
 <?php
-
-if (!defined('sugarEntry') || !sugarEntry)
-    die('Not A Valid Entry Point');
-/* * *******************************************************************************
+if (!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
+/*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+ *
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2016 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
- * ****************************************************************************** */
-
-/* * *******************************************************************************
-
- * Description: TODO:  To be written.
- * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
- * All Rights Reserved.
- * Contributor(s): ______________________________________..
- * ****************************************************************************** */
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
+ ********************************************************************************/
 
 //Shorten name.
 $data = $_REQUEST;
@@ -64,7 +57,8 @@ else if (!isset($data['forQuickCreate'])) {
  *
  * @param Array $ret
  */
-function initFullCompose($ret) {
+function initFullCompose($ret)
+{
     global $current_user;
     $json = getJSONobj();
     $composeOut = $json->encode($ret);
@@ -86,25 +80,24 @@ function initFullCompose($ret) {
  * @param Array $data
  * @param Bool $forFullCompose If full compose is set to TRUE, then continue execution and include the full Emails UI.  Otherwise
  *             the data generated is returned.
- * @param SugarBean $bean Optional - parent object with data
  */
-function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null) {
+function generateComposeDataPackage($data, $forFullCompose = TRUE)
+{
     // we will need the following:
     if (isset($data['parent_type']) && !empty($data['parent_type']) &&
-            isset($data['parent_id']) && !empty($data['parent_id']) &&
-            !isset($data['ListView']) && !isset($data['replyForward'])) {
-        if (empty($bean)) {
-            global $beanList;
-            global $beanFiles;
-            global $mod_strings;
+        isset($data['parent_id']) && !empty($data['parent_id']) &&
+        !isset($data['ListView']) && !isset($data['replyForward'])
+    ) {
+        global $beanList;
+        global $beanFiles;
+        global $mod_strings;
 
-            $parentName = '';
-            $class = $beanList[$data['parent_type']];
-            require_once($beanFiles[$class]);
+        $parentName = '';
+        $class = $beanList[$data['parent_type']];
+        require_once($beanFiles[$class]);
 
-            $bean = new $class();
-            $bean->retrieve($data['parent_id']);
-        }
+        $bean = new $class();
+        $bean->retrieve($data['parent_id']);
         if (isset($bean->full_name)) {
             $parentName = $bean->full_name;
         } elseif (isset($bean->name)) {
@@ -130,9 +123,7 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
         $email_id = "";
         $attachments = array();
         if ($bean->module_dir == 'Cases') {
-            //reena sattani 24-2-2012
-            //$subject = str_replace('%1', $bean->case_number, $bean->getEmailSubjectMacro() . " ". from_html($bean->name)) ;//bug 41928
-            $body = str_replace('%1', $bean->case_number, $bean->getEmailSubjectMacro()); //bug 41928
+            $subject = str_replace('%1', $bean->case_number, $bean->getEmailSubjectMacro() . " " . from_html($bean->name));//bug 41928
             $bean->load_relationship("contacts");
             $contact_ids = $bean->contacts->get();
             $contact = new Contact();
@@ -143,15 +134,16 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
             }
         }
         if ($bean->module_dir == 'KBDocuments') {
+
             require_once("modules/Emails/EmailUI.php");
             $subject = $bean->kbdocument_name;
-            $article_body = str_replace('/cache/images/', $GLOBALS['sugar_config']['site_url'] . '/cache/images/', KBDocument::get_kbdoc_body_without_incrementing_count($bean->id));
+            $article_body = str_replace('/' . $GLOBALS['sugar_config']['cache_dir'] . 'images/', $GLOBALS['sugar_config']['site_url'] . '/' . $GLOBALS['sugar_config']['cache_dir'] . 'images/', KBDocument::get_kbdoc_body_without_incrementing_count($bean->id));
             $body = from_html($article_body);
             $attachments = KBDocument::get_kbdoc_attachments_for_newemail($bean->id);
             $attachments = $attachments['attachments'];
         } // if
         if ($bean->module_dir == 'Quotes' && isset($data['recordId'])) {
-            $quotesData = getQuotesRelatedData($bean, $data);
+            $quotesData = getQuotesRelatedData($data);
             global $current_language;
             $namePlusEmail = $quotesData['toAddress'];
             $subject = $quotesData['subject'];
@@ -163,38 +155,34 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
             'to_email_addrs' => $namePlusEmail,
             'parent_type' => $data['parent_type'],
             'parent_id' => $data['parent_id'],
-            'cc_addrs' => $data['cc_addrs'],
-            'bcc_addrs' => $data['bcc_addrs'],
-            //'parent_name' => $parentName,
-            //'subject' => $subject,
-            //'body' => $body,
-            'parent_name' => ($data['parent_name']) ? $data['parent_name'] : $parentName,
-            'subject' => ($data['subject']) ? $data['subject'] : $subject,
-            'body' => ($body) ? $body : $data['body'],
+            'parent_name' => $parentName,
+            'subject' => $subject,
+            'body' => $body,
+            'attachments' => $attachments,
+            'email_id' => $email_id,
+
+        );
+    } else if (isset($data['recordId'])) {
+
+
+        $quotesData = getQuotesRelatedData($data);
+        $namePlusEmail = $quotesData['toAddress'];
+        $subject = $quotesData['subject'];
+        $body = $quotesData['body'];
+        $attachments = $quotesData['attachments'];
+        $email_id = $quotesData['email_id'];
+
+        $ret = array(
+            'to_email_addrs' => $namePlusEmail,
+            'parent_type' => $quotesData['parent_type'],
+            'parent_id' => $quotesData['parent_id'],
+            'parent_name' => $quotesData['parent_name'],
+            'subject' => $subject,
+            'body' => $body,
             'attachments' => $attachments,
             'email_id' => $email_id,
         );
-    } //change by bc - to correctly add original email body when mail is forwarded
-    else if (empty($data['parent_type']) && empty($data['parent_name']) && !($data['replyForward'])) {
-        $namePlusEmail = '';
-        if (isset($data['to_email_addrs'])) {
-            $namePlusEmail = $data['to_email_addrs'];
-            $namePlusEmail = from_html(str_replace("&nbsp;", " ", $namePlusEmail));
-        } else {
-            if (isset($bean->full_name)) {
-                $namePlusEmail = from_html($bean->full_name) . " <" . from_html($bean->emailAddress->getPrimaryAddress($bean)) . ">";
-            } else if (isset($bean->emailAddress)) {
-                $namePlusEmail = "<" . from_html($bean->emailAddress->getPrimaryAddress($bean)) . ">";
-            }
-        }
-        $ret = array(
-            'to_email_addrs' => $namePlusEmail,
-            'subject' => ($data['subject']) ? $data['subject'] : $subject,
-            'cc_addrs' => $data['cc_addrs'],
-            'bcc_addrs' => $data['bcc_addrs'],
-            'body' => ($body) ? $body : $data['body'],
-            'email_id' => $email_id,
-        );
+
     } else if (isset($_REQUEST['ListView'])) {
 
         $email = new Email();
@@ -222,12 +210,7 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
         $ie->email->cc_addrs = to_html($ie->email->cc_addrs_names);
         $ie->email->bcc_addrs = $ie->email->bcc_addrs_names;
         $ie->email->from_name = $ie->email->from_addr;
-        /**
-         *  To remove hr from the body part when pressed reply
-         *  @author Dhaval darji
-         */
-        //$preBodyHTML = "&nbsp;<div><hr></div>";
-        $preBodyHTML = "&nbsp;<div></div>";
+        $preBodyHTML = "&nbsp;<div><hr></div>";
         if ($ie->email->type != 'draft') {
             $email = $ie->email->et->handleReplyType($ie->email, $replyType);
         } else {
@@ -264,6 +247,42 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
             'email_id' => $email_id,
             'fromAccounts' => $return['fromAccounts'],
         );
+
+        // If it's a 'Reply All' action, append the CC addresses
+        if ($data['reply'] == 'replyAll') {
+            global $current_user;
+
+            $ccEmails = $ie->email->to_addrs;
+
+            if (!empty($ie->email->cc_addrs)) {
+                $ccEmails .= ", " . $ie->email->cc_addrs;
+            }
+
+            $myEmailAddresses = array();
+            foreach ($current_user->emailAddress->addresses as $p) {
+                array_push($myEmailAddresses, $p['email_address']);
+            }
+
+            //remove current user's email address (if contained in To/CC)
+            $ccEmailsArr = explode(", ", $ccEmails);
+
+            foreach ($ccEmailsArr as $p => $q) {
+                preg_match('/<(.*?)>/', $q, $email);
+                if (isset($email[1])) {
+                    $checkemail = $email[1];
+                } else {
+                    $checkemail = $q;
+                }
+                if (in_array($checkemail, $myEmailAddresses)) {
+                    unset($ccEmailsArr[$p]);
+                }
+            }
+
+            $ccEmails = implode(", ", $ccEmailsArr);
+
+            $ret['cc_addrs'] = from_html($ccEmails);
+        }
+
     } else {
         $ret = array(
             'to_email_addrs' => '',
@@ -276,7 +295,8 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null)
         return $ret;
 }
 
-function getQuotesRelatedData($bean, $data) {
+function getQuotesRelatedData($data)
+{
     $return = array();
     $emailId = $data['recordId'];
 
@@ -291,7 +311,33 @@ function getQuotesRelatedData($bean, $data) {
     $ret = EmailUI::getDraftAttachments($ret);
     $return['attachments'] = $ret['attachments'];
     $return['email_id'] = $emailId;
+    $return['parent_type'] = $email->parent_type;
+    $return['parent_id'] = $email->parent_id;
+    $return['parent_name'] = '';
+
+    if (isset($return['parent_type']) && !empty($return['parent_type']) && isset($return['parent_id']) && !empty($return['parent_id'])) {
+        global $beanList;
+        global $beanFiles;
+
+        $class = $beanList[$return['parent_type']];
+        require_once($beanFiles[$class]);
+
+        $bean = new $class();
+        $bean->retrieve($return['parent_id']);
+        if (isset($bean->full_name)) {
+            $parentName = $bean->full_name;
+        } elseif (isset($bean->name)) {
+            $parentName = $bean->name;
+        } else {
+            $parentName = '';
+        }
+        $parentName = from_html($parentName);
+
+        $return['parent_name'] = $parentName;
+        $return['toAddress'] = from_html($bean->full_name) . " <" . from_html($bean->emailAddress->getPrimaryAddress($bean)) . ">";
+    }
+
+
     return $return;
 }
-
 // fn

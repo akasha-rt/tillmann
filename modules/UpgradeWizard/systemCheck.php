@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -55,6 +58,7 @@ $filesNWPerms = array();
 $skipDirs = array(
 	$sugar_config['upload_dir'],
 	'.svn',
+	'.git',
 );
 $files = uwFindAllFiles(getcwd(), array(), true, $skipDirs);
 
@@ -158,7 +162,7 @@ $dbOut = $outs['dbOut'];
 $result = checkSystemCompliance();
 $checks = array(
 	'phpVersion'				=> $mod_strings['LBL_UW_COMPLIANCE_PHP_VERSION'],
-	'mysqlVersion'				=> $mod_strings['LBL_UW_COMPLIANCE_MYSQL'],
+    'dbVersion'                 => $mod_strings['LBL_UW_COMPLIANCE_DB'],
 	'xmlStatus'					=> $mod_strings['LBL_UW_COMPLIANCE_XML'],
 	'curlStatus'				=> $mod_strings['LBL_UW_COMPLIANCE_CURL'],
 	'imapStatus'				=> $mod_strings['LBL_UW_COMPLIANCE_IMAP'],
@@ -166,6 +170,9 @@ $checks = array(
 	'safeModeStatus'			=> $mod_strings['LBL_UW_COMPLIANCE_SAFEMODE'],
 	'callTimeStatus'			=> $mod_strings['LBL_UW_COMPLIANCE_CALLTIME'],
 	'memory_msg'				=> $mod_strings['LBL_UW_COMPLIANCE_MEMORY'],
+    'stream_msg'                => $mod_strings['LBL_UW_COMPLIANCE_STREAM'],
+    'ZipStatus'			        => $mod_strings['LBL_UW_COMPLIANCE_ZIPARCHIVE'],
+    'pcreVersion'			    => $mod_strings['LBL_UW_COMPLIANCE_PCRE_VERSION'],
 	//commenting mbstring overload.
 	//'mbstring.func_overload'	=> $mod_strings['LBL_UW_COMPLIANCE_MBSTRING_FUNC_OVERLOAD'],
 );

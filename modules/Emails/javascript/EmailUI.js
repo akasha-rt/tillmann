@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -143,7 +143,7 @@ SE.accounts = {
 	        YAHOO.widget.DataTable.Formatter.showBoolean = this.showBoolean;
 
 	        var typeHoverHelp = '&nbsp;<div id="rollover"><a href="#" class="rollover">'+
-	                            '<img border="0" src="themes/default/images/helpInline.gif">' +
+	                            '<img border="0" src="index.php?entryPoint=getImage&amp;imageName=helpInline.png">' +
 	                            '<div style="text-align:left"><span>' + mod_strings.LBL_EMAIL_INBOUND_TYPE_HELP + '</span></div></a></div>';
 
 
@@ -438,10 +438,10 @@ SE.accounts = {
 		document.getElementById("smtp_auth1").style.display = smtpauth_req.checked ? "" : "none";
 		document.getElementById("smtp_auth2").style.display = smtpauth_req.checked ? "" : "none";
 	},
-	
+
 	smtp_setDefaultSMTPPort : function() {
 		useSSLPort = !document.getElementById("mail_smtpssl").options[0].selected;
-    
+
         if ( useSSLPort && document.getElementById("mail_smtpport").value == '25' ) {
             document.getElementById("mail_smtpport").value = '465';
         }
@@ -466,7 +466,7 @@ SE.accounts = {
 
         switch (smtptype) {
         case "yahoomail":
-            document.getElementById("mail_smtpserver").value = 'plus.smtp.mail.yahoo.com';
+            document.getElementById("mail_smtpserver").value = 'smtp.mail.yahoo.com';
             document.getElementById("mail_smtpport").value = '465';
             document.getElementById("mail_smtpauth_req").checked = true;
             var ssl = document.getElementById("mail_smtpssl");
@@ -483,23 +483,25 @@ SE.accounts = {
             document.getElementById("mail_smtpuser_label").innerHTML = mod_strings.LBL_YAHOOMAIL_SMTPUSER;
             break;
         case "gmail":
-            document.getElementById("mail_smtpserver").value = 'smtp.gmail.com';
-            document.getElementById("mail_smtpport").value = '587';
-            document.getElementById("mail_smtpauth_req").checked = true;
-            var ssl = document.getElementById("mail_smtpssl");
-            for(var j=0;j<ssl.options.length;j++) {
-                if(ssl.options[j].text == 'TLS') {
-                    ssl.options[j].selected = true;
-                    break;
+            if(document.getElementById("mail_smtpserver").value == "" || document.getElementById("mail_smtpserver").value == 'smtp.mail.yahoo.com') {
+                document.getElementById("mail_smtpserver").value = 'smtp.gmail.com';
+                document.getElementById("mail_smtpport").value = '587';
+                document.getElementById("mail_smtpauth_req").checked = true;
+                var ssl = document.getElementById("mail_smtpssl");
+                for(var j=0;j<ssl.options.length;j++) {
+                    if(ssl.options[j].text == 'TLS') {
+                        ssl.options[j].selected = true;
+                        break;
+                    }
                 }
             }
-            document.getElementById("mailsettings1").style.display = 'none';
-            document.getElementById("mailsettings2").style.display = 'none';
+            //document.getElementById("mailsettings1").style.display = 'none';
+            //document.getElementById("mailsettings2").style.display = 'none';
             document.getElementById("mail_smtppass_label").innerHTML = mod_strings.LBL_GMAIL_SMTPPASS;
             document.getElementById("mail_smtpuser_label").innerHTML = mod_strings.LBL_GMAIL_SMTPUSER;
             break;
         case "exchange":
-            if ( document.getElementById("mail_smtpserver").value == 'plus.smtp.mail.yahoo.com'
+            if ( document.getElementById("mail_smtpserver").value == 'smtp.mail.yahoo.com'
                     || document.getElementById("mail_smtpserver").value == 'smtp.gmail.com' ) {
                 document.getElementById("mail_smtpserver").value = '';
             }
@@ -1203,22 +1205,7 @@ SE.contextMenus = {
         	SE.contextMenus.markEmail('deleted');
     	}
     },
-    
-    /**
-     * Marks email Pending , Assigned , Closed
-     * @author Dhaval darji
-     */
-    markPending : function(){
-        SE.contextMenus.markEmail('Pending');
-    },
-    markAssigned : function(){
-        SE.contextMenus.markEmail('Assigned');
-    },
-    markClosed : function(){
-        SE.contextMenus.markEmail('Closed');
-    },
-    //End - Dhaval
-    
+
     /**
      * generic call API to apply a flag to emails on the server and on sugar
      * @param string type "read" | "unread" | "flagged" | "deleted"
@@ -1328,7 +1315,7 @@ SE.contextMenus = {
             uids[i] = SE.grid.getRecord(rows[i]).getData().uid;
         }
         var ser = YAHOO.lang.JSON.stringify(uids);
-        
+
         AjaxObject.startRequest(callbackRelateEmail, urlStandard + '&emailUIAction=getRelateForm&uid=' + ser + "&ieId=" + ieId + "&mbox=" + folder);
     },
 
@@ -1776,7 +1763,6 @@ SE.detailView = {
      * @param bool
      */
     saveQuickCreate : function(action) {
-       
         var qcd = SE.detailView.quickCreateDialog;
         if (check_form('form_EmailQCView_' + qcd.qcmodule)) {
 	        var formObject = document.getElementById('form_EmailQCView_' + qcd.qcmodule);
@@ -2046,8 +2032,8 @@ SE.folders = {
     /**
      * Starts check of all email Accounts using a loading bar for large POP accounts
      */
-    startEmailAccountCheck : function() {        
-        // don't do two checks at the same time        
+    startEmailAccountCheck : function() {
+        // don't do two checks at the same time
        if(!AjaxObject.requestInProgress()) {
             SUGAR.showMessageBox(app_strings.LBL_EMAIL_ONE_MOMENT, app_strings.LBL_EMAIL_CHECKING_NEW, 'progress');
             SE.accounts.ieIds = SE.folders.getIeIds();
@@ -2407,13 +2393,13 @@ SE.folders = {
 
         if(node != null && node.data) {
             SUGAR.showMessageBox(app_strings.LBL_EMAIL_FOLDERS_ADD_DIALOG_TITLE,
-                    app_strings.LBL_EMAIL_SETTINGS_NAME,
+                    app_strings.LBL_EMAIL_FOLDERS_NEW_FOLDER,
                     'prompt', {fn:SE.folders.folderAddXmlCall, beforeShow: SE.folders.folderAddRegisterEnter, beforeHide: SE.folders.folderRemoveRegisterEnter});
         } else {
             alert(app_strings.LBL_EMAIL_FOLDERS_NO_VALID_NODE);
         }
     },
-
+    
     folderAddRegisterEnter : function() {
     	this.enterKeyListener = new YAHOO.util.KeyListener(YAHOO.util.Dom.get("sugar-message-prompt"),
     															{keys: YAHOO.util.KeyListener.KEY.ENTER},
@@ -2899,12 +2885,13 @@ SE.listView = {
     /**
      * Like populateListFrame(), but specifically for SugarFolders since the API is radically different
      */
-    populateListFrameSugarFolder : function(node, folderId, forceRefresh) {
+    populateListFrameSugarFolder : function(node, folderId, forceRefresh, getUnread) {
         SE.innerLayout.selectTab(0);
         Dom.get('_blank').innerHTML = "";
         SE.grid.params['emailUIAction'] = 'getMessageListSugarFolders';
         SE.grid.params['ieId'] = node.data.id;
         SE.grid.params['mbox'] = node.data.origText ? node.data.origText : node.data.text;
+        SE.grid.params['getUnread'] = getUnread;
         SE.listView.refreshGrid();
     },
 
@@ -3225,7 +3212,7 @@ SE.listView = {
 
     refreshGrid : function() {
         SE.grid.getDataSource().sendRequest(
-    	    SUGAR.util.paramsToUrl(SE.grid.params),
+            SUGAR.util.paramsToUrl(SE.grid.params),
     		SE.grid.onDataReturnInitializeTable,
     		SE.grid
     	);
@@ -3473,7 +3460,7 @@ SE.settings = {
 
 
     lazyLoadRules : function() {
-        if(false/*!SE.settings.rules*/) {
+        if(false) {
             AjaxObject.startRequest(callbackLoadRules, urlStandard + "&emailUIAction=loadRulesForSettings");
         }
 

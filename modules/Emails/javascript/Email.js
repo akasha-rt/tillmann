@@ -1,36 +1,39 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -41,7 +44,7 @@ var uploads_count_map=new Object();
 var uploads_count = -1;
 var current_uploads_id = -1;
 var append = false; // Ed has method InsertHTML which inserts at cursor point - plain does not
-//following varaibles store references to input fields grouped with the clicked email selection button (select).
+//following variables store references to input fields grouped with the clicked email selection button (select).
 var current_contact = '';
 var current_contact_id = '';
 var current_contact_email = '';
@@ -335,7 +338,7 @@ function multiFiles( list_target){
                 fileName = filePathComponents[filePathComponents.length - 1],
 
                 // constants
-                allowedTypes = ['gif', 'bmp', 'png', 'jpg', 'jpeg'],
+                allowedTypes = ['png', 'jpg', 'jpeg'],
                 imglocation = 'cache/images/';
 
             //check if filetype is valid
@@ -881,7 +884,7 @@ function button_change_onclick(obj) {
 	var acct_name = '';
 
 	if(document.EditView.parent_type.value  == 'Accounts' && typeof(document.EditView.parent_name.value) != 'undefined' && document.EditView.parent_name.value != '') {
-		filter = "&form_submit=false&query=true&html=Email_picker&account_name=" + escape(document.EditView.parent_name.value);
+		filter = "&form_submit=false&query=true&html=Email_picker&account_name=" + escape(document.EditView.parent_name.value) + "&account_id=" + escape(document.EditView.parent_id.value);
 		acct_name = document.EditView.parent_name.value;
 	}
 
@@ -919,8 +922,10 @@ function clear_email_addresses() {
 	}
 }
 
-function quick_create_overlib(id, theme) {
-    return overlib('<a style=\'width: 150px\' class=\'menuItem\' onmouseover=\'hiliteItem(this,"yes");\' onmouseout=\'unhiliteItem(this);\' href=\'index.php?module=Cases&action=EditView&inbound_email_id=' + id + '\'>' +
+function quick_create_overlib(id, theme, el) {
+
+		var $dialog = $('<div></div>')
+		.html('<a style=\'width: 150px\' class=\'menuItem\' onmouseover=\'hiliteItem(this,"yes");\' onmouseout=\'unhiliteItem(this);\' href=\'index.php?module=Cases&action=EditView&inbound_email_id=' + id + '\'>' +
             "<img border='0' src='index.php?entryPoint=getImage&themeName="+SUGAR.themes.theme_name+"&imageName=Cases.gif' style='margin-right:5px'>" + SUGAR.language.get('Emails', 'LBL_LIST_CASE') + '</a>' +
             "<a style='width: 150px' class='menuItem' onmouseover='hiliteItem(this,\"yes\");' onmouseout='unhiliteItem(this);' href='index.php?module=Leads&action=EditView&inbound_email_id=" + id + "'>" +
                     "<img border='0' src='index.php?entryPoint=getImage&themeName="+SUGAR.themes.theme_name+"&imageName=Leads.gif' style='margin-right:5px'>"
@@ -934,9 +939,19 @@ function quick_create_overlib(id, theme) {
              "<a style='width: 150px' class='menuItem' onmouseover='hiliteItem(this,\"yes\");' onmouseout='unhiliteItem(this);' href='index.php?module=Tasks&action=EditView&inbound_email_id=" + id + "'>" +
                     "<img border='0' src='index.php?entryPoint=getImage&themeName="+SUGAR.themes.theme_name+"&imageName=Tasks.gif' style='margin-right:5px'>"
                    + SUGAR.language.get('Emails', 'LBL_LIST_TASK') + "</a>"
-            , CAPTION, SUGAR.language.get('Emails', 'LBL_QUICK_CREATE')
-            , STICKY, MOUSEOFF, 3000, CLOSETEXT, '<img border=0  style="margin-left:2px; margin-right: 2px;" src="index.php?entryPoint=getImage&themeName='+SUGAR.themes.theme_name+'&imageName=close.gif">', WIDTH, 150, CLOSETITLE, SUGAR.language.get('app_strings', 'LBL_ADDITIONAL_DETAILS_CLOSE_TITLE'), CLOSECLICK, FGCLASS, 'olOptionsFgClass',
-            CGCLASS, 'olOptionsCgClass', BGCLASS, 'olBgClass', TEXTFONTCLASS, 'olFontClass', CAPTIONFONTCLASS, 'olOptionsCapFontClass', CLOSEFONTCLASS, 'olOptionsCloseFontClass');
+                   )
+		.dialog({
+			autoOpen: false,
+			title:  SUGAR.language.get('Emails', 'LBL_QUICK_CREATE'),
+			width: 150,
+			position: {
+				    my: 'right top',
+				    at: 'left top',
+				    of: $(el)
+			  }
+		});
+		$dialog.dialog('open');
+
 }
 
 

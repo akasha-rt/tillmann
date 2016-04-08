@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -85,7 +85,7 @@ class ViewConfig extends SugarView
         global $current_user;
         global $sugar_config;
 
-        echo $this->getModuleTitle();
+        echo $this->getModuleTitle(false);
         global $currentModule;
 
         $focus = new Administration();
@@ -164,13 +164,13 @@ class ViewConfig extends SugarView
             $this->ss->assign($k."Checked", 'CHECKED');
         }
 
-        //clean_xss('here');
         ////	END EMAIL SECURITY
         ///////////////////////////////////////////////////////////////////////////////
 
         require_once('modules/Emails/Email.php');
         $email = new Email();
         $this->ss->assign('ROLLOVER', $email->rolloverStyle);
+        $this->ss->assign('THEME', $GLOBALS['theme']);
 
         $this->ss->assign("JAVASCRIPT",get_validate_record_js());
         $this->ss->display('modules/EmailMan/tpls/config.tpl');

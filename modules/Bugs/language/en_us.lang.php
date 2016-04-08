@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -45,7 +45,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 $mod_strings = array (
   'LBL_MODULE_NAME' => 'Bugs',
-  'LBL_MODULE_TITLE' => 'Bug Tracker: Home',
+  'LBL_MODULE_TITLE' => 'Bugs: Home',
   'LBL_MODULE_ID' => 'Bugs',
   'LBL_SEARCH_FORM_TITLE' => 'Bug Search',
   'LBL_LIST_FORM_TITLE' => 'Bug List',
@@ -98,7 +98,7 @@ $mod_strings = array (
   'LBL_LIST_PHONE' => 'Phone',
   'NTC_DELETE_CONFIRMATION' => 'Are you sure you want to remove this contact from this bug?',
 
-  'LBL_DEFAULT_SUBPANEL_TITLE' => 'Bug Tracker',
+  'LBL_DEFAULT_SUBPANEL_TITLE' => 'Bugs',
   'LBL_ACTIVITIES_SUBPANEL_TITLE'=>'Activities',
   'LBL_HISTORY_SUBPANEL_TITLE'=>'History',
   'LBL_CONTACTS_SUBPANEL_TITLE' => 'Contacts',

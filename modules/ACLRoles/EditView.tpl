@@ -2,7 +2,7 @@
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -61,8 +61,7 @@ function set_focus(){
 <input type='hidden' name='return_record' value='{$RETURN.record}'>
 <input type='hidden' name='return_action' value='{$RETURN.action}'>
 <input type='hidden' name='return_module' value='{$RETURN.module}'> &nbsp;
-<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" id='save_button' accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="button primary" onclick="this.form.action.value='Save';return check_form('EditView');" type="submit" name="button" value="{$APP.LBL_SAVE_BUTTON_LABEL}" >
-<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}"   class='cancel_button' accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" type='submit' name='save' value="{$APP.LBL_CANCEL_BUTTON_LABEL}" class='button' onclick='document.EditView.action.value="{$RETURN.action}";document.EditView.module.value="{$RETURN.module}";document.EditView.record.value="{$RETURN.record}";document.EditView.submit();'>
+{sugar_action_menu id="roleEditActions" class="clickMenu fancymenu" buttons=$ACTION_MENU flat=true}
 </td>
 </tr>
 </tbody>

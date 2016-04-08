@@ -3,37 +3,40 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -50,7 +53,7 @@ require_once('include/MVC/View/views/view.list.php');
 class ProjectTaskViewList extends ViewList{
  	function ProjectTaskViewList(){
  		parent::ViewList();
- 		
+
  	}
 
  	function display(){
@@ -85,22 +88,30 @@ class ProjectTaskViewList extends ViewList{
         require_once($metadataFile);
 
 		$seed = $this->bean;
-        if(!empty($this->bean->object_name) && isset($_REQUEST[$module.'2_'.strtoupper($this->bean->object_name).'_offset'])) {//if you click the pagination button, it will poplate the search criteria here
+        if(!empty($this->bean->object_name) && isset($_REQUEST[$module.'2_'.strtoupper($this->bean->object_name).'_offset'])) {//if you click the pagination button, it will populate the search criteria here
             if(!empty($_REQUEST['current_query_by_page'])) {//The code support multi browser tabs pagination
                 $blockVariables = array('mass', 'uid', 'massupdate', 'delete', 'merge', 'selectCount', 'request_data', 'current_query_by_page', $module.'2_'.strtoupper($this->bean->object_name).'_ORDER_BY');
 		        if(isset($_REQUEST['lvso'])){
 		        	$blockVariables[] = 'lvso';
 		        }
-		        
-                $current_query_by_page = unserialize(base64_decode($_REQUEST['current_query_by_page']));
+
+                $current_query_by_page = sugar_unserialize(base64_decode($_REQUEST['current_query_by_page']));
                 foreach($current_query_by_page as $search_key=>$search_value) {
                     if($search_key != $module.'2_'.strtoupper($this->bean->object_name).'_offset' && !in_array($search_key, $blockVariables)) {
-						$_REQUEST[$search_key] = $GLOBALS['db']->quote($search_value);
-					}
+                        if (!is_array($search_value)) {
+                            $_REQUEST[$search_key] = $GLOBALS['db']->quote($search_value);
+                        }
+                        else {
+                            foreach ($search_value as $key=>&$val) {
+                                $val = $GLOBALS['db']->quote($val);
+                            }
+                            $_REQUEST[$search_key] = $search_value;
+                        }
+                    }
                 }
             }
         }
-        
+
         if(!empty($_REQUEST['saved_search_select']) && $_REQUEST['saved_search_select']!='_none') {
             if(empty($_REQUEST['button']) && (empty($_REQUEST['clear_query']) || $_REQUEST['clear_query']!='true')) {
                 $this->saved_search = loadBean('SavedSearch');
@@ -113,14 +124,14 @@ class ProjectTaskViewList extends ViewList{
                 unset($_REQUEST['saved_search_select_name']);
             }
         }
-        
+
 		$lv = new ListViewSmarty();
 		$displayColumns = array();
 		if(!empty($_REQUEST['displayColumns'])) {
 		    foreach(explode('|', $_REQUEST['displayColumns']) as $num => $col) {
-		        if(!empty($listViewDefs[$module][$col])) 
+		        if(!empty($listViewDefs[$module][$col]))
 		            $displayColumns[$col] = $listViewDefs[$module][$col];
-		    }    
+		    }
 		}
 		else {
 		    foreach($listViewDefs[$module] as $col => $params) {
@@ -128,17 +139,9 @@ class ProjectTaskViewList extends ViewList{
 		            $displayColumns[$col] = $params;
 		    }
 		}
-		
-		global $current_user;
-		
-		if (!is_admin($current_user)){
-			$params = array( 'massupdate' => false );
-			$lv->export = false;
-		}
-		else{
-			$params = array( 'massupdate' => true, 'export' => true);
-		}
-		 
+
+        $params = array( 'massupdate' => true, 'export' => true);
+
 		if(!empty($_REQUEST['orderBy'])) {
 		    $params['orderBy'] = $_REQUEST['orderBy'];
 		    $params['overrideOrder'] = true;
@@ -148,16 +151,16 @@ class ProjectTaskViewList extends ViewList{
 
 		$this->seed = $seed;
 		$this->module = $module;
-		
+
 		$searchForm = null;
 	 	$storeQuery = new StoreQuery();
 		if(!isset($_REQUEST['query'])){
 			$storeQuery->loadQuery($this->module);
 			$storeQuery->populateRequest();
 		}else{
-			$storeQuery->saveFromRequest($this->module);	
+			$storeQuery->saveFromRequest($this->module);
 		}
-	
+
 		//search
 		$view = 'basic_search';
 		if(!empty($_REQUEST['search_form_view']))
@@ -172,7 +175,7 @@ class ProjectTaskViewList extends ViewList{
 				$view = 'basic_search';
 			}
 		}
-		
+
 		$use_old_search = true;
 		if(file_exists('modules/'.$this->module.'/SearchForm.html')){
 			require_once('include/SearchForm/SearchForm.php');
@@ -180,8 +183,8 @@ class ProjectTaskViewList extends ViewList{
 		}else{
 			$use_old_search = false;
 			require_once('include/SearchForm/SearchForm2.php');
-			
-					
+
+
 			if (file_exists('custom/modules/'.$this->module.'/metadata/searchdefs.php'))
 			{
 			    require_once('custom/modules/'.$this->module.'/metadata/searchdefs.php');
@@ -194,22 +197,22 @@ class ProjectTaskViewList extends ViewList{
 			{
 			    require_once('modules/'.$this->module.'/metadata/searchdefs.php');
 			}
-				
-				
+
+
 			if(!empty($metafiles[$this->module]['searchfields']))
-				require_once($metafiles[$this->module]['searchfields']);
+                require($metafiles[$this->module]['searchfields']);
 			elseif(file_exists('modules/'.$this->module.'/metadata/SearchFields.php'))
-				require_once('modules/'.$this->module.'/metadata/SearchFields.php');
-				
-		
+                require('modules/'.$this->module.'/metadata/SearchFields.php');
+
+
 			$searchForm = new SearchForm($this->seed, $this->module, $this->action);
-			$searchForm->setup($searchdefs, $searchFields, 'include/SearchForm/tpls/SearchFormGeneric.tpl', $view, $listViewDefs);
+			$searchForm->setup($searchdefs, $searchFields, 'SearchFormGeneric.tpl', $view, $listViewDefs);
 			$searchForm->lv = $lv;
 		}
-		
+
 		if(isset($this->options['show_title']) && $this->options['show_title']) {
 			$moduleName = isset($this->seed->module_dir) ? $this->seed->module_dir : $GLOBALS['mod_strings']['LBL_MODULE_NAME'];
-			echo getClassicModuleTitle($moduleName, array($GLOBALS['mod_strings']['LBL_MODULE_TITLE']), FALSE); 
+			echo getClassicModuleTitle($moduleName, array($GLOBALS['mod_strings']['LBL_MODULE_TITLE']), FALSE);
 		}
 
 		$where = '';
@@ -221,10 +224,10 @@ class ProjectTaskViewList extends ViewList{
 	    	}
 	    	else {
                 $searchForm->populateFromRequest();
-	    	}  	
+	    	}
 			$where_clauses = $searchForm->generateSearchWhere(true, $this->seed->module_dir);
 			if (count($where_clauses) > 0 )$where = '('. implode(' ) AND ( ', $where_clauses) . ')';
-			$GLOBALS['log']->info("List View Where Clause: $where");   
+			$GLOBALS['log']->info("List View Where Clause: $where");
 		}
 		if($use_old_search){
 			switch($view) {
@@ -245,15 +248,22 @@ class ProjectTaskViewList extends ViewList{
 		}
 		if(!$headers)
 			return;
-	    
+         /*
+         * Bug 50575 - related search columns not inluded in query in a proper way
+         */
+         $lv->searchColumns = $searchForm->searchColumns;
+
 		if(empty($_REQUEST['search_form_only']) || $_REQUEST['search_form_only'] == false){
-			if (!is_admin($current_user)){
-				$lv->setup($seed, 'include/ListView/ListViewNoMassUpdate.tpl', $where, $params);
-			}
-			else {
-				$lv->setup($seed, 'include/ListView/ListViewGeneric.tpl', $where, $params);
-			}
-			$savedSearchName = empty($_REQUEST['saved_search_select_name']) ? '' : (' - ' . $_REQUEST['saved_search_select_name']);
+            //Bug 58841 - mass update form was not displayed for non-admin users that should have access
+            if(ACLController::checkAccess($module, 'massupdate') || ACLController::checkAccess($module, 'export'))
+            {
+                $lv->setup($seed, 'include/ListView/ListViewGeneric.tpl', $where, $params);
+            }
+            else
+            {
+                $lv->setup($seed, 'include/ListView/ListViewNoMassUpdate.tpl', $where, $params);
+            }
+
 			echo $lv->display();
 		}
  	}

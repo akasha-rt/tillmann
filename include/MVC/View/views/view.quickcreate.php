@@ -3,7 +3,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -42,7 +42,7 @@ require_once('include/EditView/EditView2.php');
 
 class ViewQuickcreate extends ViewAjax
 {
-    	protected $_isDCForm = false;
+	protected $_isDCForm = false;
 	
 	/**
 	 * @var EditView object
@@ -105,7 +105,7 @@ class ViewQuickcreate extends ViewAjax
      * @see SugarView::display()
      */
     public function display()
-    {	    
+    {
     	$view = (!empty($_REQUEST['target_view']))?$_REQUEST['target_view']: 'QuickCreate';
 		$module = $_REQUEST['module'];
 		
@@ -127,7 +127,7 @@ class ViewQuickcreate extends ViewAjax
 			}
 		}
 
-		$this->ev = new EditView();
+        $this->ev = $this->getEditView();
 		$this->ev->view = $view;
 		$this->ev->ss = new Sugar_Smarty();
 		
@@ -183,4 +183,13 @@ class ViewQuickcreate extends ViewAjax
 		   echo $this->ev->display(false, true);
 		}
 	}
+
+    /**
+     * Get EditView object
+     * @return EditView
+     */
+    protected function getEditView()
+    {
+        return new EditView();
+    }
 }

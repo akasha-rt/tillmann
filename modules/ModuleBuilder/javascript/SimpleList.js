@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -93,7 +93,7 @@ if(typeof(SimpleList) == 'undefined'){
         var items = ul1.getElementsByTagName("li");
         for (i=0;i<items.length;i=i+1) {
             if((SimpleList.isBlank(items[i].id) && SimpleList.isBlank(escape(drop_name.value))) || items[i].id == escape(drop_name.value)){
-                alert("Key already exists in list");
+                alert(SUGAR.language.get('ModuleBuilder', 'LBL_DROPDOWN_KEY_EXISTS'));
                 return;
             }
             if((!SimpleList.isBlank(escape(drop_name.value)) && SimpleList.isBlank(escape(drop_value.value))) || (SimpleList.isBlank(escape(drop_name.value)) && !SimpleList.isBlank(escape(drop_value.value)))){
@@ -120,11 +120,11 @@ if(typeof(SimpleList) == 'undefined'){
         if(drop_value.value == ""){
             html += "[" + SUGAR.language.get('ModuleBuilder', 'LBL_BLANK') + "]";
         }else{
-            html += "["+escape(drop_value.value)+"]";
+            html += "["+YAHOO.lang.escapeHTML(drop_value.value)+"]";
         }
         html += "</span>";
         html += "<span class='fieldValue' id='span_edit_"+liObj.id+"' style='display:none'>";
-        html += "<input type='text' id='input_"+liObj.id+"' value=\""+escape(drop_value.value)+"\" onchange='SimpleList.setDropDownValue(\""+liObj.id+"\", unescape(this.value), true)' >";
+        html += "<input type='text' id='input_"+liObj.id+"' value=\""+YAHOO.lang.escapeHTML(drop_value.value)+"\" onchange='SimpleList.setDropDownValue(\""+liObj.id+"\", unescape(this.value), true)' >";
         html += "</span>";
         html += "</td><td align='right'><a href='javascript:void(0)' onclick='SimpleList.editDropDownValue(\""+liObj.id+"\", true)'>"+SimpleList.editImage+"</a>";
         html += "&nbsp;<a href='javascript:void(0)' onclick='SimpleList.deleteDropDownValue(\""+liObj.id+"\", true)'>"+SimpleList.deleteImage+"</a>";
@@ -205,7 +205,7 @@ if(typeof(SimpleList) == 'undefined'){
             var out = [];
             for (i=0;i<items.length;i=i+1) {
                 var name = items[i].id;
-                var value = document.getElementById('input_'+name).value;
+                var value = document.getElementById('value_'+name).value;
                 out[i] = [ name , unescape(value) ];
             }
             return YAHOO.lang.JSON.stringify(out);

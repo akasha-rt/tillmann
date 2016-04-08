@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -86,6 +89,7 @@ $mod_strings = array (
   'LBL_CAMPAIGN_OBJECTIVE' => 'Objective: ',
   'LBL_CAMPAIGN_CONTENT' => 'Description: ',
   'LBL_CAMPAIGN_DAYS_REMAIN' => 'Days Remaining',
+  'LBL_CAMPAIGN_INACTIVE_SCHEDULE' => "Campaign '{0}' has status 'Inactive'. You have to set campaign status to 'Active'.",
   'LNK_NEW_CAMPAIGN' => 'Create Campaign (Classic)',
   'LNL_NEW_CAMPAIGN_WIZARD' => 'Create Campaign (Wizard)',
   'LNK_CAMPAIGN_LIST' => 'View Campaigns',
@@ -122,6 +126,7 @@ $mod_strings = array (
   'LBL_TEST_BUTTON_KEY'=>'e',
   'LBL_TEST_BUTTON_LABEL'=>'Send Test',
   'LBL_COPY_AND_PASTE_CODE' => 'Or copy and paste the html below into an existing page',
+  'LBL_CHARSET_NOTICE' => 'NOTE: Please make sure that the page containing the web-to-lead form has the following lines in the &lt;head&gt; section:',
 
   'LBL_TODETAIL_BUTTON_TITLE'=>'View Details',
   'LBL_TODETAIL_BUTTON_KEY'=>'T',
@@ -187,7 +192,7 @@ $mod_strings = array (
   'LBL_DIAGNOSTIC_WIZARD'=>   'View Diagnostics',
   'LBL_ALREADY_SUBSCRIBED_HEADER'=>'Newsletters Subscribed To',
   'LBL_UNSUBSCRIBED_HEADER'=>'Available/Newsletters Unsubscribed To',
-  'LBL_UNSUBSCRIBED_HEADER_EXPL'=>'Moving the newsletter to the Available Newsletters/Newsletters Unsubscribed To list will add the contact to the Unsubscription List for this newsletter.  It will not remove the contact from the original Subscription List or Target List.', 
+  'LBL_UNSUBSCRIBED_HEADER_EXPL'=>'Moving the newsletter to the Available Newsletters/Newsletters Unsubscribed To list will add the contact to the Unsubscription List for this newsletter.  It will not remove the contact from the original Subscription List or Target List.',
   'LBL_FILTER_CHART_BY'=>'Filter Chart By:',
   'LBL_MANAGE_SUBSCRIPTIONS_TITLE'=>'Manage Subscriptions',
   'LBL_MARK_AS_SENT' =>'Mark As Sent',
@@ -303,14 +308,12 @@ $mod_strings = array (
   'LBL_MAILBOX'                               => 'Monitored Folder',
   'LBL_NAVIGATION_MENU_SETUP'                 => 'Setup Email',
   'LBL_NAVIGATION_MENU_NEW_MAILBOX'           => 'New Mail Account',
-  'LBL_NAVIGATION_MENU_SUMMARY'               => 'Summary',
   'LBL_MAILBOX_CHECK_WIZ_GOOD'                => 'Mail account(s) with bounce handling were detected.  You do not need to create a new one, but you can still do so below.',
   'LBL_MAILBOX_CHECK_WIZ_BAD'                 => 'No mail accounts with bounce handling were detected, please create a new one below.',
   'LBL_CAMP_MESSAGE_COPY'                     => 'Keep copies of campaign messages:',
   'LBL_CAMP_MESSAGE_COPY_DESC'                     => 'Would you like to store complete copies of <bold>EACH</bold> email message sent during all campaigns?  <bold>We recommend and default to no</bold>.  Choosing no will store only the template that is sent and the needed variables to recreate the individual message.',
   'LBL_YES'                                   => 'Yes',
   'LBL_NO'                                    => 'No',
-  'LBL_FROM_ADDR'                             => '"From" Address',
   'LBL_DEFAULT_FROM_ADDR'                     => 'Default: ',
   'LBL_EMAIL_SETUP_DESC'                      => 'Fill out the form below to modify your system settings so that campaign emails can be sent out.',
   'LBL_CREATE_MAILBOX'                        => 'Create New Mail Account',
@@ -323,7 +326,7 @@ $mod_strings = array (
   'LBL_MAILBOX_CHECK1_GOOD'   => ' Mail account(s)) with bounce handling detected:',
   'LBL_MAILBOX_CHECK1_BAD'    => 'No mail account(s) with bounce handling detected.',
   'LBL_MAILBOX_CHECK2_GOOD'   => ' E-mail Settings have been configured:',
-  'LBL_MAILBOX_CHECK2_BAD'    => 'Please configure your system email address.  E-mail Settings have not been configured.',
+  'LBL_MAILBOX_CHECK2_BAD'    => 'Please configure your system email address.  E-mail Settings have not been configured or are invalid.',
   'LBL_SCHEDULER_CHECK_GOOD' => 'Schedulers detected',
   'LBL_SCHEDULER_CHECK_BAD' =>   'No Schedulers detected',
   'LBL_SCHEDULER_CHECK1_BAD'  => 'Scheduler has not been set up to process Bounced Campaign Emails.',
@@ -364,6 +367,7 @@ $mod_strings = array (
     'LBL_LEAD_FOOTER' => 'Form Footer:',
     'LBL_CAMPAIGN_NOT_SELECTED' => 'Select and associate a campaign:',
     'NTC_NO_LEGENDS' => 'None',
+    'NTC_DELETE_CONFIRMATION' => 'Are you sure you want to delete this record?',
     'LBL_SELECT_LEAD_FIELDS' => 'Please select from available fields',
     'LBL_DESCRIPTION_LEAD_FORM' => 'Form Description:',
     'LBL_DESCRIPTION_TEXT_LEAD_FORM' => 'Submitting this form will create a lead and link with campaign',
@@ -394,6 +398,7 @@ $mod_strings = array (
     'LBL_TOP_CAMPAIGNS' => 'Top Campaigns',
     'LBL_TOP_CAMPAIGNS_NAME' => 'Campaign Name',
     'LBL_TOP_CAMPAIGNS_REVENUE' => 'Revenue',
+    'LBL_TOP_CAMPAIGNS_DESCRIPTION' => 'Top Performing Campaigns by Revenue',
     'LBL_LEADS' => 'Leads',
     'LBL_CONTACTS'	=>	'Contacts',
     'LBL_ACCOUNTS'	=>	'Accounts',
@@ -416,7 +421,7 @@ $mod_strings = array (
     'LBL_ACCOUNTS_SUBPANEL_TITLE' => 'Accounts',
     'LBL_LEADS_SUBPANEL_TITLE' => 'Leads',
     'LBL_OPPORTUNITIES_SUBPANEL_TITLE' => 'Opportunities',
-    
+
     'LBL_IMPORT_PROSPECTS'=>'Import Targets',
     'LBL_LEAD_FORM_WIZARD' => 'Lead Form Wizard',
     'LBL_CAMPAIGN_INFORMATION' => 'Overview',
@@ -432,6 +437,9 @@ $mod_strings = array (
 	'LBL_DELETE_INLINE' => 'Delete' /*for 508 compliance fix*/,
 	'LBL_DELETE' => 'Remove' /*for 508 compliance fix*/,
     'LBL_VIEW_INLINE' => 'View',
+    'ERR_NO_OPTS_SAVED'		=> 'No optimums were saved with your Inbound Email account.',
+    'ERR_REVIEW_EMAIL_SETTINGS' => 'Please review Inbound Email settings.',
+    'LBL_LEADS_DELETED_SINCE_CREATED' => '{0} leads that were created through this campaign have been deleted since creation.',
 );
 
 

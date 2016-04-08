@@ -2,7 +2,7 @@
  if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -45,6 +45,7 @@ require_once('include/nusoap/nusoap.php');
 require_once('modules/Contacts/Contact.php');
 require_once('modules/Accounts/Account.php');
 require_once('modules/Opportunities/Opportunity.php');
+require_once('service/core/SoapHelperWebService.php');
 require_once('modules/Cases/Case.php');
 //ignore notices
 error_reporting(E_ALL ^ E_NOTICE);

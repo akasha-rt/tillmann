@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 $viewdefs ['Meetings'] =
@@ -40,12 +43,16 @@ array (
   array (
     'templateMeta' =>
     array (
+        'includes' => array(
+            array('file' => 'modules/Reminders/Reminders.js'),
+        ),
       'maxColumns' => '2',
       'form' =>
       array (
         'hidden' =>
         array (
            '<input type="hidden" name="isSaveAndNew" value="false">',
+           '<input type="hidden" name="is_ajax_call" value="1">',
         ),
         'buttons' =>
         array (
@@ -63,8 +70,6 @@ array (
             'customCode' => '{if $fields.status.value != "Held"}<input title="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_TITLE}" accessKey="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_KEY}" class="button" onclick="SUGAR.meetings.fill_invitees(); this.form.status.value=\'Held\'; this.form.action.value=\'Save\'; this.form.return_module.value=\'Meetings\'; this.form.isDuplicate.value=true; this.form.isSaveAndNew.value=true; this.form.return_action.value=\'EditView\'; this.form.return_id.value=\'{$fields.id.value}\'; return check_form(\'EditView\');" type="submit" name="button" value="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_LABEL}">{/if}',
           ),
         ),
-        'headerTpl' => 'modules/Meetings/tpls/header.tpl',
-        'footerTpl' => 'modules/Meetings/tpls/footer.tpl',
       ),
       'widths' =>
       array (
@@ -127,30 +132,55 @@ array (
             'label' => 'LBL_LIST_RELATED_TO',
           ),
         ),
-
+        
         array (
-
           array (
-            'name' => 'duration_hours',
-            'label' => 'LBL_DURATION',
-            'customCode' => '{literal}<script type="text/javascript">function isValidDuration(formName) { var form = document.getElementById(formName); if ( form.duration_hours.value + form.duration_minutes.value <= 0 ) { return false; } return true; }</script>{/literal}<div class="duration"><input name="duration_hours" id="duration_hours" size="2" maxlength="2" type="text" value="{$fields.duration_hours.value}" onkeyup="SugarWidgetScheduler.update_time();"/>{$fields.duration_minutes.value} {$MOD.LBL_HOURS_MINS}</div>',
+            'name' => 'date_end',
+            'type' => 'datetimecombo',
+            'displayParams' =>
+            array (
+              'required' => true,
+              'updateCallback' => 'SugarWidgetScheduler.update_time();',
+            ),
           ),
-        ),
-
-        array (
-
-          array (
-            'name' => 'reminder_time',
-            'customCode' => '{if $fields.reminder_checked.value == "1"}{assign var="REMINDER_TIME_DISPLAY" value="inline"}{assign var="REMINDER_CHECKED" value="checked"}{else}{assign var="REMINDER_TIME_DISPLAY" value="none"}{assign var="REMINDER_CHECKED" value=""}{/if}<input name="reminder_checked" type="hidden" value="0"><input name="reminder_checked" onclick=\'toggleDisplay("should_remind_list");\' type="checkbox" id="reminder_checkbox" class="checkbox" value="1" {$REMINDER_CHECKED}><div id="should_remind_list" style="display:{$REMINDER_TIME_DISPLAY}">{$fields.reminder_time.value}</div>',
-            'label' => 'LBL_REMINDER',
-          ),
-
           array (
             'name' => 'location',
             'comment' => 'Meeting location',
             'label' => 'LBL_LOCATION',
           ),
         ),
+        
+        array(        
+          array (
+            'name' => 'duration',
+            'customCode' => '
+                @@FIELD@@
+                <input id="duration_hours" name="duration_hours" type="hidden" value="{$fields.duration_hours.value}">
+                <input id="duration_minutes" name="duration_minutes" type="hidden" value="{$fields.duration_minutes.value}">
+                {sugar_getscript file="modules/Meetings/duration_dependency.js"}
+                <script type="text/javascript">
+                    var date_time_format = "{$CALENDAR_FORMAT}";
+                    {literal}
+                    SUGAR.util.doWhen(function(){return typeof DurationDependency != "undefined" && typeof document.getElementById("duration") != "undefined"}, function(){
+                        var duration_dependency = new DurationDependency("date_start","date_end","duration",date_time_format);
+                        initEditView(YAHOO.util.Selector.query(\'select#duration\')[0].form);
+                    });
+                    {/literal}
+                </script>            
+            ',
+          ),          
+//          array (
+//            'name' => 'reminder_time',
+//            'customCode' => '{include file="modules/Meetings/tpls/reminders.tpl"}',
+//            'label' => 'LBL_REMINDER',
+//          ),
+              array (
+                  'name' => 'reminders',
+                  'customCode' => '{include file="modules/Reminders/tpls/reminders.tpl"}',
+                  'label' => 'LBL_REMINDERS',
+              ),
+       ),
+
          array (
          	 array (
             'name' => 'assigned_user_name',

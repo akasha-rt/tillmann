@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -742,10 +742,8 @@ function addFilterInputDate(row,filter) {
 	new_input.type="text";
 
 	if ( typeof (filter.input_name0) != 'undefined' && filter.input_name0.length > 0) {
-		filter.input_name0 = to_display_date(filter.input_name0);
+        new_input.value = to_display_date(filter.input_name0);
  	}
-
-	new_input.value=filter.input_name0;
 	new_input.name="text_input";
 	new_input.size="30";
 	new_input.maxsize="255";
@@ -941,8 +939,7 @@ function addFilterInputDateBetween(row,filter) {
 		filter.input_name0 = '';
 	}
 
-	filter.input_name0 = to_display_date(filter.input_name0);
-	new_input.value=filter.input_name0;
+    new_input.value = to_display_date(filter.input_name0);
 	new_input.name="text_input";
 	new_input.size="12";
 	new_input.maxsize="255";
@@ -982,8 +979,7 @@ function addFilterInputDateBetween(row,filter) {
 	if (typeof(filter.input_name1) == 'undefined') {
 		filter.input_name1 = '';
 	}
-	filter.input_name1 = to_display_date(filter.input_name1);
-	new_input.value=filter.input_name1;
+    new_input.value = to_display_date(filter.input_name1);
 	new_input.name="text_input";
 	new_input.size="12";
 	new_input.maxsize="255";
@@ -1076,8 +1072,8 @@ function addFilterInputRelate(row,field,filter) {
 
 	var cell = document.createElement('td');
 	var new_input = document.createElement("input");
-	new_input.title= lbl_select+"[Alt+G]";
-	new_input.accessKey="G";
+	new_input.title= lbl_select;
+//	new_input.accessKey="G";
 	new_input.type="button";
 	new_input.value=lbl_select;
 	new_input.name=field.module;
@@ -1604,18 +1600,16 @@ function fill_form(type) {
 			}
 		}else if ( field.type == 'datetimecombo') {
 			if ( (typeof(filter_def.input_name0) != 'undefined' && typeof(filter_def.input_name0) != 'array') && (typeof(filter_def.input_name1) != 'undefined' && typeof(filter_def.input_name1) != 'array')) {
-				var date_match = filter_def.input_name0.match(date_reg_format);
-				var time_match = filter_def.input_name1.match(time_reg_format);
-				if ( date_match != null && time_match != null) {
-					filter_def.input_name0 = date_match[date_reg_positions['Y']] + "-"+date_match[date_reg_positions['m']] + "-"+date_match[date_reg_positions['d']] + ' '+ filter_def.input_name1;
-				}
+                var dbValue = convertReportDateTimeToDB(filter_def.input_name0, filter_def.input_name1);
+                if (dbValue != '') {
+                    filter_def.input_name0 = dbValue;
+                }
 			}
 			if ( typeof(filter_def.input_name2) != 'undefined' && typeof(filter_def.input_name2) != 'array' && typeof(filter_def.input_name3) != 'undefined' && typeof(filter_def.input_name3) != 'array') {
-				var date_match = filter_def.input_name2.match(date_reg_format);
-				var time_match = filter_def.input_name3.match(time_reg_format);
-				if ( date_match != null && time_match != null) {
-					filter_def.input_name2 = date_match[date_reg_positions['Y']] + "-"+date_match[date_reg_positions['m']] + "-"+date_match[date_reg_positions['d']] + ' '+ filter_def.input_name3;
-				}
+                var dbValue = convertReportDateTimeToDB(filter_def.input_name2, filter_def.input_name3);
+                if (dbValue != '') {
+                    filter_def.input_name2 = dbValue;
+                }
 			}
 		}
 		filters_def.push(filter_def);
@@ -2789,7 +2783,7 @@ function buildOuterJoinHTML(info) {
 		}
 	}
 	text = " <input class='checkbox' type='checkbox' name='outer_" + info['select']['name'] + "' id='outer_" + info['select']['name'] + "' value=1 " + checked + " onChange='updateOuterJoin(this);'> " + lbl_outer_join_checkbox;
-	text += '<img border="0" onmouseout="return nd();" onmouseover="return overlib(\'' + lbl_optional_help + '\', FGCLASS, \'olFgClass\', CGCLASS, \'olCgClass\', BGCLASS, \'olBgClass\', TEXTFONTCLASS, \'olFontClass\', CAPTIONFONTCLASS, \'olCapFontClass\', CLOSEFONTCLASS, \'olCloseFontClass\' );" src="' + image_path +'help.gif"/>';
+	text += '<img border="0" class="inlineHelpTip" src="' + image_path +'help.gif" onclick="SUGAR.util.showHelpTips(this,\''+ lbl_optional_help +'\')"/>';
 
 	return text;
 }

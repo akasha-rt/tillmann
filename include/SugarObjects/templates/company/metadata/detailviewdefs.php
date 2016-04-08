@@ -7,7 +7,7 @@
  */
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -58,9 +58,10 @@ $viewdefs[$module_name]['DetailView'] = array(
         array('ownership', 'rating'),
         array('industry'),
         array($_object_name . '_type', 'annual_revenue'),
-		array('team_name', 
-		      array('name'=>'date_modified', 'label'=>'LBL_DATE_MODIFIED', 'customCode'=>'{$fields.date_modified.value} {$APP.LBL_BY} {$fields.modified_by_name.value}')),
-		array(array('name'=>'assigned_user_name', 'label'=>'LBL_ASSIGNED_TO'),
+		array(
+            array('name'=>'date_modified', 'label'=>'LBL_DATE_MODIFIED', 'customCode'=>'{$fields.date_modified.value} {$APP.LBL_BY} {$fields.modified_by_name.value}'),
+        ),
+		array(array('name'=>'assigned_user_name', 'label'=>'LBL_ASSIGNED_TO_NAME'),
               array('name'=>'date_entered', 'customCode'=>'{$fields.date_entered.value} {$APP.LBL_BY} {$fields.created_by_name.value}')),
 		array (
 		      array (

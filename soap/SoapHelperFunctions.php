@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -90,7 +90,7 @@ function get_field_list($value, $translate=true){
 		} //foreach
 	} //if
 
-	if($value->module_dir == 'Bugs'){
+    if (isset($value->module_dir) && $value->module_dir == 'Bugs') {
 
 		$seedRelease = new Release();
 		$options = $seedRelease->get_releases(TRUE, "Active");
@@ -111,7 +111,7 @@ function get_field_list($value, $translate=true){
 			$list['release_name']['options'] = $options_ret;
 		}
 	}
-    if($value->module_dir == 'Emails'){
+    if (isset($value->module_dir) && $value->module_dir == 'Emails') {
         $fields = array('from_addr_name', 'reply_to_addr', 'to_addrs_names', 'cc_addrs_names', 'bcc_addrs_names');
         foreach($fields as $field){
             $var = $value->field_defs[$field];
@@ -376,6 +376,10 @@ function get_name_value_list($value, $returnDomValue = false){
 				}elseif(strcmp($type, 'enum') == 0 && !empty($var['options']) && $returnDomValue){
 					$val = $app_list_strings[$var['options']][$val];
 				}
+				elseif(strcmp($type, 'currency') == 0){
+					$params = array( 'currency_symbol' => false );
+					$val = currency_format_number($val, $params);
+				}
 
 				$list[$var['name']] = get_name_value($var['name'], $val);
 			}
@@ -501,6 +505,7 @@ function get_return_value_for_fields($value, $module, $fields) {
 	if($module == 'Users' && $value->id != $current_user->id){
 		$value->user_hash = '';
 	}
+	$value = clean_sensitive_data($value->field_defs, $value);
 	return Array('id'=>$value->id,
 				'module_name'=> $module,
 				'name_value_list'=>get_name_value_list_for_fields($value, $fields)
@@ -555,6 +560,7 @@ function get_return_value_for_link_fields($bean, $module, $link_name_to_value_fi
 	if($module == 'Users' && $bean->id != $current_user->id){
 		$bean->user_hash = '';
 	}
+	$bean = clean_sensitive_data($value->field_defs, $bean);
 
 	if (empty($link_name_to_value_fields_array) || !is_array($link_name_to_value_fields_array)) {
 		return array();
@@ -721,6 +727,9 @@ function new_handle_set_entries($module_name, $name_value_lists, $select_fields 
 					}//fi
 				}//fi
 				$seed->save();
+                if($seed->deleted == 1){
+                    $seed->mark_deleted($seed->id);
+                }
 				$ids[] = $seed->id;
 			}//fi
 		}
@@ -763,6 +772,7 @@ function get_return_value($value, $module, $returnDomValue = false){
 	if($module == 'Users' && $value->id != $current_user->id){
 		$value->user_hash = '';
 	}
+	$value = clean_sensitive_data($value->field_defs, $value);
 	return Array('id'=>$value->id,
 				'module_name'=> $module,
 				'name_value_list'=>get_name_value_list($value, $returnDomValue)
@@ -772,88 +782,10 @@ function get_return_value($value, $module, $returnDomValue = false){
 
 function get_encoded_Value($value) {
 
-    $value = htmlspecialchars($value);
-
-    // bug 47683, special characters cause OPI parser to fail
-    // htmlspecialchars or htmlentities does not convert control characters
-    // so we have to convert them by ourselves.
-    // Per http://en.wikipedia.org/wiki/XML#Valid_characters
-    // 00 is not allowed in XML
-    // 09, 0A, 0D and 85 does not require escaping
-    // CDATA is also needed
-    $conv_table = array();
-    $conv_table["\x00"] = ""; // not allowed in XML so remove it
-    $conv_table["\x01"] = "&#x01;";
-    $conv_table["\x02"] = "&#x02;";
-    $conv_table["\x03"] = "&#x03;";
-    $conv_table["\x04"] = "&#x04;";
-    $conv_table["\x05"] = "&#x05;";
-    $conv_table["\x06"] = "&#x06;";
-    $conv_table["\x07"] = "&#x07;";
-    $conv_table["\x08"] = "&#x08;";
-    //$conv_table["\x09"] = "&#x09;";
-    //$conv_table["\x0A"] = "&#x0A;";
-    $conv_table["\x0B"] = "&#x0B;";
-    $conv_table["\x0C"] = "&#x0C;";
-    //$conv_table["\x0D"] = "&#x0D;";
-    $conv_table["\x0E"] = "&#x0E;";
-    $conv_table["\x0F"] = "&#x0F;";
-    $conv_table["\x10"] = "&#x10";
-    $conv_table["\x11"] = "&#x11;";
-    $conv_table["\x12"] = "&#x12;";
-    $conv_table["\x13"] = "&#x13;";
-    $conv_table["\x14"] = "&#x14;";
-    $conv_table["\x15"] = "&#x15;";
-    $conv_table["\x16"] = "&#x16;";
-    $conv_table["\x17"] = "&#x17;";
-    $conv_table["\x18"] = "&#x18;";
-    $conv_table["\x19"] = "&#x19;";
-    $conv_table["\x1A"] = "&#x1A;";
-    $conv_table["\x1B"] = "&#x1B;";
-    $conv_table["\x1C"] = "&#x1C;";
-    $conv_table["\x1D"] = "&#x1D;";
-    $conv_table["\x1E"] = "&#x1E;";
-    $conv_table["\x1F"] = "&#x1F;";
-    $conv_table["\x80"] = "&#x80;";
-    $conv_table["\x81"] = "&#x81;";
-    $conv_table["\x82"] = "&#x82;";
-    $conv_table["\x83"] = "&#x83;";
-    $conv_table["\x84"] = "&#x84;";
-    $conv_table["\x85"] = "&#x85;";
-    $conv_table["\x86"] = "&#x86;";
-    $conv_table["\x87"] = "&#x87;";
-    $conv_table["\x88"] = "&#x88;";
-    $conv_table["\x89"] = "&#x89;";
-    $conv_table["\x8A"] = "&#x8A;";
-    $conv_table["\x8B"] = "&#x8B;";
-    $conv_table["\x8C"] = "&#x8C;";
-    $conv_table["\x8D"] = "&#x8D;";
-    $conv_table["\x8E"] = "&#x8E;";
-    $conv_table["\x8F"] = "&#x8F;";
-    $conv_table["\x90"] = "&#x90;";
-    $conv_table["\x91"] = "&#x91;";
-    $conv_table["\x92"] = "&#x92;";
-    $conv_table["\x93"] = "&#x93;";
-    $conv_table["\x94"] = "&#x94;";
-    $conv_table["\x95"] = "&#x95;";
-    $conv_table["\x96"] = "&#x96;";
-    $conv_table["\x97"] = "&#x97;";
-    $conv_table["\x98"] = "&#x98;";
-    $conv_table["\x99"] = "&#x99;";
-    $conv_table["\x9A"] = "&#x9A;";
-    $conv_table["\x9B"] = "&#x9B;";
-    $conv_table["\x9C"] = "&#x9C;";
-    $conv_table["\x9D"] = "&#x9D;";
-    $conv_table["\x9E"] = "&#x9E;";
-    $conv_table["\x9F"] = "&#x9F;";
-
-    // convert
-    $value = strtr($value, $conv_table);
-
-    // wrap it with CDATA
-    $value = '<value><![CDATA['.$value.']]></value>';
-
-    return $value;
+    // XML 1.0 doesn't allow those...
+    $value = preg_replace("/([\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F])/", '', $value);
+    $value = htmlspecialchars($value, ENT_NOQUOTES, "utf-8");
+    return "<value>$value</value>";
 }
 
 function get_name_value_xml($val, $module_name){
@@ -864,7 +796,7 @@ function get_name_value_xml($val, $module_name){
 			foreach($val['name_value_list'] as $name=>$nv){
 				$xml .= '<name_value>';
 				$xml .= '<name>'.htmlspecialchars($nv['name']).'</name>';
-                                $xml .= get_encoded_Value($nv['value']);
+                $xml .= get_encoded_Value($nv['value']);
 				$xml .= '</name_value>';
 			}
 			$xml .= '</name_value_list>';
@@ -973,34 +905,35 @@ function add_create_account($seed)
 			return;
 		}
 
-	    $arr = array();
+        // attempt to find by id first
+        $ret = $focus->retrieve($account_id, true, false);
 
+        // if it doesn't exist by id, attempt to find by name (non-deleted)
+        if (empty($ret))
+        {
+            $query = "select {$focus->table_name}.id, {$focus->table_name}.deleted from {$focus->table_name} ";
+            $query .= " WHERE name='".$seed->db->quote($account_name)."'";
+            $query .=" ORDER BY deleted ASC";
+            $result = $seed->db->query($query, true);
 
+            $row = $seed->db->fetchByAssoc($result, false);
 
-	    $query = "select id, deleted from {$focus->table_name} WHERE name='".$seed->db->quote($account_name)."'";
-	    $query .=" ORDER BY deleted ASC";
-	    $result = $seed->db->query($query, true);
-
-	    $row = $seed->db->fetchByAssoc($result, false);
-
-		// we found a row with that id
-	    if (isset($row['id']) && $row['id'] != -1)
-	    {
-	    	// if it exists but was deleted, just remove it entirely
-	        if ( isset($row['deleted']) && $row['deleted'] == 1)
-	        {
-	            $query2 = "delete from {$focus->table_name} WHERE id='". $seed->db->quote($row['id'])."'";
-	            $result2 = $seed->db->query($query2, true);
-			}
-			// else just use this id to link the contact to the account
-	        else
-	        {
-	        	$focus->id = $row['id'];
-	        }
-	    }
+            if (!empty($row['id']))
+            {
+                $focus->retrieve($row['id']);
+            }
+        }
+        // if it exists by id but was deleted, just remove it entirely
+        else if ($focus->deleted)
+        {
+            $query2 = "delete from {$focus->table_name} WHERE id='". $seed->db->quote($focus->id) ."'";
+            $seed->db->query($query2, true);
+            // it was deleted, create new
+            $focus = BeanFactory::newBean('Accounts');
+        }
 
 		// if we didnt find the account, so create it
-	    if (! isset($focus->id) || $focus->id == '')
+	    if (empty($focus->id))
 	    {
 	    	$focus->name = $account_name;
 

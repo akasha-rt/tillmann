@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -37,10 +37,10 @@ function gridInit() {
 	if(SUGAR.email2.grid) {
 		SUGAR.email2.grid.destroy();
 	}
-	
+
 	e2Grid = {
 		init : function() {
-		
+
 			var Ck = YAHOO.util.Cookie;
 			var widths = [ 10, 10, 150, 250, 175, 125 ];
 
@@ -53,7 +53,7 @@ function gridInit() {
 					Ck.setSub("EmailGridWidths", i + "", widths[i], {expires: SUGAR.email2.nextYear});
 				}
 			}
-			
+
 			// changes "F" to an icon
 			function flaggedIcon(cell, record, column, value) {
 				if(value != "") {
@@ -72,98 +72,79 @@ function gridInit() {
 				}
 			}
 
-			var colModel = 
+			var colModel =
 				[
 					{
 						label: "<h2><img src='index.php?entryPoint=getImage&themeName="+SUGAR.themes.theme_name+"&imageName=attachment.gif' class='image' border='0' width='10' align='absmiddle'></h2>",
-						width: 10, 
-						sortable: false, 
+						width: 10,
+						sortable: false,
 						fixed: true,
 						resizeable: true,
 						formatter: attachIcon,
 						key: 'hasAttach'
-					}, 
+					},
 				    {
-						label: "<span style='color: #f00; font-weight:bold;'>!</span>", 
-						width: widths[0], 
-						sortable: true, 
+						label: "<span style='color: #f00; font-weight:bold;'>!</span>",
+						width: widths[0],
+						sortable: true,
 						fixed: true,
 						resizeable: true,
 						formatter: flaggedIcon,
 						key: 'flagged'
-					}, 
+					},
 					{
-						label: "<img src='index.php?entryPoint=getImage&themeName="+SUGAR.themes.theme_name+"&imageName=export.gif' class='image' border='0' width='10' align='absmiddle'>", 
-						width: widths[1], 
-						sortable: true, 
+						label: "<img src='index.php?entryPoint=getImage&themeName="+SUGAR.themes.theme_name+"&imageName=export.gif' class='image' border='0' width='10' align='absmiddle'>",
+						width: widths[1],
+						sortable: true,
 						fixed: true,
 						resizeable: true,
 						formatter: repliedIcon,
 						key: 'status'
 					},
 					{
-						label: app_strings.LBL_EMAIL_FROM, 
+						label: app_strings.LBL_EMAIL_FROM,
 						width: widths[2],
 						sortable: true,
 						resizeable: true,
 						key: 'from'
-					}, 
+					},
 					{
 						label: app_strings.LBL_EMAIL_SUBJECT,
-						width: widths[3], 
+						width: widths[3],
 						sortable: true,
 						resizeable: true,
 						key: 'subject'
-					}, 
-                                        {
-						label: "Case", 
-						width: widths[5], 												
-						resizeable: true,						
-			key: 'caseflag'
 					},
 					{
 						label: mod_strings.LBL_LIST_DATE,
-						width: widths[4], 
+						width: widths[4],
 						sortable: true,
 						resizeable: true,
                         key: 'date'
-					}, 
+					},
 					{
 						label: app_strings.LBL_EMAIL_TO,
-						width: widths[5], 
+						width: widths[5],
 						sortable: false,
 						resizeable: true,
                         key: 'to_addrs'
-					}, 
-					{
-						label: mod_strings.LBL_LIST_STATUS,
-						width: widths[4], 
-						sortable: true,
-						resizeable: true,
-                        key: 'emailstatus'
-					},                                         
-                                        {
-						label: "Contact", 
-						width: widths[5], 												
-						resizeable: true,						
-			key: 'contactflag'
 					},
 					{
 						label: 'uid',
 						hidden: true,
                         key: 'uid'
-					}, 
+					},
 					{
 						label: 'mbox',
 						hidden: true,
                         key: 'mbox'
-					}, 
+					},
 					{
 						label: 'ieId',
 						hidden: true,
                         key: 'ieId'
-					}, 
-					{	
+					},
+					{
 						label: 'site_url',
 						hidden: true,
                         key: 'site_url'
@@ -177,12 +158,12 @@ function gridInit() {
                         key: 'type'
 					}
 				];
-			
+
 			var dataModel = new YAHOO.util.DataSource(urlBase + "?", {
 				responseType: YAHOO.util.DataSource.TYPE_JSON,
 				responseSchema: {
 				    resultsList: 'Email',
-		            fields: ['flagged', 'status', 'from', 'subject', 'caseflag','date','to_addrs','emailstatus','contactflag', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
+		            fields: ['flagged', 'status', 'from', 'subject', 'date','to_addrs', 'uid', 'mbox', 'ieId', 'site_url', 'seen', 'type', 'AssignedTo','hasAttach'],
 		            metaFields: {total: 'TotalCount', unread:"UnreadCount", fromCache: "FromCache"}
 				}
 		    });
@@ -203,16 +184,17 @@ function gridInit() {
 				if(test.match(/SUGAR\./)) {
 					params['emailUIAction'] = 'getMessageListSugarFolders';
 					params['mbox'] = test.substr(6);
+                    params['getUnread'] = 1;
 				}
 			}
 			//dataModel.initPaging(urlBase, SUGAR.email2.userPrefs.emailSettings.showNumInList);
-	
+
 			// create the Grid
 			var grid = SUGAR.email2.grid = new YAHOO.SUGAR.SelectionGrid('emailGrid', colModel, dataModel, {
 				MSG_EMPTY: SUGAR.language.get("Emails", "LBL_EMPTY_FOLDER"),
 				dynamicData: true,
-				paginator: new YAHOO.widget.Paginator({ 
-					rowsPerPage:parseInt(SUGAR.email2.userPrefs.emailSettings.showNumInList),  
+				paginator: new YAHOO.widget.Paginator({
+					rowsPerPage:parseInt(SUGAR.email2.userPrefs.emailSettings.showNumInList),
 					containers : ["dt-pag-nav"],
 					template: "<div class='pagination'>{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}</div>",
 					firstPageLinkLabel: 	"<button class='button'><div class='paginator-start'/></button>",
@@ -220,7 +202,7 @@ function gridInit() {
 					nextPageLinkLabel: 		"<button class='button'><div class='paginator-next'/></button>",
 					lastPageLinkLabel: 		"<button class='button'><div class='paginator-end'/></button>"
 				}),
-				initialRequest:SUGAR.util.paramsToUrl(params),
+                initialRequest:SUGAR.util.paramsToUrl(params),
 				width:  "800px",
 				height: "400px"
 			});
@@ -234,23 +216,26 @@ function gridInit() {
 	            var dir = (oState.sortedBy && oState.sortedBy.dir === YAHOO.widget.DataTable.CLASS_ASC) ? "asc" : "desc";
 	            var startIndex = (oState.pagination) ? oState.pagination.recordOffset : 0;
 	            var results = (oState.pagination) ? oState.pagination.rowsPerPage : null;
-	            // Build the request 
-	            var ret = 
-		            SUGAR.util.paramsToUrl(oSelf.params) + 
+	            // Build the request
+	            var ret =
+		            SUGAR.util.paramsToUrl(oSelf.params) +
 		            "&sort=" + sort +
 	                "&dir=" + dir +
 	                "&start=" + startIndex +
 	                ((results !== null) ? "&limit=" + results : "");
 	            return  ret;
 	        });
-			
-			
-			grid.handleDataReturnPayload = function(oRequest, oResponse, oPayload) { 
+
+
+			grid.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
 				oPayload = oPayload || { };
-				
+
 				oPayload.totalRecords = oResponse.meta.total;
-				oPayload.unreadRecords = oResponse.meta.unread;
-				
+
+                if (oResponse.meta.unread != -1) {
+                    oPayload.unreadRecords = oResponse.meta.unread;
+                }
+
 		        var tabObject = SE.innerLayout.get("tabs")[0];
 		        var mboxTitle = "";
 		        if (this.params.mbox != null) {
@@ -258,17 +243,19 @@ function gridInit() {
 		        }
 		        var tabtext = mboxTitle + " (" + oResponse.meta.total + " " + app_strings.LBL_EMAIL_MESSAGES + " )";
 		        tabObject.get("labelEl").firstChild.data = tabtext;
-		        
+
 		        if (SE.tree) {
 			        var node = SE.tree.getNodeByProperty('id', this.params.ieId) || SE.tree.getNodeByProperty('origText', this.params.mbox);
 			        if (node) {
-				        node.data.unseen = oResponse.meta.unread;
+                        if (oResponse.meta.unread != -1) {
+                            node.data.unseen = oResponse.meta.unread;
+                        }
 				        SE.accounts.renderTree();
 			        }
 		        }
-				return oPayload; 
+				return oPayload;
 			}
-			
+
 			var resize = grid.resizeGrid = function () {
 				SUGAR.email2.grid.set("width",  SUGAR.email2.grid.get("element").parentNode.clientWidth + "px");
 				SUGAR.email2.grid.set("height", (SUGAR.email2.grid.get("element").parentNode.clientHeight - 47) + "px");
@@ -280,8 +267,8 @@ function gridInit() {
 					rowEl = this.getNextTrEl(rowEl);
 				}
 			}
-			
-			
+
+
 			grid.on("columnResizeEvent", function(o) {
 				//Find the index of the column
 				var colSet = SUGAR.email2.grid.getColumnSet().flat;
@@ -292,18 +279,18 @@ function gridInit() {
 					}
 				}
 				//this.resizeGrid();
-			}, null, grid); 
-			
+			}, null, grid);
+
 			grid.on("postRenderEvent", function() {this.convertDDRows()}, null, grid);
-			grid.on("rowClickEvent", SUGAR.email2.listView.handleClick);  
-			grid.on("rowDblclickEvent", SUGAR.email2.listView.getEmail);  
+			grid.on("rowClickEvent", SUGAR.email2.listView.handleClick);
+			grid.on("rowDblclickEvent", SUGAR.email2.listView.getEmail);
 			grid.render();
 			SUGAR.email2.listViewLayout.on("render", resize);
 			resize();
-			
+
 			//Setup the default load parameters
 			SUGAR.email2.grid.params = params;
-			
+
 			grid.on('postRenderEvent', SUGAR.email2.listView.setEmailListStyles);
 			dataModel.subscribe("requestEvent", grid.disable, grid, true);
 			dataModel.subscribe("responseParseEvent", grid.undisable, grid, true);
@@ -326,23 +313,23 @@ function initRowDD() {
 	        this.init(elTr);
 	        this.initFrame(); // Needed for DDProxy
 	        this.invalidHandleTypes = {};
-	    }	
+	    }
 	};
-	
+
 	YAHOO.extend(sg.DDRow, YAHOO.util.DDProxy, {
 	    _resizeProxy: function() {
 	        this.constructor.superclass._resizeProxy.apply(this, arguments);
 	        var dragEl = this.getDragEl(),
 	            el = this.getEl();
 	        var xy = Dom.getXY(el);
-	        
+
 	        Dom.setStyle(dragEl, 'height', this.rowEl.offsetHeight + "px");
 	        Dom.setStyle(dragEl, 'width', (parseInt(Dom.getStyle(dragEl, 'width'),10) + 4) + 'px');
 	        Dom.setXY(dragEl, [xy[0] - 100, xy[1] - 20] );
 	        Dom.setStyle(dragEl, 'display', "");
 	    },
-	    
-	    startDrag: function(x, y) { 
+
+	    startDrag: function(x, y) {
 	    	//Check if we should be dragging a set of rows rather than just the one.
 	    	var selectedRows = this.ddtable.getSelectedRows();
 	    	var iSelected = false;
@@ -362,28 +349,28 @@ function initRowDD() {
 	    		this.ddtable.unselectAllRows();
 	    		this.ddtable.selectRow(this.row);
 	    	}
-	    	
+
 	    	//Initialize the dragable proxy
-	    	var dragEl = this.getDragEl(); 
-	        var clickEl = this.getEl(); 
-	        Dom.setStyle(clickEl, "opacity", "0.25"); 
-	        dragEl.innerHTML = "<table><tr>" + clickEl.innerHTML + "</tr></table>"; 
+	    	var dragEl = this.getDragEl();
+	        var clickEl = this.getEl();
+	        Dom.setStyle(clickEl, "opacity", "0.25");
+	        dragEl.innerHTML = "<table><tr>" + clickEl.innerHTML + "</tr></table>";
 	    	Dom.addClass(dragEl, "yui-dt-liner");
-	    	Dom.setStyle(dragEl, "opacity", "0.5"); 
+	    	Dom.setStyle(dragEl, "opacity", "0.5");
 	        Dom.setStyle(dragEl, "height", (clickEl.clientHeight - 2) + "px");
-	        Dom.setStyle(dragEl, "backgroundColor", Dom.getStyle(clickEl, "backgroundColor")); 
-	  	    Dom.setStyle(dragEl, "border", "2px solid gray"); 
+	        Dom.setStyle(dragEl, "backgroundColor", Dom.getStyle(clickEl, "backgroundColor"));
+	  	    Dom.setStyle(dragEl, "border", "2px solid gray");
 	    },
-	    
+
 	    clickValidator: function(e) {
 	    	if (this.row.getData()[0] == " ")
 	    		return false;
 	        var target = YAHOO.util.Event.getTarget(e);
-	    	return ( this.isValidHandleChild(target) && 
+	    	return ( this.isValidHandleChild(target) &&
 	    			(this.id == this.handleElId || this.DDM.handleWasClicked(target, this.id)) );
 	    },
 	    /**
-	     * This funciton checks that the target of the drag is a table row in this
+	     * This function checks that the target of the drag is a table row in this
 	     * DDGroup and simply moves the sourceEL to that location as a preview.
 	     */
 	    onDragOver: function(ev, id) {
@@ -394,7 +381,7 @@ function initRowDD() {
 	    		node.highlight();
 	    	}
 	    },
-	    
+
 	    onDragOut: function(e, id) {
 	    	if (this.targetNode) {
 	    		SUGAR.email2.folders.unhighliteAll();
@@ -403,7 +390,7 @@ function initRowDD() {
 	    },
 	    endDrag: function() {
 	    	Dom.setStyle(this.getEl(), "opacity", "");
-	    	Dom.setStyle(this.getDragEl(), "display", "none"); 
+	    	Dom.setStyle(this.getDragEl(), "display", "none");
 	    	if (this.targetNode) {
 	    		SUGAR.email2.folders.handleDrop(this.rows, this.targetNode);
 	    	}
@@ -425,7 +412,7 @@ function AddressSearchGridInit() {
         checkHeader += 'style="top:-5px" ';
     }
     checkHeader += 'onclick="SUGAR.email2.addressBook.grid.toggleSelectAll(this.checked);">';
-    var colModel = 
+    var colModel =
 	    [{
 	    	label: checkHeader,
             width: 30,
@@ -439,18 +426,18 @@ function AddressSearchGridInit() {
 	        key: 'bean_module'
         },
 	    {
-        	label: app_strings.LBL_EMAIL_ADDRESS_BOOK_NAME, 
+        	label: app_strings.LBL_EMAIL_ADDRESS_BOOK_NAME,
 	        width: 180,
 	        sortable: true,
 	        key: 'name'
-	    }, 
+	    },
 	    {
 	    	label: app_strings.LBL_EMAIL_ADDRESS_BOOK_EMAIL_ADDR,
-	        width: 300, 
+	        width: 300,
 	        sortable: true,
 	        key: 'email'
 	    }];
-    
+
     var dataModel = new YAHOO.util.DataSource(urlBase + "?", {
 		responseType: YAHOO.util.XHRDataSource.TYPE_JSON,
         responseSchema: {
@@ -477,12 +464,12 @@ function AddressSearchGridInit() {
 		dataModel.params['person'] = document.getElementById('input_searchPerson').value;
 	}
     SUGAR.email2.addressBook.addressBookDataModel = dataModel;
-    
+
     var grid = SUGAR.email2.addressBook.grid = new YAHOO.widget.ScrollingDataTable("addrSearchGrid", colModel, dataModel, {
     	MSG_EMPTY: "&nbsp;", //SUGAR.language.get("Emails", "LBL_EMPTY_FOLDER"),
 		dynamicData: true,
-		paginator: new YAHOO.widget.Paginator({ 
-			rowsPerPage: 25,  
+		paginator: new YAHOO.widget.Paginator({
+			rowsPerPage: 25,
 			containers : ["dt-pag-nav-addressbook"],
 			template: "<div class='pagination'>{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}</div>",
 					firstPageLinkLabel: 	"<button class='button'><div class='paginator-start'/></button>",
@@ -501,20 +488,20 @@ function AddressSearchGridInit() {
         var dir = (oState.sortedBy && oState.sortedBy.dir === YAHOO.widget.DataTable.CLASS_DESC) ? "desc" : "asc";
         var startIndex = (oState.pagination) ? oState.pagination.recordOffset : 0;
         var results = (oState.pagination) ? oState.pagination.rowsPerPage : null;
-        // Build the request 
-        var ret = 
-            SUGAR.util.paramsToUrl(oSelf.getDataSource().params) + 
+        // Build the request
+        var ret =
+            SUGAR.util.paramsToUrl(oSelf.getDataSource().params) +
             "&sort=" + sort + "&dir=" + dir + "&start=" + startIndex +
             ((results !== null) ? "&limit=" + results : "");
         return  ret;
     });
-    
-	grid.handleDataReturnPayload = function(oRequest, oResponse, oPayload) { 
+
+	grid.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
 		oPayload = oPayload || { };
 		oPayload.totalRecords = oResponse.meta.total;
-		return oPayload; 
+		return oPayload;
 	}
-	
+
 	grid.clickToggleSelect= function(args) {
 		var isIE = (args.event.target == null);
 		var targetElement = isIE ? args.event.srcElement : args.event.target;
@@ -522,10 +509,10 @@ function AddressSearchGridInit() {
 			SUGAR.email2.addressBook.grid.toggleSelect(args.target.id);
 		}
 	}
-	
+
 	grid.reSelectRowsOnRender = function (){
 	    var rows = SUGAR.email2.addressBook.grid.getRecordSet().getRecords();
-        for (var i = 0; i < rows.length; i++) 
+        for (var i = 0; i < rows.length; i++)
         {
         	var emailAddress = rows[i].getData("email");
             var alreadyAdded = SUGAR.email2.addressBook.doesEmailAdddressExistInResultTable(emailAddress);
@@ -541,15 +528,15 @@ function AddressSearchGridInit() {
             }
         }
 	}
-	grid.subscribe("rowMouseoverEvent", grid.onEventHighlightRow); 
-	grid.subscribe("rowMouseoutEvent", grid.onEventUnhighlightRow); 
+	grid.subscribe("rowMouseoverEvent", grid.onEventHighlightRow);
+	grid.subscribe("rowMouseoutEvent", grid.onEventUnhighlightRow);
 	grid.subscribe("rowClickEvent", grid.clickToggleSelect);
     grid.subscribe("postRenderEvent", grid.reSelectRowsOnRender);
-    
+
     grid.render();
     dataModel.subscribe("requestEvent", grid.disable, grid, true);
     dataModel.subscribe("responseParseEvent", grid.undisable, grid, true);
-    
+
     grid.toggleSelectCheckbox = function(id,checked){
         var row = SUGAR.email2.addressBook.grid.getRecord(id);
         row.setData("checked",checked);
@@ -561,14 +548,14 @@ function AddressSearchGridInit() {
         {
             SUGAR.email2.addressBook.grid.selectRow(row);
             SE.addressBook.insertContactRowToResultTable(id,null)
-        } else 
+        } else
         {
             SUGAR.email2.addressBook.grid.unselectRow(row);
             SE.addressBook.removeRowFromGridResults(id,row.getData("email"));
         }
         row.setData("selected", !checked);
     };
-    
+
     grid.toggleSelectAll = function(checked) {
         rows = SUGAR.email2.addressBook.grid.getRecordSet().getRecords();
         for (var i = 0; i < rows.length; i++) {
@@ -580,7 +567,7 @@ function AddressSearchGridInit() {
             checkBoxes[i].checked = checked;
         }
     };
-    
+
     //Initialize the grid result table.
     AddressSearchResultsGridInit();
 }
@@ -593,8 +580,8 @@ function AddressSearchGridInit() {
 */
 function AddressSearchResultsGridInit()
 {
-    
-    /* Full name sort funciton to compare by last name if available */
+
+    /* Full name sort function to compare by last name if available */
     var fullNameSort = function(a, b, desc) {
         // Deal with empty values
         if(!YAHOO.lang.isValue(a))
@@ -611,59 +598,59 @@ function AddressSearchResultsGridInit()
         return YAHOO.util.Sort.compare(aSortField,bSortField, desc);
 
     };
-    
+
     var typeDdOptions = [app_strings.LBL_EMAIL_ADDRESS_BOOK_ADD_TO.replace(/:$/,'') ,
                          app_strings.LBL_EMAIL_ADDRESS_BOOK_ADD_CC.replace(/:$/,''),
-                         app_strings.LBL_EMAIL_ADDRESS_BOOK_ADD_BCC.replace(/:$/,'')]; 
-              
+                         app_strings.LBL_EMAIL_ADDRESS_BOOK_ADD_BCC.replace(/:$/,'')];
+
     var ColumnDefs = [{key:'type',label:app_strings.LBL_EMAIL_ADDRESS_BOOK_ADRRESS_TYPE, width: 60, sortable: true, editor: new YAHOO.widget.RadioCellEditor({radioOptions:typeDdOptions,disableBtns:true})},
                      {key:'name',label:app_strings.LBL_EMAIL_ACCOUNTS_NAME,width: 280,sortable: true, sortOptions:{sortFunction:fullNameSort}}];
-     
-     var myDataSource = new YAHOO.util.DataSource([]); 
-	 myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSARRAY; 
-	 myDataSource.responseSchema = { 
-	            fields: ["name","type","email_address","display_email_address","bean_id","idx"] 
-	        }; 								   
-    
+
+     var myDataSource = new YAHOO.util.DataSource([]);
+	 myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSARRAY;
+	 myDataSource.responseSchema = {
+	            fields: ["name","type","email_address","display_email_address","bean_id","idx"]
+	        };
+
 	 var gridResults = SUGAR.email2.addressBook.gridResults = new YAHOO.widget.ScrollingDataTable("addrSearchResultGrid", ColumnDefs, myDataSource, {
                         width:  "350px",height: "250px", MSG_EMPTY: "&nbsp;"});
-    
+
      var highlightEditableCell = function(oArgs) {
             var elCell = oArgs.target;
             if(YAHOO.util.Dom.hasClass(elCell, "yui-dt-editable")) {
                 this.highlightCell(elCell);
             }
         };
-      
+
      gridResults.subscribe("cellMouseoverEvent", highlightEditableCell);
      gridResults.subscribe("cellMouseoutEvent", gridResults.onEventUnhighlightCell);
      gridResults.subscribe("cellClickEvent", gridResults.onEventShowCellEditor);
-     gridResults.subscribe("rowMouseoverEvent", gridResults.onEventHighlightRow); 
-	 gridResults.subscribe("rowMouseoutEvent", gridResults.onEventUnhighlightRow); 
-     
+     gridResults.subscribe("rowMouseoverEvent", gridResults.onEventHighlightRow);
+	 gridResults.subscribe("rowMouseoutEvent", gridResults.onEventUnhighlightRow);
+
      //Setup the context menus
-     var onContextMenuClick = function(p_sType, p_aArgs, p_myDataTable) { 
-	     var task = p_aArgs[1]; 
-	     if(task) 
-	     { 
-	         var elRow = this.contextEventTarget; 
-	         elRow = p_myDataTable.getTrEl(elRow); 
-	 
-	         if(elRow) 
-	         { 
-	             switch(task.index) 
-	             { 
-	                 case 0:     
-	                     var oRecord = p_myDataTable.getRecord(elRow); 
-	                     p_myDataTable.deleteRow(elRow);  
-	                     SUGAR.email2.addressBook.grid.reSelectRowsOnRender();    
-	             } 
-	         } 
-	     } 
+     var onContextMenuClick = function(p_sType, p_aArgs, p_myDataTable) {
+	     var task = p_aArgs[1];
+	     if(task)
+	     {
+	         var elRow = this.contextEventTarget;
+	         elRow = p_myDataTable.getTrEl(elRow);
+
+	         if(elRow)
+	         {
+	             switch(task.index)
+	             {
+	                 case 0:
+	                     var oRecord = p_myDataTable.getRecord(elRow);
+	                     p_myDataTable.deleteRow(elRow);
+	                     SUGAR.email2.addressBook.grid.reSelectRowsOnRender();
+	             }
+	         }
+	     }
 	 };
-     var contextMenu = new YAHOO.widget.ContextMenu("contextmenu", 
-	                {trigger:gridResults.getTbodyEl()}); 
-	 contextMenu.addItem(app_strings.LBL_EMAIL_DELETE); 
-	 contextMenu.render("addrSearchResultGrid"); 
-	 contextMenu.clickEvent.subscribe(onContextMenuClick, gridResults); 
+     var contextMenu = new YAHOO.widget.ContextMenu("contextmenu",
+	                {trigger:gridResults.getTbodyEl()});
+	 contextMenu.addItem(app_strings.LBL_EMAIL_DELETE);
+	 contextMenu.render("addrSearchResultGrid");
+	 contextMenu.clickEvent.subscribe(onContextMenuClick, gridResults);
 }

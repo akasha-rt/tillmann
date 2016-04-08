@@ -3,7 +3,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -66,6 +66,20 @@ class ContactsViewEdit extends ViewEdit
 		if(empty($admin->settings['portal_on']) || !$admin->settings['portal_on']) {
 		   unset($this->ev->sectionPanels[strtoupper('lbl_portal_information')]);
 		} else {
+           if (isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true' ) {
+               $this->ev->fieldDefs['portal_name']['value'] = '';
+               $this->ev->fieldDefs['portal_active']['value'] = '0';
+               $this->ev->fieldDefs['portal_password']['value'] = '';
+               $this->ev->fieldDefs['portal_password1']['value'] = '';
+               $this->ev->fieldDefs['portal_name_verified'] = '0';
+               $this->ev->focus->portal_name = '';
+               $this->ev->focus->portal_password = '';
+               $this->ev->focus->portal_acitve = 0;
+           }
+           else {
+               $this->ev->fieldDefs['portal_password']['value'] = '';
+               $this->ev->fieldDefs['portal_password1']['value'] = '';               
+           }
 		   echo getVersionedScript('modules/Contacts/Contact.js');
 		   echo '<script language="javascript">';
 		   echo 'addToValidateComparison(\'EditView\', \'portal_password\', \'varchar\', false, SUGAR.language.get(\'app_strings\', \'ERR_SQS_NO_MATCH_FIELD\') + SUGAR.language.get(\'Contacts\', \'LBL_PORTAL_PASSWORD\'), \'portal_password1\');';

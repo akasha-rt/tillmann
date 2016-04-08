@@ -2,7 +2,7 @@
  if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -37,21 +37,14 @@
 
 //change directories to where this file is located.
 //this is to make sure it can find dce_config.php
-chdir(realpath(dirname(__FILE__)));
+chdir(dirname(__FILE__));
 
 require_once('include/entryPoint.php');
 
-//Bug 27991 . Redirect to index.php if the request is not come from CLI.
 $sapi_type = php_sapi_name();
-if (substr($sapi_type, 0, 3) != 'cgi') {
-    global $sugar_config;
-	if(!empty($sugar_config['site_url'])){
-		header("Location: ".$sugar_config['site_url'] . "/index.php");
-	}else{
-		sugar_die("Didn't find site url in your sugarcrm config file");
-	}
+if (substr($sapi_type, 0, 3) != 'cli') {
+    sugar_die("cron.php is CLI only.");
 }
-//End of #27991
 
 if(empty($current_language)) {
 	$current_language = $sugar_config['default_language'];
@@ -64,50 +57,19 @@ global $current_user;
 $current_user = new User();
 $current_user->getSystemUser();
 
-///////////////////////////////////////////////////////////////////////////////
-////	PREP FOR SCHEDULER PID
 $GLOBALS['log']->debug('--------------------------------------------> at cron.php <--------------------------------------------');
+$cron_driver = !empty($sugar_config['cron_class'])?$sugar_config['cron_class']:'SugarCronJobs';
+$GLOBALS['log']->debug("Using $cron_driver as CRON driver");
 
-$cachePath = sugar_cached('modules/Schedulers');
-$pid = 'pid.php';
-if(!is_dir($cachePath)) {
-	mkdir_recursive($cachePath);
-}
-if(!is_file($cachePath.'/'.$pid)) {
-	if(is_writable($cachePath)) { // the "file" does not yet exist
-		write_array_to_file('timestamp', array(strtotime(date('H:i'))) , $cachePath.'/'.$pid);
-		require_once($cachePath.'/'.$pid);
-	} else {
-		$GLOBALS['log']->fatal('Scheduler cannot write PID file.  Please check permissions on '.$cachePath);
-	}
+if(file_exists("custom/include/SugarQueue/$cron_driver.php")) {
+   require_once "custom/include/SugarQueue/$cron_driver.php";
 } else {
-	if(is_writable($cachePath.'/'.$pid)) {
-		require_once($cachePath.'/'.$pid);
-	} else {
-		$GLOBALS['log']->fatal('Scheduler cannot read the PID file.  Please check permissions on '.$cachePath);
-	}
+   require_once "include/SugarQueue/$cron_driver.php";
 }
-////	END PREP FOR SCHEDULER PID
-///////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////
-////	EXECUTE IF VALID TIME (NOT DDOS)
+$jobq = new $cron_driver();
+$jobq->runCycle();
 
-// mjamil | bug # 45229 - schedulers not able to run due to current time being equal to
-// $timestamp[0]
-if($timestamp[0] <= strtotime(date('H:i'))) {
-	if(is_writable($cachePath.'/'.$pid)) {
-		write_array_to_file('timestamp', array(strtotime(date('H:i'))) , $cachePath.'/'.$pid);
-		require('modules/Schedulers/Scheduler.php');
-		$s = new Scheduler();
-		$s->flushDeadJobs();
-		$s->checkPendingJobs();
-	} else {
-		$GLOBALS['log']->fatal('Scheduler cannot write PID file.  Please check permissions on '.$cachePath);
-	}
-} else {
-	$GLOBALS['log']->fatal('If you see a whole string of these, there is a chance someone is attacking your system.');
-}
 $exit_on_cleanup = true;
 
 sugar_cleanup(false);
@@ -119,4 +81,9 @@ if(class_exists('DBManagerFactory')) {
 	$db->disconnect();
 }
 
-if($exit_on_cleanup) exit;
+// If we have a session left over, destroy it
+if(session_id()) {
+    session_destroy();
+}
+
+if($exit_on_cleanup) exit($jobq->runOk()?0:1);

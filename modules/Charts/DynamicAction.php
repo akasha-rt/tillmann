@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -36,13 +36,25 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  ********************************************************************************/
 
 
-
 if(isset($_GET['DynamicAction']) && $_GET['DynamicAction'] == "saveImage") {
-	$cache = sugar_cached("images/");
-
-	$filename = $_POST['filename'];
+	$filename = pathinfo($_POST['filename'], PATHINFO_BASENAME);
+	$ext = pathinfo($filename, PATHINFO_EXTENSION);
+	if(!in_array(strtolower($ext), array('jpg', 'png', 'jpeg'))) {
+	    return false;
+	}
 	$image = str_replace(" ", "+", $_POST["imageStr"]);
 	$data = substr($image, strpos($image, ","));
-
-	file_put_contents($cache.$filename, base64_decode($data));
+    if(sugar_mkdir(sugar_cached("images"), 0777, true))
+    {
+        $filepath = sugar_cached("images/$filename");
+        file_put_contents($filepath, base64_decode($data));
+        if(!verify_uploaded_image($filepath)) {
+            unlink($filepath);
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }

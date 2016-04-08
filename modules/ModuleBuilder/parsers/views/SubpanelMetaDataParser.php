@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -98,12 +98,19 @@ class SubpanelMetaDataParser extends ListLayoutMetaDataParser
 		        require_once 'modules/ModuleBuilder/parsers/parser.label.php' ;
             	$labelParser = new ParserLabel ( $_REQUEST['view_module'] , isset ( $_REQUEST [ 'view_package' ] ) ? $_REQUEST [ 'view_package' ] : null ) ;
             	$labelParser->addLabels($selected_lang, array($_REQUEST['subpanel_title_key'] =>  remove_xss(from_html($_REQUEST['subpanel_title']))), $_REQUEST['view_module']);
-            }
+            }            
+        } 
+        // Bug 46291 - Missing widget_class for edit_button and remove_button
+        foreach ( $this->_viewdefs as $key => $def )
+        {        
+            if (isset ( $this->_fielddefs [ $key ] [ 'widget_class' ]))
+            {
+                $this->_viewdefs [ $key ] [ 'widget_class' ] = $this->_fielddefs [ $key ] [ 'widget_class' ];
+            } 
         }
-        
         $defs = $this->restoreInvisibleFields($this->_invisibleFields,$this->_viewdefs); // unlike our parent, do not force the field names back to upper case
         $defs = $this->makeRelateFieldsAsLink($defs);
-        $this->implementation->deploy ($defs);         
+        $this->implementation->deploy ($defs);
     }
 
     /**
@@ -148,10 +155,10 @@ class SubpanelMetaDataParser extends ListLayoutMetaDataParser
         }
         return $viewdefs ;
     }
-    
+
     static function _trimFieldDefs ( $def )
     {
-        $listDef = parent::_trimFieldDefs($def); 
+        $listDef = parent::_trimFieldDefs($def);
         if (isset($listDef ['label']))
         {
             $listDef ['vname'] = $listDef ['label'];
@@ -162,18 +169,19 @@ class SubpanelMetaDataParser extends ListLayoutMetaDataParser
 
 	/**
      * makeRelateFieldsAsLink
-     * This method will go through the subpanel definition entries being saved and then apply formatting to any that are 
+     * This method will go through the subpanel definition entries being saved and then apply formatting to any that are
      * relate field so that a link to the related record may be shown in the subpanel code.  This is done by adding the
-     * widget_class, target_module and target_record_key deltas to the related subpanel definition entry. 
-     * 
+     * widget_class, target_module and target_record_key deltas to the related subpanel definition entry.
+     *
      * @param Array of subpanel definitions to possibly alter
      * @return $defs Array of formatted subpanel definition entries to include any relate field attributes for Subpanels
      */
-    protected function makeRelateFieldsAsLink($defs) 
+    protected function makeRelateFieldsAsLink($defs)
     {
-        foreach($defs as $index => $fieldData) 
+        foreach($defs as $index => $fieldData)
         {
-            if (isset($fieldData['type']) && $fieldData['type'] == 'relate') 
+            if ((isset($fieldData['type']) && $fieldData['type'] == 'relate') 
+                || (isset($fieldData['link']) && self::isTrue($fieldData['link'])))
             {
                 $defs[$index]['widget_class'] = 'SubPanelDetailViewLink';
                 $defs[$index]['target_module'] = isset($this->_fielddefs[$index]['module']) ? $this->_fielddefs[$index]['module'] : $this->_moduleName;
@@ -182,7 +190,7 @@ class SubpanelMetaDataParser extends ListLayoutMetaDataParser
         }
 
         return $defs;
-    }    
-    
+    }
+
 }
 ?>

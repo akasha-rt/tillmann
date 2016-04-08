@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,6 +35,13 @@
 
  
 
+
+	//set up any action style menus
+	$(document).ready(function(){
+		$("ul.clickMenu").each(function(index, node){
+	  		$(node).sugarActionMenu();
+	  	});
+	});
 
 /**
  * Handles loading the sitemap popup
@@ -247,7 +254,12 @@ SUGAR.append(SUGAR.themes, {
             this.loadModuleList();
         }
     },
-    
+    actionMenu: function() {
+        //set up any action style menus
+        $("ul.clickMenu").each(function(index, node){
+            $(node).sugarActionMenu();
+        });
+    },
     loadModuleList: function() {
         var nodes = YAHOO.util.Selector.query('#moduleList>div'),
             currMenuBar;
@@ -277,7 +289,9 @@ SUGAR.append(SUGAR.themes, {
          * Handles changing the sub menu items when using grouptabs
          */
         YAHOO.util.Event.onAvailable('subModuleList',IKEADEBUG);
-    }
+    },
+    //dummy function to make classic theme work with 6.5
+    setCurrentTab: function(){}
 });
 
 YAHOO.util.Event.onDOMReady(SUGAR.themes.loadModuleList, SUGAR.themes, true);

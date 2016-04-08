@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -137,7 +140,8 @@ class MssqlManager extends DBManager
             'relate'   => 'varchar',
             'multienum'=> 'text',
             'html'     => 'text',
-            'datetime' => 'datetime',
+			'longhtml' => 'text',
+    		'datetime' => 'datetime',
             'datetimecombo' => 'datetime',
             'time'     => 'datetime',
             'bool'     => 'bit',
@@ -231,7 +235,7 @@ class MssqlManager extends DBManager
         //mssql db maximum number of 5 times at the interval of .2 second. If can not connect
         //it will throw an Unable to select database message.
 
-        if(!@mssql_select_db($configOptions['db_name'], $this->database)){
+        if(!empty($configOptions['db_name']) && !@mssql_select_db($configOptions['db_name'], $this->database)){
 			$connected = false;
 			for($i=0;$i<5;$i++){
 				usleep(200000);
@@ -246,7 +250,7 @@ class MssqlManager extends DBManager
                     if(isset($GLOBALS['app_strings']['ERR_NO_DB'])) {
                         sugar_die($GLOBALS['app_strings']['ERR_NO_DB']);
                     } else {
-                        sugar_die("Could not connect to the database. Please refer to sugarcrm.log for details.");
+                        sugar_die("Could not connect to the database. Please refer to suitecrm.log for details.");
                     }
                 } else {
                     return false;
@@ -291,7 +295,7 @@ class MssqlManager extends DBManager
         $this->query_time = microtime(true);
 
         // Bug 34892 - Clear out previous error message by checking the @@ERROR global variable
-		$errorNumber = $this->getOne("SELECT @@ERROR");
+		@mssql_query("SELECT @@ERROR", $this->database);
 
         $result = $suppress?@mssql_query($sql, $this->database):mssql_query($sql, $this->database);
 
@@ -361,7 +365,7 @@ class MssqlManager extends DBManager
 
         //process if there are elements
         if ($unionOrderByCount){
-            //we really want the last ordery by, so reconstruct string
+            //we really want the last order by, so reconstruct string
             //adding a 1 to count, as we dont wish to process the last element
             $unionsql = '';
             while ($unionOrderByCount>$arr_count+1) {
@@ -395,19 +399,23 @@ class MssqlManager extends DBManager
             $rowNumOrderBy = 'id';
             $unionOrderBy = '';
         }
-        //Unions need the column name being sorted on to match acroos all queries in Union statement
+        //Unions need the column name being sorted on to match across all queries in Union statement
         //so we do not want to strip the alias like in other queries.  Just add the "order by" string and
         //pass column name as is
         if ($unionOrderBy != '') {
             $unionOrderBy = ' order by ' . $unionOrderBy;
         }
 
-        //if start is 0, then just use a top query
-        if($start == 0) {
+        //Bug 56560, use top query in conjunction with rownumber() function
+        //to create limit query when paging is needed. Otherwise,
+        //it shows duplicates when paging on activities subpanel.
+        //If not for paging, no need to use rownumber() function
+        if ($count == 1 && $start == 0)
+        {
             $limitUnionSQL = "SELECT TOP $count * FROM (" .$unionsql .") as top_count ".$unionOrderBy;
-        } else {
-            //if start is more than 0, then use top query in conjunction
-            //with rownumber() function to create limit query.
+        }
+        else
+        {
             $limitUnionSQL = "SELECT TOP $count * FROM( select ROW_NUMBER() OVER ( order by "
             .$rowNumOrderBy.") AS row_number, * FROM ("
             .$unionsql .") As numbered) "
@@ -436,13 +444,27 @@ class MssqlManager extends DBManager
             $GLOBALS['log']->debug(print_r(func_get_args(),true));
             $this->lastsql = $sql;
             $matches = array();
-            preg_match('/^(.*SELECT )(.*?FROM.*WHERE)(.*)$/isU',$sql, $matches);
+            preg_match('/^(.*SELECT\b)(.*?\bFROM\b.*\bWHERE\b)(.*)$/isU',$sql, $matches);
             if (!empty($matches[3])) {
                 if ($start == 0) {
                     $match_two = strtolower($matches[2]);
                     if (!strpos($match_two, "distinct")> 0 && strpos($match_two, "distinct") !==0) {
-    					//proceed as normal
-                    	$newSQL = $matches[1] . " TOP $count " . $matches[2] . $matches[3];
+                        $orderByMatch = array();
+                        preg_match('/^(.*)(\bORDER BY\b)(.*)$/is',$matches[3], $orderByMatch);
+                        if (!empty($orderByMatch[3])) {
+                            $selectPart = array();
+                            preg_match('/^(.*)(\bFROM\b.*)$/isU', $matches[2], $selectPart);
+                            $newSQL = "SELECT TOP $count * FROM
+                                (
+                                    " . $matches[1] . $selectPart[1] . ", ROW_NUMBER()
+                                    OVER (ORDER BY " . $this->returnOrderBy($sql, $orderByMatch[3]) . ") AS row_number
+                                    " . $selectPart[2] . $orderByMatch[1]. "
+                                ) AS a
+                                WHERE row_number > $start";
+                        }
+                        else {
+                            $newSQL = $matches[1] . " TOP $count " . $matches[2] . $matches[3];
+                        }
                     }
                     else {
                         $distinct_o = strpos($match_two, "distinct");
@@ -472,70 +494,54 @@ class MssqlManager extends DBManager
                     }
                 } else {
                     $orderByMatch = array();
-                    preg_match('/^(.*)(ORDER BY)(.*)$/is',$matches[3], $orderByMatch);
+                    preg_match('/^(.*)(\bORDER BY\b)(.*)$/is',$matches[3], $orderByMatch);
 
                     //if there is a distinct clause, parse sql string as we will have to insert the rownumber
                     //for paging, AFTER the distinct clause
                     $grpByStr = '';
                     $hasDistinct = strpos(strtolower($matches[0]), "distinct");
+
+                    require_once('include/php-sql-parser.php');
+                    $parser = new PHPSQLParser();
+                    $sqlArray = $parser->parse($sql);
+
                     if ($hasDistinct) {
                         $matches_sql = strtolower($matches[0]);
                         //remove reference to distinct and select keywords, as we will use a group by instead
                         //we need to use group by because we are introducing rownumber column which would make every row unique
 
                         //take out the select and distinct from string so we can reuse in group by
-                        $dist_str = ' distinct ';
-                        $distinct_pos = strpos($matches_sql, $dist_str);
-                        $matches_sql = substr($matches_sql,$distinct_pos+ strlen($dist_str));
+                        $dist_str = 'distinct';
+                        preg_match('/\b' . $dist_str . '\b/simU', $matches_sql, $matchesPartSQL, PREG_OFFSET_CAPTURE);
+                        $matches_sql = trim(substr($matches_sql,$matchesPartSQL[0][1] + strlen($dist_str)));
                         //get the position of where and from for further processing
-                        $from_pos = strpos($matches_sql , " from ");
-                        $where_pos = strpos($matches_sql, "where");
+                        preg_match('/\bfrom\b/simU', $matches_sql, $matchesPartSQL, PREG_OFFSET_CAPTURE);
+                        $from_pos = $matchesPartSQL[0][1];
+                        preg_match('/\where\b/simU', $matches_sql, $matchesPartSQL, PREG_OFFSET_CAPTURE);
+                        $where_pos = $matchesPartSQL[0][1];
                         //split the sql into a string before and after the from clause
                         //we will use the columns being selected to construct the group by clause
                         if ($from_pos>0 ) {
-                            $distinctSQLARRAY[0] = substr($matches_sql,0, $from_pos+1);
-                            $distinctSQLARRAY[1] = substr($matches_sql,$from_pos+1);
+                            $distinctSQLARRAY[0] = substr($matches_sql, 0, $from_pos);
+                            $distinctSQLARRAY[1] = substr($matches_sql, $from_pos);
                             //get position of order by (if it exists) so we can strip it from the string
                             $ob_pos = strpos($distinctSQLARRAY[1], "order by");
                             if ($ob_pos) {
                                 $distinctSQLARRAY[1] = substr($distinctSQLARRAY[1],0,$ob_pos);
                             }
 
-                            // strip off last closing parathese from the where clause
+                            // strip off last closing parentheses from the where clause
                             $distinctSQLARRAY[1] = preg_replace('/\)\s$/',' ',$distinctSQLARRAY[1]);
                         }
 
-                        //place group by string into array
-                        $grpByArr = explode(',', $distinctSQLARRAY[0]);
-                        $first = true;
-                        //remove the aliases for each group by element, sql server doesnt like these in group by.
-                        foreach ($grpByArr as $gb) {
-                            $gb = trim($gb);
-
-                            //clean out the extra stuff added if we are concating first_name and last_name together
-                            //this way both fields are added in correctly to the group by
-                            $gb = str_replace("isnull(","",$gb);
-                            $gb = str_replace("'') + ' ' + ","",$gb);
-
-                            //remove outer reference if they exist
-                            if (strpos($gb,"'")!==false){
+                        $grpByStr = array();
+                        foreach ($sqlArray['SELECT'] as $record) {
+                            if ($record['expr_type'] == 'const') {
                                 continue;
                             }
-                            //if there is a space, then an alias exists, remove alias
-                            if (strpos($gb,' ')){
-                                $gb = substr( $gb, 0,strpos($gb,' '));
-                            }
-
-                            //if resulting string is not empty then add to new group by string
-                            if (!empty($gb)) {
-                                if ($first) {
-                                    $grpByStr .= " $gb";
-                                    $first = false;
-                                } else {
-                                    $grpByStr .= ", $gb";
-                                }
-                            }
+                            $grpByStr[] = trim($record['base_expr']);
                         }
+                        $grpByStr = implode(', ', $grpByStr);
                     }
 
                     if (!empty($orderByMatch[3])) {
@@ -544,7 +550,7 @@ class MssqlManager extends DBManager
                             $newSQL = "SELECT TOP $count * FROM
                                         (
                                             SELECT ROW_NUMBER()
-                                                OVER (ORDER BY ".$this->returnOrderBy($sql, $orderByMatch[3]).") AS row_number,
+                                                OVER (ORDER BY " . preg_replace('/^' . $dist_str . '\s+/', '', $this->returnOrderBy($sql, $orderByMatch[3])) . ") AS row_number,
                                                 count(*) counter, " . $distinctSQLARRAY[0] . "
                                                 " . $distinctSQLARRAY[1] . "
                                                 group by " . $grpByStr . "
@@ -561,23 +567,11 @@ class MssqlManager extends DBManager
                                     WHERE row_number > $start";
                         }
                     }else{
-                        //bug: 22231 Records in campaigns' subpanel may not come from
-                        //table of $_REQUEST['module']. Get it directly from query
-                        $upperQuery = strtoupper($matches[2]);
-                        if (!strpos($upperQuery,"JOIN")){
-                            $from_pos = strpos($upperQuery , "FROM") + 4;
-                            $where_pos = strpos($upperQuery, "WHERE");
-                            $tablename = trim(substr($upperQuery,$from_pos, $where_pos - $from_pos));
-                        }else{
-                            // FIXME: this looks really bad. Probably source for tons of bug
-                            // needs to be removed
-                            $tablename = $this->getTableNameFromModuleName($_REQUEST['module'],$sql);
-                        }
                         //if there is a distinct clause, form query with rownumber after distinct
                         if ($hasDistinct) {
                              $newSQL = "SELECT TOP $count * FROM
                                             (
-                            SELECT ROW_NUMBER() OVER (ORDER BY ".$tablename.".id) AS row_number, count(*) counter, " . $distinctSQLARRAY[0] . "
+                            SELECT ROW_NUMBER() OVER (ORDER BY ".$grpByStr.") AS row_number, count(*) counter, " . $distinctSQLARRAY[0] . "
                                                         " . $distinctSQLARRAY[1] . "
                                                     group by " . $grpByStr . "
                                             )
@@ -587,7 +581,7 @@ class MssqlManager extends DBManager
                         else {
                              $newSQL = "SELECT TOP $count * FROM
                                            (
-                                  " . $matches[1] . " ROW_NUMBER() OVER (ORDER BY ".$tablename.".id) AS row_number, " . $matches[2] . $matches[3]. "
+                                  " . $matches[1] . " ROW_NUMBER() OVER (ORDER BY " . $sqlArray['FROM'][0]['alias'] . ".id) AS row_number, " . $matches[2] . $matches[3]. "
                                            )
                                            AS a
                                            WHERE row_number > $start";
@@ -653,9 +647,10 @@ class MssqlManager extends DBManager
                     continue;
                 }
             }
+            $p_len = strlen("##". $patt.$i."##");
             $p_sql = substr($p_sql, 0, $beg_sin) . " ##". $patt.$i."## " . substr($p_sql, $sec_sin+1);
             //move the marker up
-            $offset = $sec_sin+1;
+            $offset = ($sec_sin-($sec_sin-$beg_sin))+$p_len+1; // Adjusting the starting point of the marker
 
             $i = $i + 1;
         }
@@ -677,7 +672,7 @@ class MssqlManager extends DBManager
         $pattern_array = array_reverse($pattern_array);
 
         foreach ($pattern_array as $key => $replace) {
-            $token = str_replace( "##".$key."##", $replace,$token);
+            $token = str_replace( " ##".$key."## ", $replace,$token);
         }
 
         return $token;
@@ -704,7 +699,7 @@ class MssqlManager extends DBManager
         $paren_array = $this->removePatternFromSQL($new_sql, "(", ")", "par_");
         $new_sql = array_pop($paren_array);
 
-        //all functions should be removed now, so split the array on comma's
+        //all functions should be removed now, so split the array on commas
         $mstr_sql_array = explode(",", $new_sql);
         foreach($mstr_sql_array as $token ) {
             if (strpos($token, $alias)) {
@@ -732,7 +727,7 @@ class MssqlManager extends DBManager
     {
         //change case to lowercase
         $sql = strtolower($sql);
-        $patt = '/\s+'.trim($orderMatch).'\s*,/';
+        $patt = '/\s+'.trim($orderMatch).'\s*(,|from)/';
 
         //check for the alias, it should contain comma, may contain space, \n, or \t
         $matches = array();
@@ -790,12 +785,17 @@ class MssqlManager extends DBManager
             //this has a tablename defined, pass in the order match
             return $orig_order_match;
 
+        // If there is no ordering direction (ASC/DESC), use ASC by default
+        if (strpos($orig_order_match, " ") === false) {
+        	$orig_order_match .= " ASC";
+        }
+
         //grab first space in order by
         $firstSpace = strpos($orig_order_match, " ");
 
         //split order by into column name and ascending/descending
         $orderMatch = " " . strtolower(substr($orig_order_match, 0, $firstSpace));
-        $asc_desc =  substr($orig_order_match,$firstSpace);
+        $asc_desc = trim(substr($orig_order_match,$firstSpace));
 
         //look for column name as an alias in sql string
         $found_in_sql = $this->findColumnByAlias($sql, $orderMatch);
@@ -816,6 +816,9 @@ class MssqlManager extends DBManager
 				if($containsCommaPos !== false) {
 					$col_name = substr($col_name, $containsCommaPos+1);
 				}
+                //add the "asc/desc" order back
+                $col_name = $col_name. " ". $asc_desc;
+
                 //return column name
                 return $col_name;
             }
@@ -833,7 +836,8 @@ class MssqlManager extends DBManager
                 $psql = trim(substr($sql, 0, $found_in_sql));
 
             //grab the last comma before the alias
-            $comma_pos = strrpos($psql, " ");
+            preg_match('/\s+' . trim($orderMatch). '/', $psql, $match, PREG_OFFSET_CAPTURE);
+            $comma_pos = $match[0][1];
             //substring between the comma and the alias to find the joined_table alias and column name
             $col_name = substr($psql,0, $comma_pos);
 
@@ -901,6 +905,10 @@ class MssqlManager extends DBManager
             $GLOBALS['log']->debug("Could not find table name from module in request, retrieve from passed in sql");
             $tbl_name = $module_str;
             $sql = strtolower($sql);
+
+            // Bug #45625 : Getting Multi-part identifier (reports.id) could not be bound error when navigating to next page in reprots in mssql
+            // there is cases when sql string is multiline string and it we cannot find " from " string in it
+            $sql = str_replace(array("\n", "\r"), " ", $sql);
 
             //look for the location of the "from" in sql string
             $fromLoc = strpos($sql," from " );
@@ -989,7 +997,7 @@ class MssqlManager extends DBManager
     /**
      * @see DBManager::getAffectedRowCount()
      */
-	public function getAffectedRowCount()
+	public function getAffectedRowCount($result)
     {
         return $this->getOne("SELECT @@ROWCOUNT");
     }
@@ -1025,6 +1033,14 @@ class MssqlManager extends DBManager
             return $this->arrayQuote($string);
         }
         return str_replace("'","''", $this->quoteInternal($string));
+    }
+
+    /**
+     * @see DBManager::quoteIdentifier()
+     */
+    public function quoteIdentifier($string)
+    {
+        return '['.$string.']';
     }
 
     /**
@@ -1094,7 +1110,7 @@ class MssqlManager extends DBManager
         $GLOBALS['log']->debug('MSSQL about to wakeup FTS');
 
         if($this->getDatabase()) {
-                //create wakup catalog
+                //create wakeup catalog
                 $FTSqry[] = "if not exists(  select * from sys.fulltext_catalogs where name ='wakeup_catalog' )
                 CREATE FULLTEXT CATALOG wakeup_catalog
                 ";
@@ -1192,7 +1208,7 @@ class MssqlManager extends DBManager
             case 'text2char':
                 return "CAST($string AS varchar(8000))";
             case 'quarter':
-                return "DATEPART(quarter, $string)";
+                return "DATENAME(quarter, $string)";
             case "length":
                 return "LEN($string)";
             case 'month':
@@ -1201,6 +1217,12 @@ class MssqlManager extends DBManager
                 return "DATEADD({$additional_parameters[1]},{$additional_parameters[0]},$string)";
             case 'add_time':
                 return "DATEADD(hh, {$additional_parameters[0]}, DATEADD(mi, {$additional_parameters[1]}, $string))";
+            case 'add_tz_offset' :
+                $getUserUTCOffset = $GLOBALS['timedate']->getUserUTCOffset();
+                $operation = $getUserUTCOffset < 0 ? '-' : '+';
+                return 'DATEADD(minute, ' . $operation . abs($getUserUTCOffset) . ', ' . $string. ')';
+            case 'avg':
+                return "avg($string)";
         }
 
         return "$string";
@@ -1242,7 +1264,8 @@ class MssqlManager extends DBManager
     public function isTextType($type)
     {
         $type = strtolower($type);
-        return in_array($this->type_map[$type], array('ntext','text','image'));
+        if(!isset($this->type_map[$type])) return false;
+        return in_array($this->type_map[$type], array('ntext','text','image', 'nvarchar(max)'));
     }
 
     /**
@@ -1371,7 +1394,7 @@ class MssqlManager extends DBManager
     {
         if($start_value > 1)
             $start_value -= 1;
-		$this->query("DBCC CHECKIDENT ('$table', RESEED, $start_value)");
+		$this->query("DBCC CHECKIDENT ('$table', RESEED, $start_value) WITH NO_INFOMSGS");
         return true;
     }
 
@@ -1384,46 +1407,36 @@ class MssqlManager extends DBManager
         return $result;
     }
 
-   	/**
+    /**
      * @see DBManager::get_indices()
      */
-    public function get_indices($tablename)
+    public function get_indices($tableName)
     {
         //find all unique indexes and primary keys.
         $query = <<<EOSQL
-SELECT LEFT(so.[name], 30) TableName,
-        LEFT(si.[name], 50) 'Key_name',
-        LEFT(sik.[keyno], 30) Sequence,
-        LEFT(sc.[name], 30) Column_name,
-		isunique = CASE
-            WHEN si.status & 2 = 2 AND so.xtype != 'PK' THEN 1
-            ELSE 0
-        END
-    FROM sysindexes si
-        INNER JOIN sysindexkeys sik
-            ON (si.[id] = sik.[id] AND si.indid = sik.indid)
-        INNER JOIN sysobjects so
-            ON si.[id] = so.[id]
-        INNER JOIN syscolumns sc
-            ON (so.[id] = sc.[id] AND sik.colid = sc.colid)
-        INNER JOIN sysfilegroups sfg
-            ON si.groupid = sfg.groupid
-    WHERE so.[name] = '$tablename'
-    ORDER BY Key_name, Sequence, Column_name
+SELECT sys.tables.object_id, sys.tables.name as table_name, sys.columns.name as column_name,
+                sys.indexes.name as index_name, sys.indexes.is_unique, sys.indexes.is_primary_key
+            FROM sys.tables, sys.indexes, sys.index_columns, sys.columns
+            WHERE (sys.tables.object_id = sys.indexes.object_id
+                    AND sys.tables.object_id = sys.index_columns.object_id
+                    AND sys.tables.object_id = sys.columns.object_id
+                    AND sys.indexes.index_id = sys.index_columns.index_id
+                    AND sys.index_columns.column_id = sys.columns.column_id)
+                AND sys.tables.name = '$tableName'
 EOSQL;
         $result = $this->query($query);
 
         $indices = array();
         while (($row=$this->fetchByAssoc($result)) != null) {
             $index_type = 'index';
-            if ($row['Key_name'] == 'PRIMARY')
+            if ($row['is_primary_key'] == '1')
                 $index_type = 'primary';
-            elseif ($row['isunique'] == 1 )
+            elseif ($row['is_unique'] == 1 )
                 $index_type = 'unique';
-            $name = strtolower($row['Key_name']);
+            $name = strtolower($row['index_name']);
             $indices[$name]['name']     = $name;
             $indices[$name]['type']     = $index_type;
-            $indices[$name]['fields'][] = strtolower($row['Column_name']);
+            $indices[$name]['fields'][] = strtolower($row['column_name']);
         }
         return $indices;
     }
@@ -1521,7 +1534,7 @@ EOSQL;
             break;
         case 'primary':
             if ($drop)
-                $sql = "ALTER TABLE {$table} DROP PRIMARY KEY";
+                $sql = "ALTER TABLE {$table} DROP CONSTRAINT {$name}";
             else
                 $sql = "ALTER TABLE {$table} ADD CONSTRAINT {$name} PRIMARY KEY ({$fields})";
             break;
@@ -1678,10 +1691,8 @@ EOQ;
                 case 'smallint' : $fieldDef['len'] = '2'; break;
                 case 'float'    : $fieldDef['len'] = '8'; break;
                 case 'varchar'  :
-                case 'nvarchar' : if(!in_array($fieldDef['dbType'],array('text','ntext')))
-                                      $fieldDef['len'] = '255';
-                                  else
-                                      $fieldDef['len'] = 'max'; // text or ntext
+                case 'nvarchar' :
+                                  $fieldDef['len'] = $this->isTextType($fieldDef['dbType']) ? 'max' : '255';
                                   break;
                 case 'image'    : $fieldDef['len'] = '2147483647'; break;
                 case 'ntext'    : $fieldDef['len'] = '2147483646'; break;   // Note: this is from legacy code, don't know if this is correct
@@ -1806,7 +1817,7 @@ EOQ;
 		    or !isset($app_strings['ERR_MSSQL_DB_CONTEXT'])
 			or !isset($app_strings['ERR_MSSQL_WARNING']) ) {
         //ignore the message from sql-server if $app_strings array is empty. This will happen
-        //only if connection if made before languge is set.
+        //only if connection if made before language is set.
 		    return false;
         }
 
@@ -1875,13 +1886,13 @@ EOQ;
         if (strpos($sql, "'") === false)
             return $sql;
 
-        // Flag if there are odd number of single quotes, just continue w/o trying to append N
+        // Flag if there are odd number of single quotes, just continue without trying to append N
         if ((substr_count($sql, "'") & 1)) {
             $GLOBALS['log']->error("SQL statement[" . $sql . "] has odd number of single quotes.");
             return $sql;
         }
 
-        //The only location of three subsequent ' will be at the begning or end of a value.
+        //The only location of three subsequent ' will be at the beginning or end of a value.
         $sql = preg_replace('/(?<!\')(\'{3})(?!\')/', "'<@#@#@PAIR@#@#@>", $sql);
 
         // Remove any remaining '' and do not parse... replace later (hopefully we don't even have any)
@@ -1932,7 +1943,7 @@ EOQ;
     protected function quoteTerm($term)
     {
         $term = str_replace("%", "*", $term); // Mssql wildcard is *
-        return '"'.$term.'"';
+        return '"'.str_replace('"', '', $term).'"';
     }
 
     /**
@@ -2068,5 +2079,27 @@ EOQ;
                 "setup_db_admin_password" => array("label" => 'LBL_DBCONF_DB_ADMIN_PASSWORD', "type" => "password"),
             )
         );
+    }
+
+    /**
+     * Returns a DB specific FROM clause which can be used to select against functions.
+     * Note that depending on the database that this may also be an empty string.
+     * @return string
+     */
+    public function getFromDummyTable()
+    {
+        return '';
+    }
+
+    /**
+     * Returns a DB specific piece of SQL which will generate GUID (UUID)
+     * This string can be used in dynamic SQL to do multiple inserts with a single query.
+     * I.e. generate a unique Sugar id in a sub select of an insert statement.
+     * @return string
+     */
+
+	public function getGuidSQL()
+    {
+      	return 'NEWID()';
     }
 }

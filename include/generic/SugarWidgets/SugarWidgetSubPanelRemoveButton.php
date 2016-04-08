@@ -2,43 +2,46 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
 
 
-require_once('include/generic/SugarWidgets/SugarWidgetField.php');
+
 
 class SugarWidgetSubPanelRemoveButton extends SugarWidgetField
 {
@@ -51,7 +54,9 @@ class SugarWidgetSubPanelRemoveButton extends SugarWidgetField
 	{
 		
 		global $app_strings;
-		
+        global $subpanel_item_count;
+
+		$unique_id = $layout_def['subpanel_id']."_remove_".$subpanel_item_count; //bug 51512
 		
 		$parent_record_id = $_REQUEST['record'];
 		$parent_module = $_REQUEST['module'];
@@ -99,17 +104,18 @@ class SugarWidgetSubPanelRemoveButton extends SugarWidgetField
 		}
 		$return_url = "index.php?module=$return_module&action=$return_action&subpanel=$subpanel&record=$return_id&sugar_body_only=1&inline=1";
 
-		$icon_remove_text = strtolower($app_strings['LBL_ID_FF_REMOVE']);
-		$icon_remove_html = SugarThemeRegistry::current()->getImage( 'delete_inline','align="absmiddle" border="0"',null,null,'.gif','');//setting alt to blank on purpose on subpanels for 508
-		if($linked_field == 'get_products_query')
-			$linked_field = 'products';
+		$icon_remove_text = mb_strtolower($app_strings['LBL_ID_FF_REMOVE'], 'UTF-8');
+		
+         if($linked_field == 'get_emails_by_assign_or_link')
+            $linked_field = 'emails';
 		//based on listview since that lets you select records
 		if($layout_def['ListView'] && !$hideremove) {
             $retStr = "<a href=\"javascript:sub_p_rem('$subpanel', '$linked_field'" 
                     .", '$record', $refresh_page);\"" 
 			. ' class="listViewTdToolsS1"'
+            . "id=$unique_id"
 			. " onclick=\"return sp_rem_conf();\""
-			. ">$icon_remove_html&nbsp;$icon_remove_text</a>";
+			. ">$icon_remove_text</a>";
         return $retStr;
             
 		}else{
@@ -117,4 +123,3 @@ class SugarWidgetSubPanelRemoveButton extends SugarWidgetField
 		}
 	}
 }
-?>

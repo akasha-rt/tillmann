@@ -2,43 +2,46 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
 
 
-require_once('include/generic/SugarWidgets/SugarWidget.php');
+
 
 class SugarWidgetSubPanelTopButton extends SugarWidget
 {
@@ -90,6 +93,15 @@ class SugarWidgetSubPanelTopButton extends SugarWidget
 				$this->form_value = translate($form_value, $module);
 		}
 	}
+
+    public function getWidgetId($buttonSuffix = true)
+    {
+    	$widgetID = parent::getWidgetId() . '_'.preg_replace('[ ]', '', mb_strtolower($this->form_value, 'UTF-8'));
+    	if($buttonSuffix){
+    		$widgetID .= '_button';
+    	}
+        return $widgetID;
+    }
 
     function &_get_form($defines, $additionalFormFields = null, $asUrl = false)
     {
@@ -255,14 +267,12 @@ class SugarWidgetSubPanelTopButton extends SugarWidget
     }
 
 	/** This default function is used to create the HTML for a simple button */
-	function display($defines, $additionalFormFields = null)
+	function display($defines, $additionalFormFields = null, $nonbutton = false)
 	{
 		$temp='';
-		$inputID = $this->getWidgetId() . '_'.preg_replace('[ ]', '', strtolower($this->form_value)).'_button';
+		$inputID = $this->getWidgetId();
 
 		if(!empty($this->acl) && ACLController::moduleSupportsACL($defines['module'])  &&  !ACLController::checkAccess($defines['module'], $this->acl, true)){
-			$inputID = $this->getWidgetId() . '_'.preg_replace('[ ]', '', strtolower($this->form_value)).'_button';
-			$button = "<input title='$this->title'  class='button' type='button' name='$inputID' id='$inputID' value='  $this->form_value  ' disabled/>\n</form>";
 			return $temp;
 		}
 
@@ -271,10 +281,14 @@ class SugarWidgetSubPanelTopButton extends SugarWidget
         if ( isset($_REQUEST['layout_def_key']) && $_REQUEST['layout_def_key'] == 'UserEAPM' ) {
             // Subpanels generally don't go on the editview, so we have to handle this special
             $megaLink = $this->_get_form($defines, $additionalFormFields,true);
-            $button = "<input title='$this->title' accesskey='$this->access_key' class='button' type='submit' name='$inputID' id='$inputID' value='  $this->form_value  ' onclick='javascript:document.location=\"index.php?".$megaLink."\"; return false;'/>";
+            $button = "<input title='$this->title' accesskey='$this->access_key' class='button' type='submit' name='$inputID' id='$inputID' value='$this->form_value' onclick='javascript:document.location=\"index.php?".$megaLink."\"; return false;'/>";
         } else {
             $button = $this->_get_form($defines, $additionalFormFields);
-            $button .= "<input title='$this->title' accesskey='$this->access_key' class='button' type='submit' name='$inputID' id='$inputID' value='  $this->form_value  ' />\n</form>";
+            $button .= "<input title='$this->title' accesskey='$this->access_key' class='button' type='submit' name='$inputID' id='$inputID' value='$this->form_value' />\n</form>";
+        }
+
+        if ($nonbutton) {
+            $button = "<a onclick=''>$this->form_value";
         }
         return $button;
 	}
@@ -285,43 +299,7 @@ class SugarWidgetSubPanelTopButton extends SugarWidget
 	 */
 	function _create_json_encoded_popup_request($popup_request_data)
 	{
-		$popup_request_array = array();
-
-		if(!empty($popup_request_data['call_back_function']))
-		{
-			$popup_request_array[] = '"call_back_function":"' . $popup_request_data['call_back_function'] . '"';
-		}
-
-		if(!empty($popup_request_data['form_name']))
-		{
-			$popup_request_array[] = '"form_name":"' . $popup_request_data['form_name'] . '"';
-		}
-
-		if(!empty($popup_request_data['field_to_name_array']))
-		{
-			$field_to_name_array = array();
-			foreach($popup_request_data['field_to_name_array'] as $field => $name)
-			{
-				$field_to_name_array[] = '"' . $field . '":"' . $name . '"';
-			}
-
-			$popup_request_array[] = '"field_to_name_array":{' . implode(',', $field_to_name_array) . '}';
-		}
-
-		if(!empty($popup_request_data['passthru_data']))
-		{
-			$passthru_array = array();
-			foreach($popup_request_data['passthru_data'] as $field => $name)
-			{
-				$passthru_array[] = '"' . $field . '":"' . $name . '"';
-			}
-
-			$popup_request_array[] = '"passthru_data":{' . implode(',', $passthru_array) . '}';
-		}
-
-		$encoded_popup_request = '{' . implode(',', $popup_request_array) . '}';
-
-		return $encoded_popup_request;
+	    return json_encode($popup_request_data);
 	}
 
 	/**

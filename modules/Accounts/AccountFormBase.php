@@ -2,8 +2,11 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
@@ -30,9 +33,9 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * 
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -121,6 +124,14 @@ function buildTableForm($rows, $mod='Accounts'){
 		$form = '<table width="100%"><tr><td>'.$mod_strings['MSG_SHOW_DUPLICATES']. '</td></tr><tr><td height="20"></td></tr></table>';
 	}
 
+    if(isset($_POST['return_action']) && $_POST['return_action'] == 'SubPanelViewer') {
+        $_POST['return_action'] = 'DetailView';
+    }
+
+    if(isset($_POST['return_action']) && $_POST['return_action'] == 'DetailView' && empty($_REQUEST['return_id'])) {
+        unset($_POST['return_action']);
+    }
+
 	$form .= "<table width='100%' cellpadding='0' cellspacing='0' class='list view' border='0'><tr class='pagination'><td colspan='$cols'><table width='100%' cellspacing='0' cellpadding='0' border='0'><tr><td>";
 	// handle buttons
 	if ($action == 'ShowDuplicates') {
@@ -144,14 +155,6 @@ function buildTableForm($rows, $mod='Accounts'){
 	}
 	require_once('include/formbase.php');
 
-	if(isset($_POST['return_action']) && $_POST['return_action'] == 'SubPanelViewer') {
-		$_POST['return_action'] = 'DetailView';
-	} 
-	
-	if(isset($_POST['return_action']) && $_POST['return_action'] == 'DetailView' && empty($_REQUEST['return_id'])) {
-		unset($_POST['return_action']);
-	}	
-	
 	$form .= getPostToForm();
 	if(isset($rows[0])){
 		foreach ($rows[0] as $key=>$value){
@@ -194,14 +197,14 @@ function buildTableForm($rows, $mod='Accounts'){
 	if ($action == 'ShowDuplicates') {
 		$return_action = 'ListView'; // cn: bug 6658 - hardcoded return action break popup -> create -> duplicate -> cancel
 		$return_action = (isset($_REQUEST['return_action']) && !empty($_REQUEST['return_action'])) ? $_REQUEST['return_action'] : $return_action;
-		$form .= "<input type='hidden' name='selectedAccount' id='selectedAccount' value=''><input title='${app_strings['LBL_SAVE_BUTTON_TITLE']}' accessKey='${app_strings['LBL_SAVE_BUTTON_KEY']}' class='button' onclick=\"this.form.action.value='Save';\" type='submit' name='button' value='  ${app_strings['LBL_SAVE_BUTTON_LABEL']}  '>\n";
+		$form .= "<input type='hidden' name='selectedAccount' id='selectedAccount' value=''><input title='${app_strings['LBL_SAVE_BUTTON_TITLE']}' class='button' onclick=\"this.form.action.value='Save';\" type='submit' name='button' value='  ${app_strings['LBL_SAVE_BUTTON_LABEL']}  '>\n";
 	    
         if (!empty($_REQUEST['return_module']) && !empty($_REQUEST['return_action']) && !empty($_REQUEST['return_id']))
-            $form .= "<input title='${app_strings['LBL_CANCEL_BUTTON_TITLE']}' accessKey='${app_strings['LBL_CANCEL_BUTTON_KEY']}' class='button' onclick=\"this.form.module.value='".$_REQUEST['return_module']."';this.form.action.value='".$_REQUEST['return_action']."';this.form.record.value='".$_REQUEST['return_id']."'\" type='submit' name='button' value='  ${app_strings['LBL_CANCEL_BUTTON_LABEL']}  '>";
+            $form .= "<input title='${app_strings['LBL_CANCEL_BUTTON_TITLE']}' class='button' onclick=\"this.form.module.value='".$_REQUEST['return_module']."';this.form.action.value='".$_REQUEST['return_action']."';this.form.record.value='".$_REQUEST['return_id']."'\" type='submit' name='button' value='  ${app_strings['LBL_CANCEL_BUTTON_LABEL']}  '>";
         else if (!empty($_POST['return_module']) && !empty($_POST['return_action']))
-            $form .= "<input title='${app_strings['LBL_CANCEL_BUTTON_TITLE']}' accessKey='${app_strings['LBL_CANCEL_BUTTON_KEY']}' class='button' onclick=\"this.form.module.value='".$_POST['return_module']."';this.form.action.value='". $_POST['return_action'].";'\" type='submit' name='button' value='  ${app_strings['LBL_CANCEL_BUTTON_LABEL']}  '>";
+            $form .= "<input title='${app_strings['LBL_CANCEL_BUTTON_TITLE']}' class='button' onclick=\"this.form.module.value='".$_POST['return_module']."';this.form.action.value='". $_POST['return_action']."';\" type='submit' name='button' value='  ${app_strings['LBL_CANCEL_BUTTON_LABEL']}  '>";
         else
-            $form .= "<input title='${app_strings['LBL_CANCEL_BUTTON_TITLE']}' accessKey='${app_strings['LBL_CANCEL_BUTTON_KEY']}' class='button' onclick=\"this.form.action.value='ListView';\" type='submit' name='button' value='  ${app_strings['LBL_CANCEL_BUTTON_LABEL']}  '>";
+            $form .= "<input title='${app_strings['LBL_CANCEL_BUTTON_TITLE']}'  class='button' onclick=\"this.form.action.value='ListView';\" type='submit' name='button' value='  ${app_strings['LBL_CANCEL_BUTTON_LABEL']}  '>";
 	} else {
 		$form .= "<input type='submit' class='button' name='ContinueAccount' value='${mod_strings['LNK_NEW_ACCOUNT']}'></form>\n";
 	}
@@ -465,16 +468,14 @@ function handleSave($prefix,$redirect=true, $useRequired=false){
 			}
 
 			//add return_module, return_action, and return_id to redirect get string
-			$get .= '&return_module=';
-			if(!empty($_POST['return_module'])) $get .= $_POST['return_module'];
-			else $get .= 'Accounts';
-			$get .= '&return_action=';
-			if(!empty($_POST['return_action'])) $get .= $_POST['return_action'];
-			//else $get .= 'DetailView';
-			if(!empty($_POST['return_id'])) $get .= '&return_id='.$_POST['return_id'];
-			if(!empty($_POST['popup'])) $get .= '&popup='.$_POST['popup'];
-			if(!empty($_POST['create'])) $get .= '&create='.$_POST['create'];
-			
+			$urlData = array('return_module' => 'Accounts', 'return_action' => '');
+			foreach (array('return_module', 'return_action', 'return_id', 'popup', 'create') as $var) {
+			    if (!empty($_POST[$var])) {
+			        $urlData[$var] = $_POST[$var];
+			    }
+			}
+			$get .= "&".http_build_query($urlData);
+
 			$_SESSION['SHOW_DUPLICATES'] = $get;
 			//now redirect the post to modules/Accounts/ShowDuplicates.php
             if (!empty($_POST['is_ajax_call']) && $_POST['is_ajax_call'] == '1')
@@ -489,7 +490,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false){
             }
             else {
                 if(!empty($_POST['to_pdf']))
-                    $location .= '&to_pdf='.$_POST['to_pdf'];
+                    $location .= '&to_pdf='.urlencode($_POST['to_pdf']);
                 header("Location: index.php?$location");
             }
 			return null;
@@ -528,20 +529,20 @@ function handleSave($prefix,$redirect=true, $useRequired=false){
         return null;
     }
 
-	if(isset($_POST['popup']) && $_POST['popup'] == 'true') {
-		$get = '&module=';
-		if(!empty($_POST['return_module'])) $get .= $_POST['return_module'];
-		else $get .= 'Accounts';
-		$get .= '&action=';
-		if(!empty($_POST['return_action'])) $get .= $_POST['return_action'];
-		else $get .= 'Popup';
-		if(!empty($_POST['return_id'])) $get .= '&return_id='.$_POST['return_id'];
-		if(!empty($_POST['popup'])) $get .= '&popup='.$_POST['popup'];
-		if(!empty($_POST['create'])) $get .= '&create='.$_POST['create'];
-		if(!empty($_POST['to_pdf'])) $get .= '&to_pdf='.$_POST['to_pdf'];
-		$get .= '&name=' . $focus->name;
-		$get .= '&query=true';
-		header("Location: index.php?$get");
+    if (isset($_POST['popup']) && $_POST['popup'] == 'true') {
+	    $urlData = array("query" => true, "name" => $focus->name, "module" => 'Accounts', 'action' => 'Popup');
+    	if (!empty($_POST['return_module'])) {
+    	    $urlData['module'] = $_POST['return_module'];
+    	}
+        if (!empty($_POST['return_action'])) {
+    	    $urlData['action'] = $_POST['return_action'];
+    	}
+    	foreach (array('return_id', 'popup', 'create', 'to_pdf') as $var) {
+    	    if (!empty($_POST[$var])) {
+    	        $urlData[$var] = $_POST[$var];
+    	    }
+    	}
+		header("Location: index.php?".http_build_query($urlData));
 		return;
 	}
 	if($redirect){

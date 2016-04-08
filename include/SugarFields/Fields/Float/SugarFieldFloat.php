@@ -2,7 +2,7 @@
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -56,7 +56,7 @@ class SugarFieldFloat extends SugarFieldInt
     
     public function unformatField($formattedField, $vardef){
         if ( $formattedField === '' || $formattedField === NULL ) {
-            return '';
+            return null;
         }
         return (float)unformat_number($formattedField);
     }
@@ -80,6 +80,6 @@ class SugarFieldFloat extends SugarFieldInt
             return false;
         }
         
-        return $value;
+        return (float)$value;
     }
 }

@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+ *
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2016 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -117,7 +120,7 @@ class VardefManager{
                 }
             }
         }
-
+       
         if(!empty($templates[$template])){
             if(empty($GLOBALS['dictionary'][$object]['fields']))$GLOBALS['dictionary'][$object]['fields'] = array();
             if(empty($GLOBALS['dictionary'][$object]['relationships']))$GLOBALS['dictionary'][$object]['relationships'] = array();
@@ -128,23 +131,22 @@ class VardefManager{
             // maintain a record of this objects inheritance from the SugarObject templates...
             $GLOBALS['dictionary'][$object]['templates'][ $template ] = $template ;
         }
-
     }
 
 
     /**
      * Remove invalid field definitions
      * @static
-     * @param Array $fieldDefs
-     * @return  Array
+     * @param array $fieldDefs
+     * @return  array
      */
     static function cleanVardefs($fieldDefs)
     {
-        foreach($fieldDefs as $field => $defs)
-        {
-            if (empty($def['name']) || empty($def['type']))
-            {
-                unset($fieldDefs[$field]);
+        if(isset($fieldDefs['fields'])) {
+            foreach ($fieldDefs['fields'] as $field => $defs) {
+                if (empty($defs['name']) || empty($defs['type'])) {
+                    unset($fieldDefs['fields'][$field]);
+                }
             }
         }
 
@@ -160,16 +162,20 @@ class VardefManager{
 
         if (empty($GLOBALS['dictionary'][$object]))
             $object = BeanFactory::getObjectName($module);
+
+        //Sometimes bad definitions can get in from left over extensions or file system lag(caching). We need to clean those.
+        $data = self::cleanVardefs($GLOBALS['dictionary'][$object]);
+
         $file = create_cache_directory('modules/' . $module . '/' . $object . 'vardefs.php');
-        write_array_to_file('GLOBALS["dictionary"]["'. $object . '"]',$GLOBALS['dictionary'][$object], $file);
+
+        $out="<?php \n \$GLOBALS[\"dictionary\"][\"". $object . "\"]=" . var_export($data, true) .";";
+        sugar_file_put_contents_atomic($file, $out);
         if ( sugar_is_file($file) && is_readable($file)) {
             include($file);
         }
 
         // put the item in the sugar cache.
         $key = "VardefManager.$module.$object";
-        //Sometimes bad definitions can get in from left over extensions or file system lag(caching). We need to clean those.
-        $data = self::cleanVardefs($GLOBALS['dictionary'][$object]);
         sugar_cache_put($key,$data);
     }
 
@@ -270,7 +276,7 @@ class VardefManager{
         if($cacheCustom){
             require_once("modules/DynamicFields/DynamicField.php");
             $df = new DynamicField ($module) ;
-            $df->buildCache($module);
+            $df->buildCache($module, false);
         }
 
         //great! now that we have loaded all of our vardefs.
@@ -320,12 +326,20 @@ class VardefManager{
                 $links[$name] = $def;
             }
         }
+
+        self::$linkFields[$object] = $links;
+
         return $links;
     }
 
 
     public static function getLinkFieldForRelationship($module, $object, $relName)
     {
+        $cacheKey = "LFR{$module}{$object}{$relName}";
+        $cacheValue = sugar_cache_retrieve($cacheKey);
+        if(!empty($cacheValue))
+            return $cacheValue;
+
         $relLinkFields = self::getLinkFieldsForModule($module, $object);
         $matches = array();
         if (!empty($relLinkFields))
@@ -341,9 +355,13 @@ class VardefManager{
         if (empty($matches))
             return false;
         if (sizeof($matches) == 1)
-            return $matches[0];
-        //For relationships where both sides are the same module, more than one link will be returned
-        return $matches;
+            $results = $matches[0];
+        else
+            //For relationships where both sides are the same module, more than one link will be returned
+            $results = $matches;
+
+        sugar_cache_put($cacheKey, $results);
+        return $results ;
     }
 
 
@@ -386,7 +404,7 @@ class VardefManager{
         //here check if the cache file exists, if it does then load it, if it doesn't
         //then call refreshVardef
         //if either our session or the system is set to developerMode then refresh is set to true
-        if(!empty($GLOBALS['sugar_config']['developerMode']) || !empty($_SESSION['developerMode'])){
+        if(inDeveloperMode() || !empty($_SESSION['developerMode'])){
             $refresh = true;
         }
         // Retrieve the vardefs from cache.
@@ -421,7 +439,7 @@ class VardefManager{
             {
                 if (is_readable($cachedfile))
                 {
-                    include_once($cachedfile);
+                    include($cachedfile);
                 }
                 // now that we hae loaded the data from disk, put it in the cache.
                 if(!empty($GLOBALS['dictionary'][$object]))

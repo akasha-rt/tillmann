@@ -2,8 +2,11 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
@@ -30,9 +33,9 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * 
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -56,60 +59,39 @@ var $objectName = 'Contact';
  * This function returns the SQL String used for initial duplicate Contacts check
  *
  * @see checkForDuplicates (method), ContactFormBase.php, LeadFormBase.php, ProspectFormBase.php
+ * @param $focus sugarbean
  * @param $prefix String value of prefix that may be present in $_POST variables
  * @return SQL String of the query that should be used for the initial duplicate lookup check
  */
-/*public function getDuplicateQuery($prefix='')
+public function getDuplicateQuery($focus, $prefix='')
 {
-	$query = 'SELECT id, first_name, last_name, title FROM contacts where deleted = 0 AND ';
+	$query = 'SELECT contacts.id, contacts.first_name, contacts.last_name, contacts.title FROM contacts ';
+
+    // Bug #46427 : Records from other Teams shown on Potential Duplicate Contacts screen during Lead Conversion
+    // add team security
+
+    $query .= ' where contacts.deleted = 0 AND ';
 	if(isset($_POST[$prefix.'first_name']) && strlen($_POST[$prefix.'first_name']) != 0 && isset($_POST[$prefix.'last_name']) && strlen($_POST[$prefix.'last_name']) != 0){
-		$query .= " first_name LIKE '". $_POST[$prefix.'first_name'] . "%' AND last_name = '". $_POST[$prefix.'last_name'] ."'";
+		$query .= " contacts.first_name LIKE '". $_POST[$prefix.'first_name'] . "%' AND contacts.last_name = '". $_POST[$prefix.'last_name'] ."'";
 	} else {
-		$query .= " last_name = '". $_POST[$prefix.'last_name'] ."'";
+		$query .= " contacts.last_name = '". $_POST[$prefix.'last_name'] ."'";
 	}
 
 	if(!empty($_POST[$prefix.'record'])) {
-		$query .= " AND  id != '". $_POST[$prefix.'record'] ."'";
+		$query .= " AND  contacts.id != '". $_POST[$prefix.'record'] ."'";
 	}
     return $query;
-    //return ' ';
-}*/
-public function getDuplicateQuery($prefix='')
-{
-
-        $query = 'SELECT
-                    contacts.id,
-                    contacts.first_name,
-                    contacts.last_name,
-                    contacts.title
-                  FROM contacts
-                    LEFT JOIN email_addr_bean_rel
-                      ON email_addr_bean_rel.bean_id = contacts.id
-                        AND email_addr_bean_rel.deleted = 0
-                    LEFT JOIN email_addresses
-                      ON email_addresses.id = email_addr_bean_rel.email_address_id
-                        AND email_addresses.deleted = 0
-                  WHERE contacts.deleted = 0
-                      AND ';
-
-        $query .= " email_addresses.email_address = '". $_POST['Contacts0emailAddress0'] ."'";
-
-        if(!empty($_POST[$prefix.'record'])) {
-            $query .= " AND  id != '". $_POST[$prefix.'record'] ."'";
-        }
-        return $query;
-        //return ' ';
 }
 
 
 function getWideFormBody($prefix, $mod='',$formname='',  $contact = '', $portal = true){
-	
+
 	if(!ACLController::checkAccess('Contacts', 'edit', true)){
 		return '';
 	}
-	
+
 	if(empty($contact)){
-		$contact = new Contact();
+        $contact = $this->getContact();
 	}
 
 	global $mod_strings;
@@ -148,7 +130,7 @@ function getWideFormBody($prefix, $mod='',$formname='',  $contact = '', $portal 
     }
 	$lbl_email_address = $mod_strings['LBL_EMAIL_ADDRESS'];
 	$salutation_options=get_select_options_with_id($app_list_strings['salutation_dom'], $contact->salutation);
-	
+
 	if (isset($contact->lead_source)) {
 		$lead_source_options=get_select_options_with_id($app_list_strings['lead_source_dom'], $contact->lead_source);
 	} else {
@@ -174,7 +156,7 @@ if(!empty($_REQUEST['birthdate'])){
    }
 
 
-$jsCalendarImage = SugarThemeRegistry::current()->getImageURL('jscalendar.gif');	
+$jsCalendarImage = SugarThemeRegistry::current()->getImageURL('jscalendar.gif');
 $ntc_date_format = $timedate->get_user_date_format();
 $cal_dateformat = $timedate->get_cal_date_format();
 $lbl_required_symbol = $app_strings['LBL_REQUIRED_SYMBOL'];
@@ -247,7 +229,7 @@ $form .= <<<EOQ
 		<td  nowrap>
 			<input name='{$prefix}birthdate' onblur="parseDate(this, '$cal_dateformat');" size='12' maxlength='10' id='${prefix}jscal_field' type="text" value="{$birthdate}">&nbsp;
 			<!--not_in_theme!--><img src="{$jsCalendarImage}" alt="{$app_strings['LBL_ENTER_DATE']}"  id="${prefix}jscal_trigger" align="absmiddle">
-		</td>		
+		</td>
 		</tr>
 
 EOQ;
@@ -270,14 +252,14 @@ EOQ;
 
 
 	//carry forward custom lead fields common to contacts during Lead Conversion
-	$tempContact = new Contact();
+    $tempContact = $this->getContact();
 
 	if (method_exists($contact, 'convertCustomFieldsForm')) $contact->convertCustomFieldsForm($form, $tempContact, $prefix);
 	unset($tempContact);
 
 $form .= <<<EOQ
 		</table>
-		
+
 		<input type='hidden' name='${prefix}alt_address_street'  value='{$contact->alt_address_street}'>
 		<input type='hidden' name='${prefix}alt_address_city' value='{$contact->alt_address_city}'><input type='hidden' name='${prefix}alt_address_state'   value='{$contact->alt_address_state}'><input type='hidden' name='${prefix}alt_address_postalcode'   value='{$contact->alt_address_postalcode}'><input type='hidden' name='${prefix}alt_address_country'  value='{$contact->alt_address_country}'>
 		<input type='hidden' name='${prefix}do_not_call'  value='{$contact->do_not_call}'>
@@ -311,7 +293,7 @@ EOQ;
 	        $form .= "<input name='${prefix}old_portal_password' type='hidden' size='25'  value='' >";
 	    }
 	}
-	
+
 $form .= <<<EOQ
 			<script type="text/javascript">
 				Calendar.setup ({
@@ -319,20 +301,20 @@ $form .= <<<EOQ
 				});
 			</script>
 EOQ;
-	
-	
-	
+
+
+
 	$javascript = new javascript();
 	$javascript->setFormName($formname);
-	$javascript->setSugarBean(new Contact());
+	$javascript->setSugarBean($this->getContact());
 	$javascript->addField('email1','false',$prefix);
 	$javascript->addField('email2','false',$prefix);
 	$javascript->addRequiredFields($prefix);
 
 	$form .=$javascript->getScript();
 	$mod_strings = $temp_strings;
-	
-  
+
+
 	return $form;
 }
 
@@ -391,7 +373,7 @@ EOQ;
 
 $javascript = new javascript();
 $javascript->setFormName($formname);
-$javascript->setSugarBean(new Contact());
+$javascript->setSugarBean($this->getContact());
 $javascript->addField('email1','false',$prefix);
 $javascript->addRequiredFields($prefix);
 
@@ -439,20 +421,20 @@ return $the_form;
 
 function handleSave($prefix, $redirect=true, $useRequired=false){
 	global $theme, $current_user;
-	
-	
-	
-    
+
+
+
+
 	require_once('include/formbase.php');
-	
+
 	global $timedate;
 
-	$focus = new Contact();
+	$focus = $this->getContact();
 
 	if($useRequired &&  !checkRequired($prefix, array_keys($focus->required_fields))){
 		return null;
 	}
-	
+
 	if (!empty($_POST[$prefix.'new_reports_to_id'])) {
 		$focus->retrieve($_POST[$prefix.'new_reports_to_id']);
 		$focus->reports_to_id = $_POST[$prefix.'record'];
@@ -460,7 +442,7 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 
         $focus = populateFromPost($prefix, $focus);
         if( isset($_POST[$prefix.'old_portal_password']) && !empty($focus->portal_password) && $focus->portal_password != $_POST[$prefix.'old_portal_password']){
-            $focus->portal_password = md5($focus->portal_password);
+            $focus->portal_password = User::getPasswordHash($focus->portal_password);
         }
 		if (!isset($_POST[$prefix.'email_opt_out'])) $focus->email_opt_out = 0;
 		if (!isset($_POST[$prefix.'do_not_call'])) $focus->do_not_call = 0;
@@ -472,7 +454,7 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 	}
 	if($_REQUEST['action'] != 'BusinessCard' && $_REQUEST['action'] != 'ConvertLead' && $_REQUEST['action'] != 'ConvertProspect')
 	{
-		
+
 		if (!empty($_POST[$prefix.'sync_contact']) || !empty($focus->sync_contact)){
 			 $focus->contacts_users_id = $current_user->id;
 		}
@@ -493,7 +475,7 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 		$check_notify = FALSE;
 	}
 
-    
+
 	if (empty($_POST['record']) && empty($_POST['dup_checked'])) {
 
 		$duplicateContacts = $this->checkForDuplicates($prefix);
@@ -503,7 +485,7 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 			if(isset($_POST['inbound_email_id']) && !empty($_POST['inbound_email_id'])) {
 				$get .= '&inbound_email_id='.$_POST['inbound_email_id'];
 			}
-			
+
 			// Bug 25311 - Add special handling for when the form specifies many-to-many relationships
 			if(isset($_POST['relate_to']) && !empty($_POST['relate_to'])) {
 				$get .= '&Contactsrelate_to='.$_POST['relate_to'];
@@ -530,19 +512,19 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 			}
 
 			if($focus->hasCustomFields()) {
-				foreach($focus->field_defs as $name=>$field) {	
+				foreach($focus->field_defs as $name=>$field) {
 					if (!empty($field['source']) && $field['source'] == 'custom_fields')
 					{
 						$get .= "&Contacts$name=".urlencode($focus->$name);
-					}			    
+					}
 				}
-			}			
-			
-			
+			}
+
+
 			$emailAddress = new SugarEmailAddress();
 			$get .= $emailAddress->getFormBaseURL($focus);
 
-			
+
 			//create list of suspected duplicate contact id's in redirect get string
 			$i=0;
 			foreach ($duplicateContacts as $contact)
@@ -552,21 +534,15 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 			}
 
 			//add return_module, return_action, and return_id to redirect get string
-			$get .= "&return_module=";
-			if(!empty($_POST['return_module'])) $get .= $_POST['return_module'];
-			else $get .= "Contacts";
-			$get .= "&return_action=";
-			if(!empty($_POST['return_action'])) $get .= $_POST['return_action'];
-			//else $get .= "DetailView";
-			if(!empty($_POST['return_id'])) $get .= "&return_id=".$_POST['return_id'];
-			if(!empty($_POST['popup'])) $get .= '&popup='.$_POST['popup'];
-			if(!empty($_POST['create'])) $get .= '&create='.$_POST['create'];
+			$urlData = array('return_module' => 'Contacts', 'return_action' => '');
+			foreach (array('return_module', 'return_action', 'return_id', 'popup', 'create', 'start') as $var) {
+			    if (!empty($_POST[$var])) {
+			        $urlData[$var] = $_POST[$var];
+			    }
+			}
+			$get .= "&".http_build_query($urlData);
+			$_SESSION['SHOW_DUPLICATES'] = $get;
 
-			// for InboundEmail flow
-			if(!empty($_POST['start'])) $get .= '&start='.$_POST['start'];
-
-
-            $_SESSION['SHOW_DUPLICATES'] = $get;
             //now redirect the post to modules/Contacts/ShowDuplicates.php
             if (!empty($_POST['is_ajax_call']) && $_POST['is_ajax_call'] == '1')
             {
@@ -579,7 +555,7 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
                 echo "<script>SUGAR.ajaxUI.loadContent('index.php?$location');</script>";
             }
             else {
-                if(!empty($_POST['to_pdf'])) $location .= '&to_pdf='.$_POST['to_pdf'];
+                if(!empty($_POST['to_pdf'])) $location .= '&to_pdf='.urlencode($_POST['to_pdf']);
                 header("Location: index.php?$location");
             }
             return null;
@@ -600,7 +576,7 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 	if(isset($_REQUEST['inbound_email_id']) && !empty($_REQUEST['inbound_email_id'])) {
 		// fake this case like it's already saved.
 		$focus->save($check_notify);
-		
+
 		$email = new Email();
 		$email->retrieve($_REQUEST['inbound_email_id']);
 		$email->parent_type = 'Contacts';
@@ -619,22 +595,22 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 
 	$focus->save($check_notify);
 	$return_id = $focus->id;
-    
+
 	$GLOBALS['log']->debug("Saved record with id of ".$return_id);
 
-    if (!empty($_POST['is_ajax_call']) && $_POST['is_ajax_call'] == '1') {
+    if ($redirect && !empty($_POST['is_ajax_call']) && $_POST['is_ajax_call'] == '1') {
         $json = getJSONobj();
         echo $json->encode(array('status' => 'success',
                                  'get' => ''));
     	$trackerManager = TrackerManager::getInstance();
         $timeStamp = TimeDate::getInstance()->nowDb();
-        if($monitor = $trackerManager->getMonitor('tracker')){ 
+        if($monitor = $trackerManager->getMonitor('tracker')){
 	        $monitor->setValue('action', 'detailview');
 	        $monitor->setValue('user_id', $GLOBALS['current_user']->id);
 	        $monitor->setValue('module_name', 'Contacts');
 	        $monitor->setValue('date_modified', $timeStamp);
 	        $monitor->setValue('visible', 1);
-	
+
 	        if (!empty($this->bean->id)) {
 	            $monitor->setValue('item_id', $return_id);
 	            $monitor->setValue('item_summary', $focus->get_summary_text());
@@ -644,21 +620,21 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
         return null;
     }
 
-	if(isset($_POST['popup']) && $_POST['popup'] == 'true') {
-		$get = '&module=';
-		if(!empty($_POST['return_module'])) $get .= $_POST['return_module'];
-		else $get .= 'Contacts';
-		$get .= '&action=';
-		if(!empty($_POST['return_action'])) $get .= $_POST['return_action'];
-		else $get .= 'Popup';
-		if(!empty($_POST['return_id'])) $get .= '&return_id='.$_POST['return_id'];
-		if(!empty($_POST['popup'])) $get .= '&popup='.$_POST['popup'];
-		if(!empty($_POST['create'])) $get .= '&create='.$_POST['create'];
-		if(!empty($_POST['to_pdf'])) $get .= '&to_pdf='.$_POST['to_pdf'];
-		$get .= '&first_name=' . urlencode($focus->first_name);
-		$get .= '&last_name=' . urlencode($focus->last_name);
-		$get .= '&query=true';
-		header("Location: index.php?$get");
+	if($redirect && isset($_POST['popup']) && $_POST['popup'] == 'true') {
+	    $urlData = array("query" => true, "first_name" => $focus->first_name, "last_name" => $focus->last_name,
+	       "module" => 'Accounts', 'action' => 'Popup');
+    	if (!empty($_POST['return_module'])) {
+    	    $urlData['module'] = $_POST['return_module'];
+    	}
+        if (!empty($_POST['return_action'])) {
+    	    $urlData['action'] = $_POST['return_action'];
+    	}
+    	foreach(array('return_id', 'popup', 'create', 'to_pdf') as $var) {
+    	    if (!empty($_POST[$var])) {
+    	        $urlData[$var] = $_POST[$var];
+    	    }
+    	}
+		header("Location: index.php?".http_build_query($urlData));
 		return;
 	}
 
@@ -671,7 +647,7 @@ function handleSave($prefix, $redirect=true, $useRequired=false){
 
 function handleRedirect($return_id){
 	if(isset($_POST['return_module']) && $_POST['return_module'] != "") {
-		$return_module = $_POST['return_module'];
+		$return_module = urlencode($_POST['return_module']);
 	}
 	else {
 		$return_module = "Contacts";
@@ -679,14 +655,14 @@ function handleRedirect($return_id){
 
 	if(isset($_POST['return_action']) && $_POST['return_action'] != "") {
 		if($_REQUEST['return_module'] == 'Emails') {
-			$return_action = $_REQUEST['return_action'];
+			$return_action = urlencode($_REQUEST['return_action']);
 		}
 		// if we create a new record "Save", we want to redirect to the DetailView
 		elseif($_REQUEST['action'] == "Save" && $_REQUEST['return_module'] != "Home") {
 			$return_action = 'DetailView';
 		} else {
 			// if we "Cancel", we go back to the list view.
-			$return_action = $_REQUEST['return_action'];
+			$return_action = urlencode($_REQUEST['return_action']);
 		}
 	}
 	else {
@@ -694,7 +670,7 @@ function handleRedirect($return_id){
 	}
 
 	if(isset($_POST['return_id']) && $_POST['return_id'] != "") {
-        $return_id = $_POST['return_id'];
+        $return_id = urlencode($_POST['return_id']);
 	}
 
 	//eggsurplus Bug 23816: maintain VCR after an edit/save. If it is a duplicate then don't worry about it. The offset is now worthless.
@@ -711,7 +687,12 @@ function handleRedirect($return_id){
     }
 }
 
+    /**
+    * @return Contact
+    */
+    protected function getContact()
+    {
+        return new Contact();
+    }
 }
 
-
-?>

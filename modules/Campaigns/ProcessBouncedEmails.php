@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -82,13 +82,33 @@ function createBouncedCampaignLogEntry($row,$email, $email_description)
     $bounce->related_id= $email->id;
 
     //do we have the phrase permanent error in the email body.
-    if (preg_match('/permanent[ ]*error/',$email_description)) 
+    if (preg_match('/permanent[ ]*error/',$email_description))
+    {
         $bounce->activity_type='invalid email';
+        markEmailAddressInvalid($email);
+    }
     else 
         $bounce->activity_type='send error';
         
     $return_id=$bounce->save();
     return $return_id;
+}
+
+/**
+ * Given an email address, mark it as invalid.
+ *
+ * @param $email_address
+ */
+function markEmailAddressInvalid($email_address)
+{
+    if(empty($email_address))
+        return;
+    $sea = new SugarEmailAddress();
+    $rs = $sea->retrieve_by_string_fields( array('email_address_caps' => trim(strtoupper($email_address))) );
+    if($rs != null)
+    {
+        $sea->AddUpdateEmailAddress($email_address, 1, 0, $rs->id);
+    }
 }
 
 /**
@@ -199,8 +219,6 @@ function campaign_process_bounced_emails(&$email, &$email_header)
     		} 
     		else 
     		{
-    			//todo mark the email address as invalid. search for prospects/leads/contact associated
-    			//with this email address and set the invalid_email flag... also make email available.
     			$GLOBALS['log']->info("Warning: Empty identifier for campaign log.");
     			return FALSE;
     		}

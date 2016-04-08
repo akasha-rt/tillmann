@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -42,16 +42,10 @@ require_once('include/utils/encryption_utils.php');
 
 function getSystemInfo($send_usage_info=true){
 	global $sugar_config;
-	global $db, $authLevel, $administration, $timedate;
+	global $db, $administration, $timedate;
 	$info=array();
 	$info = getBaseSystemInfo($send_usage_info);
     if($send_usage_info){
-		if($authLevel > 0){
-			if(isset($_SERVER['SERVER_ADDR']))
-				$info['ip_address'] = $_SERVER['SERVER_ADDR'];
-			else
-				$info['ip_address'] = '127.0.0.1';
-		}
 		$info['application_key']=$sugar_config['unique_key'];
 		$info['php_version']=phpversion();
 		if(isset($_SERVER['SERVER_SOFTWARE'])) {
@@ -60,11 +54,12 @@ function getSystemInfo($send_usage_info=true){
 
 		//get user count.
 
-		$user_list = get_user_array(false, "Active", "", false, null, " AND is_group=0 AND portal_only=0 ", false);
+                $query = "SELECT count(*) as total from users WHERE " . User::getLicensedUsersWhere();
+                $result = $db->getOne($query, false, 'fetching active users count');
+                if ($result !== false) {
+                    $info['users'] = $result;
+                }
 
-
-
-		$info['users']=count($user_list);
 		if(empty($administration)){
 
 			$administration = new Administration();
@@ -78,9 +73,6 @@ function getSystemInfo($send_usage_info=true){
 			$info['admin_users'] = $result;
 		}
 
-		if(empty($authLevel)){
-			$authLevel = 0;
-		}
 
 		$result=$db->getOne("select count(*) count from users", false, 'fetching all users count');
 		if($result !== false) {
@@ -112,7 +104,6 @@ function getSystemInfo($send_usage_info=true){
 		include('distro.php');
 		if(!empty($distro_name))$info['distro_name'] = $distro_name;
 	}
-	$info['auth_level'] = $authLevel;
 	$info['os'] = php_uname('s');
 	$info['os_version'] = php_uname('r');
 	$info['timezone_u'] = $GLOBALS['current_user']->getPreference('timezone');
@@ -125,7 +116,6 @@ function getSystemInfo($send_usage_info=true){
 }
 
 function getBaseSystemInfo($send_usage_info=true){
-    global $authLevel;
     include('sugar_version.php');
     $info=array();
 
@@ -134,7 +124,7 @@ function getBaseSystemInfo($send_usage_info=true){
     }
     $info['sugar_version']=$sugar_version;
     $info['sugar_flavor']=$sugar_flavor;
-    $info['auth_level'] = $authLevel;
+    $info['auth_level'] = 0;
 
 
 
@@ -146,6 +136,7 @@ function getBaseSystemInfo($send_usage_info=true){
 function check_now($send_usage_info=true, $get_request_data=false, $response_data = false, $from_install=false ) {
 	global $sugar_config, $timedate;
 	global $db, $license;
+    include('sugar_version.php');
 
 
 	$return_array=array();
@@ -165,18 +156,16 @@ function check_now($send_usage_info=true, $get_request_data=false, $response_dat
 		$GLOBALS['log']->debug('USING HTTPS TO CONNECT TO HEARTBEAT');
 		$sclient = new nusoapclient('https://updates.sugarcrm.com/heartbeat/soap.php', false, false, false, false, false, 15, 15);
 		$ping = $sclient->call('sugarPing', array());
-		if(empty($ping) || $sclient->getError()){
-			$sclient = '';
-		}
-
-		if(empty($sclient)){
-			$GLOBALS['log']->debug('USING HTTP TO CONNECT TO HEARTBEAT');
-			$sclient = new nusoapclient('http://updates.sugarcrm.com/heartbeat/soap.php', false, false, false, false, false, 15, 15);
-		}
-
-
-
-
+        if (empty($ping) || $sclient->getError()) {
+            if (!$get_request_data) {
+                return array(
+                    array(
+                        'version' => $sugar_version,
+                        'description' => "You have the latest version."
+                    )
+                );
+            }
+        }
 
 
 			$key = '4829482749329';
@@ -256,11 +245,6 @@ function check_now($send_usage_info=true, $get_request_data=false, $response_dat
 		$license->saveSetting('license', 'latest_versions','')	;
 	}
 
-
-
-
-	include('sugar_version.php');
-
 	if(sizeof($resultData) == 1 && !empty($resultData['versions'][0]['version'])
         && compareVersions($sugar_version, $resultData['versions'][0]['version']))
 	{
@@ -276,32 +260,7 @@ function check_now($send_usage_info=true, $get_request_data=false, $response_dat
  */
 function compareVersions($ver1, $ver2)
 {
-    if(!preg_match_all("/[0-9]/", $ver1, $matches1))
-    {
-        return false;
-    }
-
-    if(!preg_match_all("/[0-9]/", $ver2, $matches2))
-    {
-        return true;
-    }
-
-    //Now recreate string with only numbers
-    $ver1 = implode('', $matches1[0]);
-    $ver2 = implode('', $matches2[0]);
-
-    $len1 = strlen($ver1);
-    $len2 = strlen($ver2);
-
-    //Now apply padding
-    if($len1 > $len2) {
-        $ver2 = str_pad($ver2, $len1, '0');
-    } else if($len2 > $len1) {
-        $ver1 = str_pad($ver1, $len2, '0');
-    }
-
-    //Return result
-    return (int)$ver1 > (int)$ver2;
+    return (version_compare($ver1, $ver2) === 1);
 }
 function set_CheckUpdates_config_setting($value) {
 
@@ -408,10 +367,9 @@ function loadLicense($firstLogin=false){
 }
 
 function loginLicense(){
-	global $current_user, $license, $authLevel;
+	global $current_user, $license;
 	loadLicense(true);
 
-	$authLevel = 0;
 
 	if (shouldCheckSugar()) {
 
@@ -428,7 +386,13 @@ function loginLicense(){
 			set_last_check_date_config_setting("$current_date_time");
 			include('sugar_version.php');
 
-			if(!empty($version)&& count($version) == 1 && $version[0]['version'] > $sugar_version  && is_admin($current_user))
+            $newVersion = '';
+            if (!empty($version) && count($version) == 1)
+            {
+                $newVersion = $version[0]['version'];
+            }
+
+            if (version_compare($newVersion, $sugar_version, '>') && is_admin($current_user))
 			{
 				//set session variables.
 				$_SESSION['available_version']=$version[0]['version'];
@@ -440,12 +404,3 @@ function loginLicense(){
 
 
 }
-
-
-
-
-
-
-
-
-?>

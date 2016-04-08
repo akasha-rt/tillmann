@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -52,6 +52,8 @@ class ImportViewLast extends ImportView
 {
     protected $pageTitleKey = 'LBL_STEP_5_TITLE';
 
+    var $lvf;
+
  	/**
      * @see SugarView::display()
      */
@@ -76,17 +78,23 @@ class ImportViewLast extends ImportView
         $dupeCount    = 0;
         $createdCount = 0;
         $updatedCount = 0;
-        $fp = sugar_fopen(ImportCacheFiles::getStatusFileName(),'r');
-        while (( $row = fgetcsv($fp, 8192) ) !== FALSE)
+        $fp = sugar_fopen(ImportCacheFiles::getStatusFileName(), 'r');
+        
+        // Read the data if we successfully opened file 
+        if ($fp !== false)
         {
-            $count         += (int) $row[0];
-            $errorCount    += (int) $row[1];
-            $dupeCount     += (int) $row[2];
-            $createdCount  += (int) $row[3];
-            $updatedCount  += (int) $row[4];
+            // Read rows 1 by 1 and add the info
+            while ($row = fgetcsv($fp, 8192))
+            {
+                $count         += (int) $row[0];
+                $errorCount    += (int) $row[1];
+                $dupeCount     += (int) $row[2];
+                $createdCount  += (int) $row[3];
+                $updatedCount  += (int) $row[4];
+            }
+            fclose($fp);
         }
-        fclose($fp);
-
+        
         $this->ss->assign("showUndoButton",FALSE);
         if($createdCount > 0)
         {
@@ -101,13 +109,14 @@ class ImportViewLast extends ImportView
             $activeTab = 0;
 
         $this->ss->assign("JAVASCRIPT", $this->_getJS($activeTab));
-        $this->ss->assign("errorCount",$errorCount);
-        $this->ss->assign("dupeCount",$dupeCount);
-        $this->ss->assign("createdCount",$createdCount);
-        $this->ss->assign("updatedCount",$updatedCount);
-        $this->ss->assign("errorFile",ImportCacheFiles::getErrorFileName());
-        $this->ss->assign("errorrecordsFile",ImportCacheFiles::getErrorRecordsWithoutErrorFileName());
-        $this->ss->assign("dupeFile",ImportCacheFiles::getDuplicateFileName());
+
+        $this->ss->assign("errorCount", $errorCount);
+        $this->ss->assign("dupeCount", $dupeCount);
+        $this->ss->assign("createdCount", $createdCount);
+        $this->ss->assign("updatedCount", $updatedCount);
+        $this->ss->assign("errorFile", ImportCacheFiles::convertFileNameToUrl(ImportCacheFiles::getErrorFileName()));
+        $this->ss->assign("errorrecordsFile", ImportCacheFiles::convertFileNameToUrl(ImportCacheFiles::getErrorRecordsWithoutErrorFileName()));
+        $this->ss->assign("dupeFile", ImportCacheFiles::convertFileNameToUrl(ImportCacheFiles::getDuplicateFileName()));
 
         if ( $this->bean->object_name == "Prospect" )
         {
@@ -144,7 +153,7 @@ class ImportViewLast extends ImportView
     {
         global $mod_strings, $current_language;
         // build listview to show imported records
-        $lvf = new ListViewFacade($this->bean, $this->bean->module_dir, 0);
+        $lvf = !empty($this->lvf) ? $this->lvf : new ListViewFacade($this->bean, $this->bean->module_dir, 0);
 
         $params = array();
         if(!empty($_REQUEST['orderBy']))
@@ -161,12 +170,6 @@ class ImportViewLast extends ImportView
                 AND users_last_import.bean_id = {$this->bean->table_name}.id
                 AND users_last_import.deleted = 0
                 AND {$this->bean->table_name}.deleted = 0";
-        $where = " {$this->bean->table_name}.id IN (
-                        SELECT users_last_import.bean_id
-                            FROM users_last_import
-                            WHERE users_last_import.assigned_user_id = '{$GLOBALS['current_user']->id}'
-                                AND users_last_import.bean_type = '{$beanname}'
-                                AND users_last_import.deleted = 0 )";
 
         $lvf->lv->mergeduplicates = false;
         $lvf->lv->showMassupdateFields = false;
@@ -174,7 +177,7 @@ class ImportViewLast extends ImportView
             $lvf->template = 'include/ListView/ListViewNoMassUpdate.tpl';
 
         $module_mod_strings = return_module_language($current_language, $this->bean->module_dir);
-        $lvf->setup('', $where, $params, $module_mod_strings, 0, -1, '', strtoupper($beanname), array(), 'id');
+        $lvf->setup('', '', $params, $module_mod_strings, 0, -1, '', strtoupper($beanname), array(), 'id');
         global $app_list_strings;
         return $lvf->display($app_list_strings['moduleList'][$this->bean->module_dir], 'main', TRUE);
 
@@ -291,11 +294,19 @@ EOJAVASCRIPT;
 				WHERE users_last_import.assigned_user_id = '{$current_user->id}' AND users_last_import.bean_type='Prospect' AND users_last_import.bean_id=prospects.id
 				AND users_last_import.deleted=0 AND prospects.deleted=0";
 
+        $prospect_id='';
+        if(!empty($query)){
+            $res=$GLOBALS['db']->query($query);
+            while($row = $GLOBALS['db']->fetchByAssoc($res))
+            {
+                $prospect_id[]=$row['id'];
+            }
+        }
         $popup_request_data = array(
             'call_back_function' => 'set_return_and_save_background',
             'form_name' => 'DetailView',
             'field_to_name_array' => array(
-                'id' => 'subpanel_id',
+                'id' => 'prospect_list_id',
             ),
             'passthru_data' => array(
                 'child_field' => 'notused',
@@ -309,10 +320,9 @@ EOJAVASCRIPT;
                 'child_id'=>'id',
                 'link_attribute'=>'prospects',
                 'link_type'=>'default',	 //polymorphic or default
+                'prospect_ids'=>$prospect_id,
             )
         );
-
-        $popup_request_data['passthru_data']['query'] = urlencode($query);
 
         $json = getJSONobj();
         $encoded_popup_request_data = $json->encode($popup_request_data);
@@ -321,7 +331,6 @@ EOJAVASCRIPT;
 <script type="text/javascript" src="include/SubPanel/SubPanelTiles.js?s={$sugar_version}&c={$sugar_config['js_custom_version']}"></script>
 <input align=right" type="button" name="select_button" id="select_button" class="button"
      title="{$app_strings['LBL_ADD_TO_PROSPECT_LIST_BUTTON_LABEL']}"
-     accesskey="{$app_strings['LBL_ADD_TO_PROSPECT_LIST_BUTTON_KEY']}"
      value="{$app_strings['LBL_ADD_TO_PROSPECT_LIST_BUTTON_LABEL']}"
      onclick='open_popup("ProspectLists",600,400,"",true,true,$encoded_popup_request_data,"Single","true");' />
 EOHTML;

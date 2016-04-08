@@ -1,166 +1,139 @@
 <?php
-/*********************************************************************************
- * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Affero General Public License version 3 as published by the
- * Free Software Foundation with the addition of the following permission added
- * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
- * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
- * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU Affero General Public License along with
- * this program; if not, see http://www.gnu.org/licenses or write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
- * 
- * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
- * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
- * The interactive user interfaces in modified source and object code versions
- * of this program must display Appropriate Legal Notices, as required under
- * Section 5 of the GNU Affero General Public License version 3.
- * 
- * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
- * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
- ********************************************************************************/
-
-$viewdefs ['Tasks'] = 
-array (
-  'QuickCreate' => 
+// created: 2016-04-08 13:01:38
+$viewdefs['Tasks']['QuickCreate'] = array (
+  'templateMeta' => 
   array (
-    'templateMeta' => 
+    'form' => 
     array (
-      'form' => 
+      'hidden' => 
       array (
-        'hidden' => 
+        0 => '<input type="hidden" name="isSaveAndNew" value="false">',
+        1 => '<input type="hidden" name="is_ajax_call" value="1">',
+      ),
+      'buttons' => 
+      array (
+        0 => 'SAVE',
+        1 => 'CANCEL',
+        2 => 
         array (
-           '<input type="hidden" name="isSaveAndNew" value="false">',
-        ),
-        'buttons' => 
-        array (
-           'SAVE',
-           'CANCEL',
-           
-          array (
-            'customCode' => '{if $fields.status.value != "Completed"}<input title="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_TITLE}" accessKey="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_KEY}" class="button" onclick="document.getElementById(\'status\').value=\'Completed\'; this.form.action.value=\'Save\'; this.form.return_module.value=\'Tasks\'; this.form.isDuplicate.value=true; this.form.isSaveAndNew.value=true; this.form.return_action.value=\'EditView\'; this.form.return_id.value=\'{$fields.id.value}\'; return check_form(\'EditView\');" type="submit" name="button" value="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_LABEL}">{/if}',
-          ),
+          'customCode' => '{if $fields.status.value != "Completed"}<input title="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_TITLE}" class="button" onclick="document.getElementById(\'status\').value=\'Completed\'; this.form.action.value=\'Save\'; this.form.return_module.value=\'Tasks\'; this.form.isDuplicate.value=true; this.form.isSaveAndNew.value=true; this.form.return_action.value=\'EditView\'; this.form.return_id.value=\'{$fields.id.value}\'; return check_form(\'EditView\');" type="submit" name="button" value="{$APP.LBL_CLOSE_AND_CREATE_BUTTON_LABEL}">{/if}',
         ),
       ),
-      'maxColumns' => '2',
-      'widths' => 
-      array (
-         
-        array (
-          'label' => '10',
-          'field' => '30',
-        ),
-         
-        array (
-          'label' => '10',
-          'field' => '30',
-        ),
-      ),
-      'useTabs' => false,
     ),
-    'panels' => 
+    'maxColumns' => '2',
+    'widths' => 
     array (
-      'default' => 
+      0 => 
       array (
-         
+        'label' => '10',
+        'field' => '30',
+      ),
+      1 => 
+      array (
+        'label' => '10',
+        'field' => '30',
+      ),
+    ),
+    'useTabs' => false,
+    'tabDefs' => 
+    array (
+      'DEFAULT' => 
+      array (
+        'newTab' => false,
+        'panelDefault' => 'expanded',
+      ),
+    ),
+  ),
+  'panels' => 
+  array (
+    'default' => 
+    array (
+      0 => 
+      array (
+        0 => 
         array (
-           
+          'name' => 'name',
+          'displayParams' => 
           array (
-            'name' => 'name',
-            'displayParams' => 
-            array (
-              'required' => true,
-            ),
-          ),
-           
-          array (
-            'name' => 'status',
-            'displayParams' => 
-            array (
-              'required' => true,
-            ),
+            'required' => true,
           ),
         ),
-         
+        1 => 
         array (
-           
+          'name' => 'status',
+          'displayParams' => 
           array (
-            'name' => 'date_start',
-            'type' => 'datetimecombo',
-            'displayParams' => 
-            array (
-              'showNoneCheckbox' => true,
-              'showFormats' => true,
-            ),
-          ),
-           
-          array (
-            'name' => 'parent_name',
-            'label' => 'LBL_LIST_RELATED_TO',
+            'required' => true,
           ),
         ),
-         
+      ),
+      1 => 
+      array (
+        0 => 
         array (
-           
+          'name' => 'date_start',
+          'type' => 'datetimecombo',
+          'displayParams' => 
           array (
-            'name' => 'date_due',
-            'type' => 'datetimecombo',
-            'displayParams' => 
-            array (
-              'showNoneCheckbox' => true,
-              'showFormats' => true,
-            ),
-          ),
-           
-          array (
-            'name' => 'contact_name',
-            'label' => 'LBL_CONTACT_NAME',
+            'showNoneCheckbox' => true,
+            'showFormats' => true,
           ),
         ),
-         
+        1 => 
         array (
-           
+          'name' => 'parent_name',
+          'label' => 'LBL_LIST_RELATED_TO',
+        ),
+      ),
+      2 => 
+      array (
+        0 => 
+        array (
+          'name' => 'date_due',
+          'type' => 'datetimecombo',
+          'displayParams' => 
           array (
-            'name' => 'priority',
-            'displayParams' => 
-            array (
-              'required' => true,
-            ),
+            'showNoneCheckbox' => true,
+            'showFormats' => true,
           ),
         ),
-         array (
+        1 => 
+        array (
+          'name' => 'contact_name',
+          'label' => 'LBL_CONTACT_NAME',
+        ),
+      ),
+      3 => 
+      array (
+        0 => 
+        array (
+          'name' => 'priority',
+          'displayParams' => 
           array (
-            'name' => 'assigned_user_name',
-            'label' => 'LBL_ASSIGNED_TO_NAME',
+            'required' => true,
           ),
         ),
+      ),
+      4 => 
+      array (
+        0 => 
         array (
-           
+          'name' => 'assigned_user_name',
+          'label' => 'LBL_ASSIGNED_TO_NAME',
+        ),
+      ),
+      5 => 
+      array (
+        0 => 
+        array (
+          'name' => 'description',
+          'displayParams' => 
           array (
-            'name' => 'description',
-            'displayParams' => 
-            array (
-              'rows' => 8,
-              'cols' => 60,
-            ),
+            'rows' => 8,
+            'cols' => 60,
           ),
         ),
       ),
     ),
   ),
 );
-?>

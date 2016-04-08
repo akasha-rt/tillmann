@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -124,6 +127,7 @@ class MysqlManager extends DBManager
 			'relate'   => 'varchar',
 			'multienum'=> 'text',
 			'html'     => 'text',
+			'longhtml' => 'longtext',
 			'datetime' => 'datetime',
 			'datetimecombo' => 'datetime',
 			'time'     => 'time',
@@ -277,7 +281,7 @@ class MysqlManager extends DBManager
 	/**
 	 * @see DBManager::checkQuery()
 	 */
-	protected function checkQuery($sql)
+	protected function checkQuery($sql, $object_name = false)
 	{
 		$result   = $this->query('EXPLAIN ' . $sql);
 		$badQuery = array();
@@ -455,6 +459,14 @@ class MysqlManager extends DBManager
 		return mysql_real_escape_string($this->quoteInternal($string), $this->getDatabase());
 	}
 
+    /**
+     * @see DBManager::quoteIdentifier()
+     */
+    public function quoteIdentifier($string)
+    {
+        return '`'.$string.'`';
+    }
+
 	/**
 	 * @see DBManager::connect()
 	 */
@@ -485,7 +497,7 @@ class MysqlManager extends DBManager
 					if(isset($GLOBALS['app_strings']['ERR_NO_DB'])) {
 						sugar_die($GLOBALS['app_strings']['ERR_NO_DB']);
 					} else {
-						sugar_die("Could not connect to the database. Please refer to sugarcrm.log for details.");
+						sugar_die("Could not connect to the database. Please refer to suitecrm.log for details.");
 					}
 				} else {
 					return false;
@@ -616,6 +628,12 @@ class MysqlManager extends DBManager
 					return "DATE_ADD($string, INTERVAL {$additional_parameters[0]} {$additional_parameters[1]})";
 			case 'add_time':
 					return "DATE_ADD($string, INTERVAL + CONCAT({$additional_parameters[0]}, ':', {$additional_parameters[1]}) HOUR_MINUTE)";
+            case 'add_tz_offset' :
+                $getUserUTCOffset = $GLOBALS['timedate']->getUserUTCOffset();
+                $operation = $getUserUTCOffset < 0 ? '-' : '+';
+                return $string . ' ' . $operation . ' INTERVAL ' . abs($getUserUTCOffset) . ' MINUTE';
+            case 'avg':
+                return "avg($string)";
 		}
 
 		return $string;
@@ -716,6 +734,16 @@ class MysqlManager extends DBManager
 		return $sql;
 	}
 
+    /**
+     * Does this type represent text (i.e., non-varchar) value?
+     * @param string $type
+     */
+    public function isTextType($type)
+    {
+        $type = $this->getColumnType(strtolower($type));
+        return in_array($type, array('blob','text','longblob', 'longtext'));
+    }
+
 	/**
 	 * @see DBManager::oneColumnSQLRep()
 	 */
@@ -730,9 +758,8 @@ class MysqlManager extends DBManager
 
 		// bug 22338 - don't set a default value on text or blob fields
 		if ( isset($ref['default']) &&
-			($ref['colType'] == 'text' || $ref['colType'] == 'blob'
-				|| $ref['colType'] == 'longtext' || $ref['colType'] == 'longblob' ))
-			$ref['default'] = '';
+            in_array($ref['colBaseType'], array('text', 'blob', 'longtext', 'longblob')))
+			    $ref['default'] = '';
 
 		if ( $return_as_array )
 			return $ref;
@@ -1030,7 +1057,7 @@ class MysqlManager extends DBManager
 			}
 		}
 		if (!empty($sql)) {
-			$sql = "ALTER TABLE $tablename ".join(",", $sql);
+            $sql = "ALTER TABLE $tablename " . join(",", $sql) . ";";
 			if($execute)
 				$this->query($sql);
 		} else {
@@ -1456,4 +1483,26 @@ class MysqlManager extends DBManager
 	{
 	    return $this->query('ALTER TABLE '.$tableName.' ENABLE KEYS');
 	}
+
+    /**
+     * Returns a DB specific FROM clause which can be used to select against functions.
+     * Note that depending on the database that this may also be an empty string.
+     * @return string
+     */
+    public function getFromDummyTable()
+    {
+        return '';
+    }
+
+    /**
+     * Returns a DB specific piece of SQL which will generate GUID (UUID)
+     * This string can be used in dynamic SQL to do multiple inserts with a single query.
+     * I.e. generate a unique Sugar id in a sub select of an insert statement.
+     * @return string
+     */
+
+	public function getGuidSQL()
+    {
+      	return 'UUID()';
+    }
 }

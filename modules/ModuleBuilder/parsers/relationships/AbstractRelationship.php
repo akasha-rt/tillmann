@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -162,7 +162,21 @@ class AbstractRelationship
         $this->deleted = $this->definition [ 'deleted' ] = true ;
     }
     
-    
+    public function getFromStudio()
+    {
+        return $this->from_studio;
+    }
+
+    public function getLhsModule()
+    {
+        return $this->lhs_module;
+    }
+
+    public function getRhsModule()
+    {
+        return $this->rhs_module;
+    }
+
     public function getType ()
     {
         return $this->relationship_type ;
@@ -247,6 +261,20 @@ class AbstractRelationship
 		}
 		return $this->rhs_module;
     }
+
+    /**
+     * Returns a key=>value set of labels used in this relationship for use when desplaying the relationship in MB
+     * @return array labels used in this relationship
+     */
+    public function getLabels() {
+        $labels = array();
+        $labelDefinitions = $this->buildLabels();
+        foreach($labelDefinitions as $def){
+            $labels[$def['module']][$def['system_label']] = $def['display_label'];
+        }
+
+        return $labels;
+    }
 	
     /*
      * GET methods called by the BUILD methods of the subclasses to construct the relationship metadata
@@ -305,6 +333,8 @@ class AbstractRelationship
         $vardef [ 'type' ] = 'link' ;
         $vardef [ 'relationship' ] = $relationshipName ;
         $vardef [ 'source' ] = 'non-db' ;
+        $vardef [ 'module' ] = $sourceModule ;
+        $vardef [ 'bean_name' ] = BeanFactory::getObjectName($sourceModule) ;
         if ($right_side)
         	$vardef [ 'side' ] = 'right' ;
         if (!empty($vname))
@@ -453,11 +483,14 @@ class AbstractRelationship
         
         $properties = array ( ) ;
 
+        //bug 47903
         if ($checkExisting && !empty($dictionary[$relationshipName])
             && !empty($dictionary[$relationshipName][ 'true_relationship_type' ])
             && $dictionary[$relationshipName][ 'true_relationship_type' ]  == $relationshipType
             && !empty($dictionary[$relationshipName]['relationships'][$relationshipName]))
         {
+            //bug 51336
+            $properties [ 'true_relationship_type' ] = $relationshipType ;
             $rel_properties = $dictionary[$relationshipName]['relationships'][$relationshipName];
         } else
         {
@@ -568,7 +601,7 @@ class AbstractRelationship
      * @param string $ensureUnique 
      * @return string Valid column name trimmed to right length and with invalid characters removed
      */
-    static function getValidDBName ($name, $ensureUnique = false)
+    static function getValidDBName ($name, $ensureUnique = true)
     {
 
         require_once 'modules/ModuleBuilder/parsers/constants.php' ;

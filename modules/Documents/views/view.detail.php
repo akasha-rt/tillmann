@@ -3,7 +3,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -52,4 +52,18 @@ class DocumentsViewDetail extends ViewDetail
     	
 		return $params;
     }
+
+    public function display()
+ 	{
+	//check to see if the file field is empty.  This should not occur and would only happen when an error has ocurred during upload, or from db manipulation of record.
+         if(empty($this->bean->filename)){
+	    //print error to screen
+            $this->errors[] = $GLOBALS['mod_strings']['ERR_MISSING_FILE'];
+            $this->displayErrors();
+         }
+
+
+        parent::display();
+    }
+    
 }

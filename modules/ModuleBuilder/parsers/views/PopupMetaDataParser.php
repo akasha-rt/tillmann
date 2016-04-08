@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -46,7 +46,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  	// Columns is used by the view to construct the listview - each column is built by calling the named function
  	public $columns = array ( 'LBL_DEFAULT' => 'getDefaultFields' , 'LBL_AVAILABLE' => 'getAdditionalFields' , 'LBL_HIDDEN' => 'getAvailableFields' ) ;
  	
- 	public static $reserveProperties = array('moduleMain', 'varName' , 'orderBy', 'whereClauses', 'searchInputs', 'create');
+ 	public static $reserveProperties = array('moduleMain', 'varName' , 'orderBy', 'whereClauses', 'searchInputs', 'create','addToReserve');
  	
  	public static $defsMap = array(MB_POPUPSEARCH => 'searchdefs' , MB_POPUPLIST => 'listviewdefs');
 
@@ -174,7 +174,13 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
     	{
     		$popupMeta['listviewdefs'] = array_change_key_case($this->_viewdefs , CASE_UPPER );
     	}
-    	$allProperties = array_merge(self::$reserveProperties , array('searchdefs', 'listviewdefs'));
+
+        //provide a way for users to add to the reserve properties list via the 'addToReserve' element
+    	$totalReserveProps = self::$reserveProperties;
+        if(!empty($popupMeta['addToReserve'])){
+           $totalReserveProps =  array_merge(self::$reserveProperties,$popupMeta['addToReserve']);
+        }
+    	$allProperties = array_merge($totalReserveProps , array('searchdefs', 'listviewdefs'));
     	
     	$out .= "\$popupMeta = array (\n";
     	foreach( $allProperties as $p){

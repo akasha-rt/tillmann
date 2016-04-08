@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -45,7 +45,7 @@ class LoggerManager
 	private $_level = 'fatal';
 
 	//this is a list of different loggers that have been loaded
-	private static $_loggers = array();
+	protected static $_loggers = array();
 
 	//this is the instance of the LoggerManager
 	private static $_instance = NULL;
@@ -106,6 +106,24 @@ class LoggerManager
  			//tell the logger to log the message
  			self::$_loggers[$logger]->log($method, $message);
  		}
+ 	}
+
+ 	/**
+ 	 * Check if this log level will be producing any logging
+ 	 * @param string $method
+ 	 * @return boolean
+ 	 */
+ 	public function wouldLog($method)
+ 	{
+ 	    if ( !isset(self::$_levelMapping[$method]) )
+ 	    	$method = $this->_level;
+ 	    if($method == $this->_level
+ 	    		//otherwise if we have a level mapping for the method and that level is less than or equal to the current level let's let it log
+ 	    		|| (!empty(self::$_levelMapping[$method])
+ 	    				&& self::$_levelMapping[$this->_level] >= self::$_levelMapping[$method]) ) {
+ 	        return true;
+ 	    }
+ 	    return false;
  	}
 
 	/**

@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -102,12 +102,12 @@ function complexLayoutInit() {
         
         init : function(){
             // initialize state manager, we will use cookies
-//                Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
         	var viewHeight = document.documentElement ? document.documentElement.clientHeight : self.innerHeight;
+            var heightOffset = $('#dcmenu').length > 0 ? $('#dcmenu').height() : $('#header').height();
         	se.complexLayout = new YAHOO.widget.Layout("container", {
         		border:true,
                 hideOnLayout: true,
-                height: Dom.getViewportHeight() - (document.getElementById('header').clientHeight ) - 65,
+                height: Dom.getViewportHeight() - heightOffset - 65,
                 width: Dom.getViewportWidth() - 40,
                 units: [{
                 	position: "center",
@@ -151,7 +151,11 @@ function complexLayoutInit() {
 			var listV =  this.getInnerLayout2Rows();
 			listV.set("height", tp.get("element").clientHeight - 25);
 			listV.render();
-            
+            tp.on("activeTabChange", function ()
+            {
+             	se.complexLayout.resize();
+            });
+
             se.leftTabs = new YAHOO.widget.TabView("lefttabs");
             var folderTab = new YAHOO.widget.Tab({ 
 				label: app_strings.LBL_EMAIL_FOLDERS_SHORT,

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -80,7 +80,7 @@ class MyMeetingsDashlet extends DashletGeneric {
            	//join with meeting_users table to process related users
        		$this->seedBean->listview_inner_join = array('LEFT JOIN  meetings_users m_u on  m_u.meeting_id = meetings.id');
         	//set the custom query to retrieve invitees AND assigned meetings            
-        	$lvsParams['custom_where'] = ' AND (meetings.assigned_user_id = \'' . $current_user->id . '\' OR m_u.user_id = \'' . $current_user->id . '\') AND m_u.deleted=0 ';
+        	$lvsParams['custom_where'] = ' AND (meetings.assigned_user_id = \'' . $current_user->id . '\' OR (m_u.user_id = \'' . $current_user->id . '\' AND m_u.deleted=0)) ';
         }
 
         $this->myItemsOnly = false;
@@ -169,12 +169,18 @@ class MyMeetingsDashlet extends DashletGeneric {
                                      'clear' => $GLOBALS['app_strings']['LBL_CLEAR_BUTTON_LABEL'],
                                      ));
 
-        require_once('modules/Meetings/Meeting.php');
-        $types = getMeetingsExternalApiDropDown();
-        $this->currentSearchFields['type']['input'] = '<select size="3" multiple="true" name="type[]">'
-                                     . get_select_options_with_id($types, (empty($this->filters['type']) ? '' : $this->filters['type']))
-                                     . '</select>';
-        $this->configureSS->assign('searchFields', $this->currentSearchFields);
+        // the 'type' search field exists in default dashlet's definition,
+        // but we need to check it anyways because user can re-define the search fields using he studio
+        // and the 'type' field can be removed
+        if (isset($this->currentSearchFields['type']))
+        {
+            require_once('modules/Meetings/Meeting.php');
+            $types = getMeetingsExternalApiDropDown();
+            $this->currentSearchFields['type']['input'] = '<select size="3" multiple="true" name="type[]">'
+                    . get_select_options_with_id($types, (empty($this->filters['type']) ? '' : $this->filters['type']))
+                    . '</select>';
+            $this->configureSS->assign('searchFields', $this->currentSearchFields);
+        }
 
         return $this->configureSS->fetch($this->configureTpl);
     }

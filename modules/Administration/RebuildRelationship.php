@@ -3,7 +3,7 @@ if (! defined ( 'sugarEntry' ) || ! sugarEntry)
     die ( 'Not A Valid Entry Point' ) ;
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -63,7 +63,7 @@ foreach ( $GLOBALS['beanFiles'] as $bean => $file )
         $focus = new $bean ( ) ;
         if ( $focus instanceOf SugarBean ) {
             $table_name = $focus->table_name ;
-            $empty = '' ;
+            $empty = array() ;
             if (empty ( $_REQUEST [ 'silent' ] ))
                 echo $mod_strings [ 'LBL_REBUILD_REL_PROC_META' ] . $focus->table_name . "..." ;
             SugarBean::createRelationshipMeta ( $focus->getObjectName (), $db, $table_name, $empty, $focus->module_dir ) ;
@@ -86,7 +86,7 @@ foreach ( $GLOBALS['beanFiles'] as $bean => $file )
     $focus = new $bean ( ) ;
     if ( $focus instanceOf SugarBean ) {
         $table_name = $focus->table_name ;
-        $empty = '' ;
+        $empty = array() ;
         if (empty ( $_REQUEST [ 'silent' ] ))
             echo $mod_strings [ 'LBL_REBUILD_REL_PROC_C_META' ] . $focus->table_name . "..." ;
         SugarBean::createRelationshipMeta ( $focus->getObjectName (), $db, $table_name, $empty, $focus->module_dir, true ) ;
@@ -98,7 +98,7 @@ foreach ( $GLOBALS['beanFiles'] as $bean => $file )
 // finally, whip through the list of relationships defined in TableDictionary.php, that is all the relationships in the metadata directory, and install those
     $dictionary = array ( ) ;
     require ('modules/TableDictionary.php') ;
-    //for module installer incase we alredy loaded the table dictionary
+    //for module installer incase we already loaded the table dictionary
     if (file_exists ( 'custom/application/Ext/TableDictionary/tabledictionary.ext.php' ))
     {
         include ('custom/application/Ext/TableDictionary/tabledictionary.ext.php') ;

@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -202,23 +205,19 @@ class Lead extends Person {
 
 	function create_list_query($order_by, $where, $show_deleted=0)
 	{
-		$custom_join = $this->custom_fields->getJOIN();
+        $custom_join = $this->getCustomJoin();
                 $query = "SELECT ";
 
 
 			$query .= "$this->table_name.*, users.user_name assigned_user_name";
-			if($custom_join){
-   				$query .= $custom_join['select'];
- 			}
+        $query .= $custom_join['select'];
             $query .= " FROM leads ";
 
 			$query .= "			LEFT JOIN users
                                 ON leads.assigned_user_id=users.id ";
 			$query .= "LEFT JOIN email_addr_bean_rel eabl  ON eabl.bean_id = leads.id AND eabl.bean_module = 'Leads' and eabl.primary_address = 1 and eabl.deleted=0 ";
         	$query .= "LEFT JOIN email_addresses ea ON (ea.id = eabl.email_address_id) ";
-			if($custom_join){
-  				$query .= $custom_join['join'];
-			}
+        $query .= $custom_join['join'];
 			$where_auto = '1=1';
 			if($show_deleted == 0){
 				$where_auto = " leads.deleted=0 ";
@@ -237,51 +236,15 @@ class Lead extends Person {
 		return $query;
 	}
 
-	function create_new_list_query($order_by, $where,$filter=array(),$params=array(), $show_deleted = 0,$join_type='', $return_array = false, $parentbean = null, $singleSelect = false){
+	function create_new_list_query($order_by, $where,$filter=array(),$params=array(), $show_deleted = 0,$join_type='', $return_array = false,$parentbean=null, $singleSelect = false, $ifListForExport = false){
 		
-		$ret_array = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, true, $parentbean, $singleSelect);
+		$ret_array = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, true, $parentbean, $singleSelect, $ifListForExport);
 		if(strpos($ret_array['select'],"leads.account_name") == false && strpos($ret_array['select'],"leads.*") == false)
 			$ret_array['select'] .= " ,leads.account_name";
     	if ( !$return_array )
             return  $ret_array['select'] . $ret_array['from'] . $ret_array['where']. $ret_array['order_by'];
         return $ret_array;
-	}	
-	
-    function create_export_query(&$order_by, &$where, $relate_link_join='')
-    {
-        $custom_join = $this->custom_fields->getJOIN(true, true,$where);
-		if($custom_join)
-				$custom_join['join'] .= $relate_link_join;
-                         $query = "SELECT
-                                leads.*, email_addresses.email_address email_address,
-                                users.user_name assigned_user_name";
-                         if($custom_join){
-   							$query .= $custom_join['select'];
- 						}
-                         $query .= " FROM leads ";
-			$query .= "			LEFT JOIN users
-                                ON leads.assigned_user_id=users.id ";
-
-				//join email address table too.
-				$query .=  ' LEFT JOIN  email_addr_bean_rel on leads.id = email_addr_bean_rel.bean_id and email_addr_bean_rel.bean_module=\'Leads\' and email_addr_bean_rel.deleted=0 and email_addr_bean_rel.primary_address=1 ';
-				$query .=  ' LEFT JOIN email_addresses on email_addresses.id = email_addr_bean_rel.email_address_id ' ;
-						
-            
-            	if($custom_join){
-  					$query .= $custom_join['join'];
-				}
-
-                        $where_auto = " leads.deleted=0 ";
-
-                if($where != "")
-                        $query .= "where ($where) AND ".$where_auto;
-                else
-                        $query .= "where ".$where_auto;
-
-                if(!empty($order_by))
-                        $query .= " ORDER BY $order_by";
-                return $query;
-        }
+	}
 
     function converted_lead($leadid, $contactid, $accountid, $opportunityid){
     	$query = "UPDATE leads set converted='1', contact_id=$contactid, account_id=$accountid, opportunity_id=$opportunityid where  id=$leadid and deleted=0";
@@ -325,22 +288,11 @@ class Lead extends Person {
 	}
 
 	function get_list_view_data(){
-		/*global $app_list_strings;
-		global $current_user;
 
-		$temp_array = $this->get_list_view_array();
-		$temp_array['STATUS'] = (empty($temp_array['STATUS'])) ? '' : $temp_array['STATUS'];
-		$temp_array['ENCODED_NAME']=$this->name;
-		$temp_array['NAME']=$this->name;
-		$temp_array['EMAIL1'] = $this->emailAddress->getPrimaryAddress($this);
-		$this->email1 = $temp_array['EMAIL1'];
-		$temp_array['EMAIL1_LINK'] = $current_user->getEmailLink('email1', $this, '', '', 'ListView');
-    	$temp_array['ACC_NAME_FROM_ACCOUNTS'] = empty($temp_array['ACC_NAME_FROM_ACCOUNTS']) ? ($temp_array['ACCOUNT_NAME']) : ($temp_array['ACC_NAME_FROM_ACCOUNTS']);
-		return $temp_array;
-		*/
-		$this->_create_proper_name_field();
 		$temp_array = parent::get_list_view_data();
+
 		$temp_array['ACC_NAME_FROM_ACCOUNTS'] = empty($temp_array['ACC_NAME_FROM_ACCOUNTS']) ? ($temp_array['ACCOUNT_NAME']) : ($temp_array['ACC_NAME_FROM_ACCOUNTS']);
+
 		return $temp_array;		
 	}
 	
@@ -427,27 +379,61 @@ class Lead extends Person {
 	function listviewACLHelper(){
 		$array_assign = parent::listviewACLHelper();
 		$is_owner = false;
+		$in_group = false; //SECURITY GROUPS
 		if(!empty($this->account_name)){
 
 			if(!empty($this->account_name_owner)){
 				global $current_user;
 				$is_owner = $current_user->id == $this->account_name_owner;
 			}
+			/* BEGIN - SECURITY GROUPS */
+			else {
+				global $current_user;
+                $parent_bean = BeanFactory::getBean('Accounts',$this->account_id);
+                if($parent_bean !== false) {
+                	$is_owner = $current_user->id == $parent_bean->assigned_user_id;
+                }
+			}
+			require_once("modules/SecurityGroups/SecurityGroup.php");
+			$in_group = SecurityGroup::groupHasAccess('Accounts', $this->account_id, 'view'); 
+        	/* END - SECURITY GROUPS */
 		}
+			/* BEGIN - SECURITY GROUPS */
+			/**
 			if( ACLController::checkAccess('Accounts', 'view', $is_owner)){
+			*/
+			if( ACLController::checkAccess('Accounts', 'view', $is_owner, 'module', $in_group)){
+        	/* END - SECURITY GROUPS */
 				$array_assign['ACCOUNT'] = 'a';
 			}else{
 				$array_assign['ACCOUNT'] = 'span';
 			}
 		$is_owner = false;
+		$in_group = false; //SECURITY GROUPS
 		if(!empty($this->opportunity_name)){
 
 			if(!empty($this->opportunity_name_owner)){
 				global $current_user;
 				$is_owner = $current_user->id == $this->opportunity_name_owner;
 			}
+			/* BEGIN - SECURITY GROUPS */
+			else {
+				global $current_user;
+                $parent_bean = BeanFactory::getBean('Opportunities',$this->opportunity_id);
+                if($parent_bean !== false) {
+                	$is_owner = $current_user->id == $parent_bean->assigned_user_id;
+                }
+			}
+			require_once("modules/SecurityGroups/SecurityGroup.php");
+			$in_group = SecurityGroup::groupHasAccess('Opportunities', $this->opportunity_id, 'view'); 
+        	/* END - SECURITY GROUPS */
 		}
+			/* BEGIN - SECURITY GROUPS */
+			/**
 			if( ACLController::checkAccess('Opportunities', 'view', $is_owner)){
+			*/
+			if( ACLController::checkAccess('Opportunities', 'view', $is_owner, 'module', $in_group)){
+        	/* END - SECURITY GROUPS */
 				$array_assign['OPPORTUNITY'] = 'a';
 			}else{
 				$array_assign['OPPORTUNITY'] = 'span';
@@ -455,14 +441,32 @@ class Lead extends Person {
 
 
 		$is_owner = false;
+		$in_group = false; //SECURITY GROUPS
 		if(!empty($this->contact_name)){
 
 			if(!empty($this->contact_name_owner)){
 				global $current_user;
 				$is_owner = $current_user->id == $this->contact_name_owner;
 			}
+			/* BEGIN - SECURITY GROUPS */
+			//contact_name_owner not being set for whatever reason so we need to figure this out
+			else {
+				global $current_user;
+                $parent_bean = BeanFactory::getBean('Contacts',$this->contact_id);
+                if($parent_bean !== false) {
+                	$is_owner = $current_user->id == $parent_bean->assigned_user_id;
+                }
+			}
+			require_once("modules/SecurityGroups/SecurityGroup.php");
+			$in_group = SecurityGroup::groupHasAccess('Contacts', $this->contact_id, 'view'); 
+        	/* END - SECURITY GROUPS */
 		}
+			/* BEGIN - SECURITY GROUPS */
+			/**
 			if( ACLController::checkAccess('Contacts', 'view', $is_owner)){
+			*/
+			if( ACLController::checkAccess('Contacts', 'view', $is_owner, 'module', $in_group)){
+        	/* END - SECURITY GROUPS */
 				$array_assign['CONTACT'] = 'a';
 			}else{
 				$array_assign['CONTACT'] = 'span';
@@ -595,6 +599,6 @@ class Lead extends Person {
         
         return $return_array;
     }
+
 }
 
-?>

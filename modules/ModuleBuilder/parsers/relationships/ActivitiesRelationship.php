@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -96,30 +96,41 @@ class ActivitiesRelationship extends OneToManyRelationship
         if (!$this->relationship_only )
         {
             if (!isset(ActivitiesRelationship::$labelsAdded[$this->lhs_module])) {
-	        	$labelDefinitions [] = array (
-	            	'module' => 'application' ,
-	            	'system_label' => 'parent_type_display',
-	            	'display_label' => array ( $this->lhs_module => ucfirst ( $this->lhs_module ))
-	            ) ;
-
-	            $labelDefinitions [] = array (
-	            	'module' => 'application' ,
-	            	'system_label' => 'record_type_display',
-	            	'display_label' => array ( $this->lhs_module => ucfirst ( $this->lhs_module ))
-	            ) ;
-
-	            $labelDefinitions [] = array (
-	            	'module' => 'application' ,
-	            	'system_label' => 'record_type_display_notes',
-	            	'display_label' => array ( $this->lhs_module => ucfirst ( $this->lhs_module ))
-	            ) ;
+                foreach(getTypeDisplayList() as $typeDisplay)
+                {
+                    $labelDefinitions [] = array (
+                        'module' => 'application',
+                        'system_label' => $typeDisplay,
+                        'display_label' => array(
+                            $this->lhs_module => $this->lhs_label ? $this->lhs_label : ucfirst($this->lhs_module)
+                        ),
+                    );
+                }
             }
-            
-            $labelDefinitions [] = array ( 
-            	'module' => $this->lhs_module , 
-            	'system_label' => 'LBL_' . strtoupper ( $this->relationship_name . '_FROM_' . $this->getRightModuleSystemLabel() ) . '_TITLE' , 
-            	'display_label' => /*'*' .*/ ucfirst ( $this->rhs_module )
-            ) ;
+
+            $rhs_display_label = '';
+            if (!empty($this->rhs_label)) {
+                $rhs_display_label .= $this->rhs_label . ':';
+            }
+            $rhs_display_label .= translate($this->rhs_module);
+
+            $lhs_display_label = '';
+            if (!empty($this->rhs_label)) {
+                $lhs_display_label .= $this->rhs_label . ':';
+            }
+            $lhs_display_label .= translate($this->lhs_module);
+
+            $labelDefinitions[] = array (
+                'module' => $this->lhs_module ,
+                'system_label' => 'LBL_' . strtoupper($this->relationship_name . '_FROM_' . $this->getRightModuleSystemLabel()) . '_TITLE',
+                'display_label' => $rhs_display_label
+            );
+            $labelDefinitions[] = array(
+                'module' => $this->rhs_module,
+                'system_label' => 'LBL_' . strtoupper($this->relationship_name . '_FROM_' . $this->getLeftModuleSystemLabel()) . '_TITLE',
+                'display_label' => $lhs_display_label
+            );
+
             ActivitiesRelationship::$labelsAdded[$this->lhs_module] = true;
         }
         return $labelDefinitions ;
@@ -147,6 +158,8 @@ class ActivitiesRelationship extends OneToManyRelationship
         $vardef [ 'type' ] = 'link' ;
         $vardef [ 'relationship' ] = $relationshipName ;
         $vardef [ 'source' ] = 'non-db' ;
+        $vardef [ 'module' ] = $sourceModule ;
+        $vardef [ 'bean_name' ] = BeanFactory::getObjectName($sourceModule) ;
         $vardef [ 'vname' ] = strtoupper("LBL_{$relationshipName}_FROM_{$sourceModule}_TITLE");
         return $vardef ;
     }
@@ -274,4 +287,3 @@ class ActivitiesRelationship extends OneToManyRelationship
                         'get_subpanel_data' => $relationshipName. '_emails' ) ) )  ;
     }
 }
-?>

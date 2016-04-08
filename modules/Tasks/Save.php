@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -141,6 +141,13 @@ if (!isset($GLOBALS['check_notify'])) {
 }
 $focus->save($GLOBALS['check_notify']);
 $return_id = $focus->id;
+
+if(!empty($_POST['is_ajax_call']))
+{
+	$json = getJSONobj();
+	echo $json->encode(array('status' => 'success', 'get' => ''));
+	exit;
+}
 
 handleRedirect($return_id,'Tasks');
 ?>

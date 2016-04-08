@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -42,21 +42,13 @@ $subpanel_layout = array(
 	//the activities sub-panel.
 
 	'where' => "(tasks.status != 'Completed' AND tasks.status != 'Deferred')",
-	
-	
-				
+			
 	'list_fields' => array(
 		'object_image'=>array(
 			'vname' => 'LBL_OBJECT_IMAGE',
 			'widget_class' => 'SubPanelIcon',
  		 	'width' => '2%',
-		),
-		'close_button'=>array(
-			'widget_class' => 'SubPanelCloseButton',
-			'vname' => 'LBL_LIST_CLOSE',
-			'width' => '6%',
-			'sortable'=>false,
-		),
+		),		
 		'name'=>array(
 			 'vname' => 'LBL_LIST_SUBJECT',
 			 'widget_class' => 'SubPanelDetailViewLink',
@@ -93,6 +85,13 @@ $subpanel_layout = array(
 			'vname' => 'LBL_EDIT_BUTTON',
 			 'widget_class' => 'SubPanelEditButton',
 			 'width' => '2%',
+			 
+		),
+		'close_button'=>array(
+			'widget_class' => 'SubPanelCloseButton',
+			'vname' => 'LBL_LIST_CLOSE',
+			'width' => '6%',
+			'sortable'=>false,
 		),
 		'remove_button'=>array(
 			'vname' => 'LBL_REMOVE',

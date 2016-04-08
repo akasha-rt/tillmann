@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -58,12 +58,12 @@ class One2OneBeanRelationship extends One2MBeanRelationship
     public function add($lhs, $rhs, $additionalFields = array())
     {
         $lhsLinkName = $this->lhsLink;
-        //In a one to one, any existing links from boths sides must be removed first.
+        //In a one to one, any existing links from both sides must be removed first.
         //one2Many will take care of the right side, so we'll do the left.
         $lhs->load_relationship($lhsLinkName);
         $this->removeAll($lhs->$lhsLinkName);
 
-        parent::add($lhs, $rhs, $additionalFields);
+        return parent::add($lhs, $rhs, $additionalFields);
     }
 
     protected function updateLinks($lhs, $lhsLinkName, $rhs, $rhsLinkName)
@@ -95,8 +95,11 @@ class One2OneBeanRelationship extends One2MBeanRelationship
             $targetTable = $params['join_table_alias'];
         }
 
+        $deleted = !empty($params['deleted']) ? 1 : 0;
+
         //join the related module's table
-        $join .= "$join_type $targetTableWithAlias ON $targetTable.$targetKey=$startingTable.$startingKey AND $targetTable.deleted=0\n"
+        $join .= "$join_type $targetTableWithAlias ON $targetTable.$targetKey=$startingTable.$startingKey"
+               . " AND $targetTable.deleted=$deleted\n"
         //Next add any role filters
                . $this->getRoleWhere();
 

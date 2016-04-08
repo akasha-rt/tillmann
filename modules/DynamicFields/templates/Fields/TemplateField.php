@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 $GLOBALS['studioReadOnlyFields'] = array('date_entered'=>1, 'date_modified'=>1, 'created_by'=>1, 'id'=>1, 'modified_user_id'=>1);
@@ -47,6 +50,7 @@ class TemplateField{
 	var $view = 'edit';
 	var $name = '';
 	var $vname = '';
+    public $label = '';
 	var $id = '';
 	var $size = '20';
 	var $len = '255';
@@ -61,7 +65,8 @@ class TemplateField{
 	var $ext3 = '';
 	var $ext4 = '';
 	var $audited= 0;
-	var $massupdate = 0;
+    var $inline_edit = 1;
+    var $massupdate = 0;
 	var $importable = 'true' ;
 	var $duplicate_merge=0;
 	var $new_field_definition;
@@ -84,6 +89,7 @@ class TemplateField{
 		'required'=>'required',
 		'type'=>'type',
 		'audited'=>'audited',
+		'inline_edit'=>'inline_edit',
 		'massupdate'=>'massupdate',
 		'options'=>'ext1',
 		'help'=>'help',
@@ -93,15 +99,16 @@ class TemplateField{
 		'duplicate_merge_dom_value'=>'duplicate_merge_dom_value', //bug #14897
 		'merge_filter'=>'merge_filter',
 		'reportable' => 'reportable',
-		'min'=>'ext1',
-		'max'=>'ext2',
 		'ext2'=>'ext2',
 		'ext4'=>'ext4',
-	//'disable_num_format'=>'ext3',
 	    'ext3'=>'ext3',
-		'label_value'=>'label_value',
+        'labelValue' => 'label_value',
 		'unified_search'=>'unified_search',
+        'full_text_search'=>'full_text_search',
 	);
+    // Bug #48826
+    // fields to decode from post request
+    var $decode_from_request_fields_map = array('formula', 'dependency');
 	/*
 		HTML FUNCTIONS
 		*/
@@ -331,22 +338,29 @@ class TemplateField{
 			'type'=>$this->type,
 			'massupdate'=>$this->massupdate,
 			'default'=>$this->default,
+            'no_default'=> !empty($this->no_default),
 			'comments'=> (isset($this->comments)) ? $this->comments : '',
 		    'help'=> (isset($this->help)) ?  $this->help : '',
 		    'importable'=>$this->importable,
 			'duplicate_merge'=>$this->duplicate_merge,
-			'duplicate_merge_dom_value'=> isset($this->duplicate_merge_dom_value) ? $this->duplicate_merge_dom_value : $this->duplicate_merge,
+			'duplicate_merge_dom_value'=> $this->getDupMergeDomValue(),
 			'audited'=>$this->convertBooleanValue($this->audited),
-			'reportable'=>$this->convertBooleanValue($this->reportable),
-            'unified_search'=>$this->convertBooleanValue($this->unified_search)
+            'inline_edit'=>$this->convertBooleanValue($this->inline_edit),
+            'reportable'=>$this->convertBooleanValue($this->reportable),
+            'unified_search'=>$this->convertBooleanValue($this->unified_search),
+            'merge_filter' => empty($this->merge_filter) ? "disabled" : $this->merge_filter
 		);
+        if (isset($this->full_text_search)) {
+            $array['full_text_search'] = $this->full_text_search;
+        }
 		if(!empty($this->len)){
 			$array['len'] = $this->len;
 		}
 		if(!empty($this->size)){
 			$array['size'] = $this->size;
 		}
-		$this->get_dup_merge_def($array);
+
+        $this->get_dup_merge_def($array);
 
 		return $array;
 	}
@@ -365,13 +379,14 @@ class TemplateField{
 	/* if the field is duplicate merge enabled this function will return the vardef entry for the same.
 	 */
 	function get_dup_merge_def(&$def) {
-
-		switch ($def['duplicate_merge_dom_value']) {
+        switch ($def['duplicate_merge_dom_value']) {
 			case 0:
 				$def['duplicate_merge']='disabled';
+                $def['merge_filter']='disabled';
 				break;
 			case 1:
 				$def['duplicate_merge']='enabled';
+                $def['merge_filter']='disabled';
 				break;
 			case 2:
 				$def['merge_filter']='enabled';
@@ -388,6 +403,45 @@ class TemplateField{
 		}
 
 	}
+
+    /**
+     * duplicate_merge_dom_value drives the dropdown in the studio editor. This dropdown drives two fields though,
+     * duplicate_merge and merge_filter. When duplicate_merge_dom_value is not set, we need to derive it from the values
+     * of those two fields. Also, when studio sends this value down to be read in PopulateFromPost, it is set to
+     * duplicate_merge rather than duplicate_merge_dom_value, so we must check if duplicate_merge is a number rather
+     * than a string as well.
+     * @return int
+     */
+    function getDupMergeDomValue(){
+        if (isset($this->duplicate_merge_dom_value)) {
+            return $this->duplicate_merge_dom_value;
+        }
+
+        //If duplicate merge is numeric rather than a string, it is probably what duplicate_merge_dom_value was set to.
+        if (is_numeric($this->duplicate_merge))
+            return $this->duplicate_merge;
+
+
+        //Figure out the duplicate_merge_dom_value based on the values of merge filter and duplicate merge
+        if (empty($this->merge_filter) || $this->merge_filter === 'disabled' )
+        {
+            if (empty($this->duplicate_merge) || $this->duplicate_merge === 'disabled') {
+                $this->duplicate_merge_dom_value = 0;
+            } else {
+                $this->duplicate_merge_dom_value = 1;
+            }
+        } else {
+            if ($this->merge_filter === "selected")
+                $this->duplicate_merge_dom_value = 3;
+            else if (empty($this->duplicate_merge) || $this->duplicate_merge === 'disabled') {
+                $this->duplicate_merge_dom_value = 4;
+            } else {
+                $this->duplicate_merge_dom_value = 2;
+            }
+        }
+
+        return $this->duplicate_merge_dom_value;
+    }
 
 	/*
 		HELPER FUNCTIONS
@@ -411,9 +465,12 @@ class TemplateField{
 		if(!is_array($row)) {
 			$GLOBALS['log']->error("Error: TemplateField->populateFromRow expecting Array");
 		}
-		//Bug 24189: Copy fields from FMD format to Field objects
+		//Bug 24189: Copy fields from FMD format to Field objects and vice versa
 		foreach ($fmd_to_dyn_map as $fmd_key => $dyn_key) {
-			if (isset($row[$fmd_key])) {
+            if (isset($row[$dyn_key])) {
+                $this->$fmd_key = $row[$dyn_key];
+            }
+            if (isset($row[$fmd_key])) {
 				$this->$dyn_key = $row[$fmd_key];
 			}
 		}
@@ -424,8 +481,26 @@ class TemplateField{
 
 	function populateFromPost(){
 		foreach($this->vardef_map as $vardef=>$field){
-			if(isset($_REQUEST[$vardef])){
-				$this->$vardef = $_REQUEST[$vardef];
+
+			if(isset($_REQUEST[$vardef])){		    
+                $this->$vardef = $_REQUEST[$vardef];
+
+                //  Bug #48826. Some fields are allowed to have special characters and must be decoded from the request
+                // Bug 49774, 49775: Strip html tags from 'formula' and 'dependency'.
+                if (is_string($this->$vardef) && in_array($vardef, $this->decode_from_request_fields_map))
+                {
+                    $this->$vardef = html_entity_decode(strip_tags(from_html($this->$vardef)));
+                }
+
+
+                //Remove potential xss code from help field
+                if($field == 'help' && !empty($this->$vardef))
+                {
+                    $help = htmlspecialchars_decode($this->$vardef, ENT_QUOTES);
+                    $this->$vardef = htmlentities(remove_xss($help));
+                }
+
+
 				if($vardef != $field){
 					$this->$field = $this->$vardef;
 				}
@@ -450,7 +525,7 @@ class TemplateField{
 
     /**
      * get_field_name
-     * 
+     *
      * This is a helper function to return a field's proper name.  It checks to see if an instance of the module can
      * be created and then attempts to retrieve the field's name based on the name lookup skey supplied to the method.
      *
@@ -477,7 +552,7 @@ class TemplateField{
      * checks to see if updates are needed for the SearchFields.php file.  In the event that the unified_search
      * member variable is set to true, a search field definition is updated/created to the SearchFields.php file.
      *
-     * @param $df Instance of DynamicField
+     * @param DynamicField $df
      */
 	function save($df){
 		//	    $GLOBALS['log']->debug('saving field: '.print_r($this,true));

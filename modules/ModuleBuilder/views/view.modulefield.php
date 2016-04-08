@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 require_once('modules/ModuleBuilder/MB/AjaxCompose.php');
@@ -132,7 +135,7 @@ class ViewModulefield extends SugarView
         //C.L. - Add support to mark related module id columns as reserved keywords
         require_once 'modules/ModuleBuilder/parsers/relationships/DeployedRelationships.php';
         $relatedModules = array_keys(DeployedRelationships::findRelatableModules()) ;
-        global $beanList;
+        global $beanList, $current_language;
         foreach($relatedModules as $relModule)
         {
             if(isset($beanList[$relModule]))
@@ -141,7 +144,7 @@ class ViewModulefield extends SugarView
             }
         }
 
-        if(! isset($_REQUEST['view_package']) || $_REQUEST['view_package'] == 'studio' || empty ( $_REQUEST [ 'view_package' ] ) ) {
+        if(empty($_REQUEST['view_package']) || $_REQUEST['view_package'] == 'studio') {
             $moduleName = $_REQUEST['view_module'];
             $objectName = BeanFactory::getObjectName($moduleName);
             $module = BeanFactory::getBean($moduleName);
@@ -178,18 +181,26 @@ class ViewModulefield extends SugarView
             $tf->module = $module;
             $tf->populateFromRow($vardef);
 			$vardef = array_merge($vardef, $tf->get_field_def());
-            
+
             //          $GLOBALS['log']->debug('vardefs after loading = '.print_r($vardef,true));
            
             
             //Check if autoincrement fields are allowed
             $allowAutoInc = true;
+            $enumFields = array();
             foreach($module->field_defs as $field => $def)
             {
             	if (!empty($def['type']) && $def['type'] == "int" && !empty($def['auto_increment'])) {
             	   $allowAutoInc = false;
-            	   break;
+            	   continue;
             	}
+                if (!empty($def['type']) && $def['type'] == "enum" && $field != $vardef['name'])
+                {
+                    if(!empty($def['studio']) && $def['studio'] == "false") continue; //bug51866 
+                    $enumFields[$field] = translate($def['vname'], $moduleName);
+                    if (substr($enumFields[$field], -1) == ":")
+                        $enumFields[$field] = substr($enumFields[$field], 0, strlen($enumFields[$field]) - 1);
+                }
             }
             $fv->ss->assign( 'allowAutoInc', $allowAutoInc);   
 
@@ -250,6 +261,21 @@ class ViewModulefield extends SugarView
 			if(empty($module->mbvardefs->vardefs['fields']['parent_name']) || (isset($vardef['type']) && $vardef['type'] == 'parent'))
 				$field_types['parent'] = $GLOBALS['mod_strings']['parent'];
 
+            $enumFields = array();
+            if (!empty($module->mbvardefs->vardefs['fields']))
+            {
+                foreach($module->mbvardefs->vardefs['fields'] as $field => $def)
+                {
+                    if (!empty($def['type']) && $def['type'] == "enum" && $field != $vardef['name'])
+                    {
+                        $enumFields[$field] = isset($module->mblanguage->strings[$current_language][$def['vname']]) ?
+                            $this->mbModule->mblanguage->strings[$current_language][$def['vname']] : translate($field);
+                        if (substr($enumFields[$field], -1) == ":")
+                            $enumFields[$field] = substr($enumFields[$field], 0, strlen($enumFields[$field]) -1);
+                    }
+                }
+            }
+
             $edit_or_add = 'mbeditField';
         }
 
@@ -262,7 +288,7 @@ class ViewModulefield extends SugarView
             $fv->ss->assign('lbl_value', htmlentities($_REQUEST['labelValue'], ENT_QUOTES, 'UTF-8'));
         }
 
-        foreach(array("formula", "default", "comments", "help") as $toEscape)
+        foreach(array("formula", "default", "comments", "help", "visiblityGrid") as $toEscape)
 		{
 			if (!empty($vardef[$toEscape]) && is_string($vardef[$toEscape])) {
 	        	$vardef[$toEscape] = htmlentities($vardef[$toEscape], ENT_QUOTES, 'UTF-8');
@@ -277,11 +303,14 @@ class ViewModulefield extends SugarView
 
         $fv->ss->assign('action',$action);
         $fv->ss->assign('isClone', ($isClone ? 1 : 0));
+        $fv->ss->assign("module_dd_fields", $enumFields);
         $json = getJSONobj();
 
         $fv->ss->assign('field_name_exceptions', $json->encode($field_name_exceptions));
         ksort($field_types);
         $fv->ss->assign('field_types',$field_types);
+
+
         $fv->ss->assign('importable_options', $GLOBALS['app_list_strings']['custom_fields_importable_dom']);
         $fv->ss->assign('duplicate_merge_options', $GLOBALS['app_list_strings']['custom_fields_merge_dup_dom']);
 
@@ -325,8 +354,23 @@ class ViewModulefield extends SugarView
         }
 
         $fv->ss->assign('help_group', $edit_or_add);
-        $body = $fv->ss->fetch('modules/ModuleBuilder/tpls/MBModule/field.tpl');
+        $body = $this->fetchTemplate($fv, 'modules/ModuleBuilder/tpls/MBModule/field.tpl');
         $ac->addSection('east', translate('LBL_SECTION_FIELDEDITOR','ModuleBuilder'), $body );
         return $ac;
+    }
+
+    /**
+     * fetchTemplate
+     * This function overrides fetchTemplate from SugarView.  For view.modulefield.php we go through the FieldViewer
+     * class to fetch the display contents.
+     *
+     * @param FieldViewer $mixed the FieldViewer instance
+     * @param string $template the file to fetch
+     * @return string contents from calling the fetch method on the FieldViewer Sugar_Smarty instance
+     */
+    protected function fetchTemplate($fv/*, $template*/)
+    {
+        $template = func_get_arg(1);
+        return $fv->ss->fetch($this->getCustomFilePathIfExists($template));
     }
 }

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -36,7 +36,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  ********************************************************************************/
 
 
-require_once('include/generic/SugarWidgets/SugarWidgetFieldenum.php');
+
 class SugarWidgetFieldparent_type extends SugarWidgetFieldEnum
 {
     function SugarWidgetFieldparent_type(&$layout_manager) {
@@ -55,6 +55,24 @@ class SugarWidgetFieldparent_type extends SugarWidgetFieldEnum
         }
         return $value;
     }    
+
+    /**
+     * Return value of a field from layout_def
+     * @param mixed $layout_def
+     * @return string
+     */
+    function _get_list_value(&$layout_def)
+    {
+        $value = parent::_get_list_value($layout_def);
+        if (
+            !empty($value)
+            && isset($this->reporter->all_fields[$layout_def['column_key']]['options'])
+        ) {
+            $app_list_strings = return_app_list_strings_language($GLOBALS['current_language']);
+            $value = $app_list_strings[$this->reporter->all_fields[$layout_def['column_key']]['options']][$value];
+        }
+        return $value;
+    }
 }
 
 ?>

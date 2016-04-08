@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -84,7 +84,7 @@ class ViewCampaignconfig extends SugarView
         global $current_user;
         
         echo $this->getModuleTitle(false);
-        global $currentModule;
+        global $currentModule, $sugar_config;
         
         $focus = new Administration();
         $focus->retrieveSettings(); //retrieve all admin settings.
@@ -113,6 +113,8 @@ class ViewCampaignconfig extends SugarView
             $this->ss->assign("userdefined_checked", "checked");
             $this->ss->assign("TRACKING_ENTRIES_LOCATION",$focus->settings["massemailer_tracking_entities_location"]);
         }
+        $this->ss->assign("SITEURL",$sugar_config['site_url']);
+        
         
         // Change the default campaign to not store a copy of each message.
         if (!empty($focus->settings['massemailer_email_copy']) and $focus->settings['massemailer_email_copy']=='1') {

@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,7 +35,6 @@
  ********************************************************************************/
 
 *}
-{sugar_getscript file="cache/include/javascript/sugar_grp_overlib.js"}
 {literal}
 <script type="text/javascript">
     var accountText = document.getElementById('account_name');
@@ -114,24 +113,27 @@
 <tr>
 <td class="buttons">
 {if $bean->aclAccess("save")}
-    <input title='{sugar_translate label="LBL_SAVE_BUTTON_LABEL"}' accessKey="{sugar_translate label='LBL_SAVE_BUTTON_KEY}" class="button primary"
+    <input title='{sugar_translate label="LBL_SAVE_BUTTON_LABEL"}' class="button primary"
         onclick="return check_form('{$form_name}');"
-        type="submit" name="button" value="{sugar_translate label='LBL_SAVE_BUTTON_LABEL'}">
+        type="submit" name="button" id="SAVE_FOOTER" value="{sugar_translate label='LBL_SAVE_BUTTON_LABEL'}">
 {/if}
 
 {if !empty($smarty.request.return_action) && ($smarty.request.return_action == "DetailView" && !empty($record_id))}
-    <input title="{sugar_translate label='LBL_CANCEL_BUTTON'}" accessKey="{sugar_translate label='LBL_CANCEL_BUTTON_KEY'}" class="button"
+    <input title="{sugar_translate label='LBL_CANCEL_BUTTON'}"  class="button"
         onclick="this.form.action.value='DetailView'; this.form.module.value='{$smarty.request.return_module}'; this.form.record.value='{$smarty.request.return_id}';"
-        type="submit" name="button" value="{sugar_translate label='LBL_CANCEL_BUTTON_LABEL'}">
+        type="submit" id="CANCEL_FOOTER" name="button" value="{sugar_translate label='LBL_CANCEL_BUTTON_LABEL'}">
 {elseif !empty($smarty.request.return_action) && ($smarty.request.return_action == "DetailView" && !empty($smarty.request.return_id))}';
-    <input title="{sugar_translate label='LBL_CANCEL_BUTTON_TITLE'}" accessKey="{sugar_translate label='LBL_CANCEL_BUTTON_KEY'}" class="button"
+    <input title="{sugar_translate label='LBL_CANCEL_BUTTON_TITLE'}" class="button"
         onclick="this.form.action.value='DetailView'; this.form.module.value='{$smarty.request.return_module}'; this.form.record.value='{$smarty.request.return_id}';"
-        type="submit" name="button" value="{sugar_translate label='LBL_CANCEL_BUTTON_LABEL'}">
+        type="submit" id="CANCEL_FOOTER" name="button" value="{sugar_translate label='LBL_CANCEL_BUTTON_LABEL'}">
 {else}
-    <input title="{sugar_translate label='LBL_CANCEL_BUTTON_TITLE'}" accessKey="{sugar_translate label='LBL_CANCEL_BUTTON_KEY'}" class="button"
+    <input title="{sugar_translate label='LBL_CANCEL_BUTTON_TITLE'}"  class="button"
         onclick="this.form.action.value='DetailView'; this.form.module.value='Leads'; this.form.record.value='{$smarty.request.record}';"
-        type="submit" name="button" value="{sugar_translate label='LBL_CANCEL_BUTTON_LABEL'}">
+        type="submit" id="CANCEL_FOOTER" name="button" value="{sugar_translate label='LBL_CANCEL_BUTTON_LABEL'}">
 {/if}
 </td>
 </tr>
 </table>
+ <script type="text/javascript">
+   addDropdownElements();//Bug#50590 after  lead_conv_ac_op_sel is loaded fill it with all required modules
+ </script>

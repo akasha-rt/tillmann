@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,9 +35,5 @@
  ********************************************************************************/
 
 *}
-{sugar_fetch object=$parentFieldArray key=$col assign='amount'}
-{if stripos(strtoupper($col), '_USD') || empty($currency_id)}
-{sugar_currency_format var=$amount}
-{else}
-{sugar_currency_format var=$amount currency_id=$currency_id}
-{/if}
+
+{sugar_currency_format var=$amount currency_id=$currency_id currency_symbol=$currency_symbol}

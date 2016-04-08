@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -38,16 +38,18 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 
 
-require_once('include/generic/SugarWidgets/SugarWidgetField.php');
+
 class SugarWidgetSubPanelDeleteButton extends SugarWidgetField
 {
 	function displayList($layout_def)
 	{
 		global $app_strings;
+        global $subpanel_item_count;
 		$return_module = $_REQUEST['module'];
 		$return_id = $_REQUEST['record'];
 		$module_name = $layout_def['module'];
 		$record_id = $layout_def['fields']['ID'];
+        $unique_id = $layout_def['subpanel_id']."_delete_".$subpanel_item_count; //bug 51512
 
 		// calls and meetings are held.
 		$new_status = 'Held';
@@ -69,7 +71,7 @@ class SugarWidgetSubPanelDeleteButton extends SugarWidgetField
 			$refresh_page = 1;
 		}
 
-		$html = "<a onclick='return sp_del_conf();' href=\"javascript:sub_p_del('$subpanel', '$module_name', '$record_id', $refresh_page);\">".SugarThemeRegistry::current()->getImage("delete_inline","alt=".translate('LBL_DELETE_INLINE',$module_name)." border='0'")."</a>";
+		$html = "<a id=\"$unique_id\" onclick='return sp_del_conf();' href=\"javascript:sub_p_del('$subpanel', '$module_name', '$record_id', $refresh_page);\">".$app_strings['LNK_DELETE']."</a>";
 		return $html;
 
 	}

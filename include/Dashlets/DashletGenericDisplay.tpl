@@ -2,32 +2,32 @@
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
  * SugarCRM" logo. If the display of the logo is not reasonably feasible for
@@ -45,7 +45,8 @@
 {assign var="alt_prev" value=$navStrings.previous}
 {assign var="alt_end" value=$navStrings.end}
 
-<table cellpadding='0' cellspacing='0' width='100%' border='0' class='list view'>
+<table id="dashletPanel" cellpadding='0' cellspacing='0' width='100%' border='0' class='list view default'>
+	<thead>
     <tr class="pagination" role=”presentation”>
         <td colspan='{$colCount+1}' align='right'>
             <table border='0' cellpadding='0' cellspacing='0' width='100%'>
@@ -94,7 +95,7 @@
 						{if $pageData.urls.endPage  && $pageData.offsets.total != $pageData.offsets.lastOffsetOnPage}
                             <!--<a href='#' onclick='return SUGAR.mySugar.retrieveDashlet("{$dashletId}", "{$pageData.urls.endPage}")' >{$navStrings.end}&nbsp;{sugar_getimage name="end" ext=".png" width="14" height="13" alt=$navStrings.end other_attributes='align="absmiddle" border="0" '}</a></td>-->
 							<button title='{$navStrings.end}' class='button' onclick='return SUGAR.mySugar.retrieveDashlet("{$dashletId}", "{$pageData.urls.endPage}")'>
-								{sugar_getimage name="end.png" attr='align="absmiddle" border="0" ' alt="$alt_end"}							
+								{sugar_getimage name="end.png" attr='align="absmiddle" border="0" ' alt="$alt_end"}
 							</button>
 
 						{elseif !$pageData.offsets.totalCounted || $pageData.offsets.total == $pageData.offsets.lastOffsetOnPage}
@@ -110,10 +111,16 @@
         </td>
     </tr>
     <tr height='20'>
+        {counter start=0 name="colCounter" print=false assign="colCounter"}
+        {assign var='datahide' value=""}
         {foreach from=$displayColumns key=colHeader item=params}
-	        <th scope='col' width='{$params.width}%'>
+            {if $colCounter == '1'}{assign var='datahide' value="phone"}{/if}
+            {if $colCounter == '3'}{assign var='datahide' value="phone,phonelandscape"}{/if}
+            {if $colCounter == '5'}{assign var='datahide' value="phone,phonelandscape,tablet"}{/if}
+            {if $colHeader == 'NAME' || $params.bold}<th scope='col' data-toggle="true">
+            {else}<th scope='col' data-hide="{$datahide}">{/if}
 				<div style='white-space: normal;'width='100%' align='{$params.align|default:'left'}'>
-                {if $params.sortable|default:true} 
+                {if $params.sortable|default:true}
 	                <a href='#' onclick='return SUGAR.mySugar.retrieveDashlet("{$dashletId}", "{$pageData.urls.orderBy}{$params.orderBy|default:$colHeader|lower}&sugar_body_only=1&id={$dashletId}")' class='listViewThLinkS1' title="{$arrowAlt}">{sugar_translate label=$params.label module=$pageData.bean.moduleDir}</a>&nbsp;&nbsp;
 	                {if $params.orderBy|default:$colHeader|lower == $pageData.ordering.orderBy}
 	                    {if $pageData.ordering.sortOrder == 'ASC'}
@@ -137,12 +144,13 @@
 	           {/if}
 			   </div>
             </th>
+            {counter name="colCounter"}
         {/foreach}
 		{if !empty($quickViewLinks)}
 		<td  class='td_alt' nowrap="nowrap" width='1%'>&nbsp;</td>
 		{/if}
     </tr>
-        
+	</thead>
 	{foreach name=rowIteration from=$data key=id item=rowData}
 		{if $smarty.foreach.rowIteration.iteration is odd}
 			{assign var='_rowColor' value=$rowColor[0]}
@@ -179,14 +187,13 @@
 			{/foreach}
 			{if !empty($quickViewLinks)}
 			<td width='1%' class='{$_rowColor}S1' bgcolor='{$_bgColor}' nowrap>
-				{if $pageData.access.edit}
+				{if $pageData.rowAccess[$id].edit}
                     {capture name='tmp1' assign='alt_edit'}{sugar_translate label="LNK_EDIT"}{/capture}
                     {capture name='tmp1' assign='alt_view'}{sugar_translate label="LBL_VIEWINLINE"}{/capture}
-					<a
-                        title='{$editLinkString}' href='index.php?action=EditView&module={$pageData.bean.moduleDir}&record={$rowData.ID}&offset={$pageData.offsets.current+$smarty.foreach.rowIteration.iteration}&stamp={$pageData.stamp}&return_module=Home&return_action=index'>{sugar_getimage name="edit_inline.png" attr='border="0" ' alt="$alt_edit"}</a>
+                    <a title='{$editLinkString}' href='index.php?action=EditView&module={$pageData.bean.moduleDir}&record={$rowData.ID}&offset={$pageData.offsets.current+$smarty.foreach.rowIteration.iteration}&stamp={$pageData.stamp}&return_module=Home&return_action=index'>{sugar_getimage name="edit_inline.png" attr='border="0" ' alt="$alt_edit"}</a>
 				{/if}
 				{if $pageData.access.view}
-					<a title='{$viewLinkString}' href='index.php?action=DetailView&module={$params.module|default:$pageData.bean.moduleDir}&record={$rowData[$params.parent_id]|default:$rowData.ID}&offset={$pageData.offsets.current+$smarty.foreach.rowIteration.iteration}&stamp={$pageData.stamp}&return_module=Home&return_action=index' title="{sugar_translate label="LBL_VIEW_INLINE"}>{sugar_getimage name="view_inline.png" attr='border="0" ' alt="$alt_view"}</a>
+                <a title='{$viewLinkString}' href='index.php?action=DetailView&module={$params.module|default:$pageData.bean.moduleDir}&record={$rowData[$params.parent_id]|default:$rowData.ID}&offset={$pageData.offsets.current+$smarty.foreach.rowIteration.iteration}&stamp={$pageData.stamp}&return_module=Home&return_action=index' title="{sugar_translate label="LBL_VIEW_INLINE"}>{sugar_getimage name="view_inline.png" attr='border="0" ' alt="$alt_view"}</a>
 				{/if}
 			</td>
 			{/if}

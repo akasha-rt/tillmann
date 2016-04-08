@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -69,7 +69,7 @@ $toHTML = array(
 );
 $GLOBALS['toHTML_keys'] = array_keys($toHTML);
 $GLOBALS['toHTML_values'] = array_values($toHTML);
-
+$GLOBALS['toHTML_keys_set'] = implode("", $GLOBALS['toHTML_keys']);
 /**
  * Replaces specific characters with their HTML entity values
  * @param string $string String to check/replace
@@ -78,37 +78,33 @@ $GLOBALS['toHTML_values'] = array_values($toHTML);
  *
  * @todo Make this utilize the external caching mechanism after re-testing (see
  *       log on r25320).
+ *
+ * Bug 49489 - removed caching of to_html strings as it was consuming memory and
+ * never releasing it
  */
 function to_html($string, $encode=true){
 	if (empty($string)) {
 		return $string;
 	}
-	static $cache = array();
+
 	global $toHTML;
-	if (isset($cache['c'.$string])) {
-	    return $cache['c'.$string];
-	}
 
-	$cache_key = 'c'.$string;
-
-	if($encode && is_string($string)){//$string = htmlentities($string, ENT_QUOTES);
+	if($encode && is_string($string)){
 		/*
 		 * cn: bug 13376 - handle ampersands separately
 		 * credit: ashimamura via bug portal
 		 */
 		//$string = str_replace("&", "&amp;", $string);
 
-		if(is_array($toHTML)) { // cn: causing errors in i18n test suite ($toHTML is non-array)
-			$string = str_replace(
-				$GLOBALS['toHTML_keys'],
-				$GLOBALS['toHTML_values'],
-				$string
-			);
+        if(is_array($toHTML))
+        { // cn: causing errors in i18n test suite ($toHTML is non-array)
+            $string = str_ireplace($GLOBALS['toHTML_keys'],$GLOBALS['toHTML_values'],$string);
 		}
 	}
-	$cache[$cache_key] = $string;
-	return $cache[$cache_key];
+
+    return $string;
 }
+
 
 /**
  * Replaces specific HTML entity values with the true characters
@@ -125,23 +121,23 @@ function from_html($string, $encode=true) {
     static $toHTML_values = null;
     static $toHTML_keys = null;
     static $cache = array();
-    if (!isset($toHTML_values) || !empty($GLOBALS['from_html_cache_clear'])) {
+    if (!empty($toHTML) && is_array($toHTML) && (!isset($toHTML_values) || !empty($GLOBALS['from_html_cache_clear']))) {
         $toHTML_values = array_values($toHTML);
         $toHTML_keys = array_keys($toHTML);
     }
 
     // Bug 36261 - Decode &amp; so we can handle double encoded entities
-	$string = str_replace("&amp;", "&", $string);
+	$string = str_ireplace("&amp;", "&", $string);
 
     if (!isset($cache[$string])) {
-        $cache[$string] = str_replace($toHTML_values, $toHTML_keys, $string);
+        $cache[$string] = str_ireplace($toHTML_values, $toHTML_keys, $string);
     }
     return $cache[$string];
 }
 
 /*
  * Return a version of $proposed that can be used as a column name in any of our supported databases
- * Practically this means no longer than 25 characters as the smallest identifier length for our supported DBs is 30 chars for Oracle plus we add on at least four characters in some places (for indicies for example)
+ * Practically this means no longer than 25 characters as the smallest identifier length for our supported DBs is 30 chars for Oracle plus we add on at least four characters in some places (for indices for example)
  * @param string $name Proposed name for the column
  * @param string $ensureUnique
  * @param int $maxlen Deprecated and ignored
@@ -155,7 +151,7 @@ function getValidDBName ($name, $ensureUnique = false, $maxLen = 30)
 
 /**
  * isValidDBName
- * 
+ *
  * Utility to perform the check during install to ensure a database name entered by the user
  * is valid based on the type of database server
  * @param string $name Proposed name for the DB

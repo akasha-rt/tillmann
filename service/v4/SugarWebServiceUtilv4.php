@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -48,30 +48,6 @@ class SugarWebServiceUtilv4 extends SugarWebServiceUtilv3_1
 
         $view = strtolower($view);
         switch (strtolower($type)){
-            case 'wireless':
-                if( $view == 'list'){
-                    require_once('include/SugarWireless/SugarWirelessListView.php');
-                    $GLOBALS['module'] = $moduleName; //WirelessView keys off global variable not instance variable...
-                    $v = new SugarWirelessListView();
-                    $results = $v->getMetaDataFile();
-                    $results = self::formatWirelessListViewResultsToArray($results);
-
-                }
-                elseif ($view == 'subpanel')
-                    $results = $this->get_subpanel_defs($moduleName, $type);
-                else{
-                    require_once('include/SugarWireless/SugarWirelessView.php');
-                    $v = new SugarWirelessView();
-                    $v->module = $moduleName;
-                    $fullView = ucfirst($view) . 'View';
-                    $meta = $v->getMetaDataFile('Wireless' . $fullView);
-                    $metadataFile = $meta['filename'];
-                    require($metadataFile);
-                    //Wireless detail metadata may actually be just edit metadata.
-                    $results = isset($viewdefs[$meta['module_name']][$fullView] ) ? $viewdefs[$meta['module_name']][$fullView] : $viewdefs[$meta['module_name']]['EditView'];
-                }
-
-                break;
             case 'default':
             default:
                 if ($view == 'subpanel')
@@ -97,26 +73,6 @@ class SugarWebServiceUtilv4 extends SugarWebServiceUtilv3_1
         return $results;
     }
 
-    /**
-     * Format the results for wirless list view metadata from an associative array to a
-     * numerically indexed array.  This conversion will ensure that consumers of the metadata
-     * can eval the json response and iterative over the results with the order of the fields
-     * preserved.
-     *
-     * @param array $fields
-     * @return array
-     */
-    function formatWirelessListViewResultsToArray($fields)
-    {
-        $results = array();
-        foreach($fields as $key => $defs)
-        {
-            $defs['name'] = $key;
-            $results[] = $defs;
-        }
-
-        return $results;
-    }
 
     /**
      * Equivalent of get_list function within SugarBean but allows the possibility to pass in an indicator
@@ -130,7 +86,8 @@ class SugarWebServiceUtilv4 extends SugarWebServiceUtilv3_1
 		{
 			$show_deleted = 1;
 		}
-		$order_by=$seed->process_order_by($order_by, null);
+		// Fix bug with sort order in get_entry_list
+		// $order_by=$seed->process_order_by($order_by, null);
 
 		$params = array();
 		if(!empty($favorites)) {
@@ -179,89 +136,6 @@ class SugarWebServiceUtilv4 extends SugarWebServiceUtilv3_1
         return $fav;
     }
 
-   /**
-	 * Parse wireless editview metadata and add ACL values.
-	 *
-	 * @param String $module_name
-	 * @param array $metadata
-	 * @return array Metadata with acls added
-	 */
-	function metdataAclParserWirelessEdit($module_name, $metadata)
-	{
-	    global  $beanList, $beanFiles;
-	    $class_name = $beanList[$module_name];
-	    require_once($beanFiles[$class_name]);
-	    $seed = new $class_name();
-
-	    $results = array();
-	    $results['templateMeta'] = $metadata['templateMeta'];
-	    $aclRows = array();
-	    //Wireless metadata only has a single panel definition.
-	    foreach ($metadata['panels'] as $row)
-	    {
-	        $aclRow = array();
-	        foreach ($row as $field)
-	        {
-	            $aclField = array();
-	            if( is_string($field) )
-	                $aclField['name'] = $field;
-	            else
-	                $aclField = $field;
-
-	            if($seed->bean_implements('ACL'))
-	                $aclField['acl'] = $this->getFieldLevelACLValue($seed->module_dir, $aclField['name']);
-	            else
-	                $aclField['acl'] = ACL_FIELD_DEFAULT;
-
-	            $aclRow[] = $aclField;
-	        }
-	        $aclRows[] = $aclRow;
-	    }
-
-	    $results['panels'] = $aclRows;
-	    return $results;
-	}
-
-	/**
-	 * Parse wireless detailview metadata and add ACL values.
-	 *
-	 * @param String $module_name
-	 * @param array $metadata
-	 * @return array Metadata with acls added
-	 */
-	function metdataAclParserWirelessDetail($module_name, $metadata)
-	{
-	    return self::metdataAclParserWirelessEdit($module_name, $metadata);
-	}
-
-    /**
-	 * Parse wireless listview metadata and add ACL values.
-	 *
-	 * @param String $module_name
-	 * @param array $metadata
-	 * @return array Metadata with acls added
-	 */
-	function metdataAclParserWirelessList($module_name, $metadata)
-	{
-	    global  $beanList, $beanFiles;
-	    $class_name = $beanList[$module_name];
-	    require_once($beanFiles[$class_name]);
-	    $seed = new $class_name();
-
-	    $results = array();
-	    foreach ($metadata as $entry)
-	    {
-	        $field_name = $entry['name'];
-	        if($seed->bean_implements('ACL'))
-	            $entry['acl'] = $this->getFieldLevelACLValue($seed->module_dir, strtolower($field_name));
-	        else
-	            $entry['acl'] = 99;
-
-	        $results[] = $entry;
-	    }
-
-	    return $results;
-	}
 
 	/**
 	 * Processes the filter_fields attribute to use with SugarBean::create_new_list_query()
@@ -463,7 +337,9 @@ class SugarWebServiceUtilv4 extends SugarWebServiceUtilv3_1
 				if($module_name == 'Users' && !empty($seed->id) && ($seed->id != $current_user->id) && $field_name == 'user_hash'){
 					continue;
 				}
-
+				if(!empty($seed->field_name_map[$field_name]['sensitive'])) {
+					continue;
+				}
 				$seed->$field_name = $val;
 			}
 
@@ -533,6 +409,9 @@ class SugarWebServiceUtilv4 extends SugarWebServiceUtilv3_1
                         }
                     }
 					$seed->save();
+					if($seed->deleted == 1){
+						$seed->mark_deleted($seed->id);
+					}
 					$ids[] = $seed->id;
 				}//fi
 			}

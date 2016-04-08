@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 require_once('include/MVC/View/SugarView.php');
@@ -281,19 +284,58 @@ class SugarController{
 	/**
 	 * This method is called from SugarApplication->execute and it will bootstrap the entire controller process
 	 */
-	final public function execute(){
-		$this->process();
-		if(!empty($this->view)){
-			$this->processView();
-		}elseif(!empty($this->redirect_url)){
-			$this->redirect();
-		}
+	final public function execute()
+    {
+
+        try
+        {
+            $this->process();
+            if(!empty($this->view))
+            {
+                $this->processView();
+            }
+            elseif(!empty($this->redirect_url))
+            {
+            			$this->redirect();
+            }
+        }
+        catch (Exception $e)
+        {
+            $this->handleException($e);
+        }
+
+
+
 	}
+
+    /**
+      * Handle exception
+      * @param Exception $e
+      */
+    protected function handleException(Exception $e)
+    {
+        $GLOBALS['log']->fatal('Exception in Controller: ' . $e->getMessage());
+        $logicHook = new LogicHook();
+
+        if (isset($this->bean))
+        {
+            $logicHook->setBean($this->bean);
+            $logicHook->call_custom_logic($this->bean->module_dir, "handle_exception", $e);
+        }
+        else
+        {
+            $logicHook->call_custom_logic('', "handle_exception", $e);
+        }
+    }
 
 	/**
 	 * Display the appropriate view.
 	 */
 	private function processView(){
+		if(!isset($this->view_object_map['remap_action']) && isset($this->action_view_map[strtolower($this->action)]))
+		{
+		  $this->view_object_map['remap_action'] = $this->action_view_map[strtolower($this->action)];
+		}
 		$view = ViewFactory::loadView($this->view, $this->module, $this->bean, $this->view_object_map, $this->target_module);
 		$GLOBALS['current_view'] = $view;
 		if(!empty($this->bean) && !$this->bean->ACLAccess($view->type) && $view->type != 'list'){
@@ -332,11 +374,14 @@ class SugarController{
 			$this->loadBean();
 
 			$processed = false;
-			foreach($this->process_tasks as $process){
-				$this->$process();
-				if($this->_processed)
-					break;
-			}
+            if (!$this->_processed) {
+                foreach ($this->process_tasks as $process) {
+                    $this->$process();
+                    if ($this->_processed) {
+                        break;
+                    }
+                }
+            }
 
 			$this->redirect();
 		}else{
@@ -506,6 +551,13 @@ class SugarController{
 		$this->bean->save(!empty($this->bean->notify_on_save));
 	}
 
+
+    public function action_spot()
+    {
+            $this->view = 'spot';
+    }
+
+
 	/**
 	 * Specify what happens after the save has occurred.
 	 */
@@ -543,16 +595,20 @@ class SugarController{
 	 * Specify what happens after the deletion has occurred.
 	 */
 	protected function post_delete(){
-		$return_module = isset($_REQUEST['return_module']) ?
-			$_REQUEST['return_module'] :
-			$GLOBALS['sugar_config']['default_module'];
-		$return_action = isset($_REQUEST['return_action']) ?
-			$_REQUEST['return_action'] :
-			$GLOBALS['sugar_config']['default_action'];
-		$return_id = isset($_REQUEST['return_id']) ?
-			$_REQUEST['return_id'] :
-			'';
-		$url = "index.php?module=".$return_module."&action=".$return_action."&record=".$return_id;
+        if (empty($_REQUEST['return_url'])) {
+            $return_module = isset($_REQUEST['return_module']) ?
+                $_REQUEST['return_module'] :
+                $GLOBALS['sugar_config']['default_module'];
+            $return_action = isset($_REQUEST['return_action']) ?
+                $_REQUEST['return_action'] :
+                $GLOBALS['sugar_config']['default_action'];
+            $return_id = isset($_REQUEST['return_id']) ?
+                $_REQUEST['return_id'] :
+                '';
+            $url = "index.php?module=".$return_module."&action=".$return_action."&record=".$return_id;
+        } else {
+            $url = $_REQUEST['return_url'];
+        }
 
 		//eggsurplus Bug 23816: maintain VCR after an edit/save. If it is a duplicate then don't worry about it. The offset is now worthless.
 		if(isset($_REQUEST['offset']) && empty($_REQUEST['duplicateSave'])) {
@@ -588,11 +644,11 @@ class SugarController{
             $temp_req = array('current_query_by_page' => $_REQUEST['current_query_by_page'], 'return_module' => $_REQUEST['return_module'], 'return_action' => $_REQUEST['return_action']);
             if($_REQUEST['return_module'] == 'Emails') {
                 if(!empty($_REQUEST['type']) && !empty($_REQUEST['ie_assigned_user_id'])) {
-                    $this->req_for_email = array('type' => $_REQUEST['type'], 'ie_assigned_user_id' => $_REQUEST['ie_assigned_user_id']); //specificly for My Achieves
+                    $this->req_for_email = array('type' => $_REQUEST['type'], 'ie_assigned_user_id' => $_REQUEST['ie_assigned_user_id']); // Specifically for My Achieves
                 }
             }
             $_REQUEST = array();
-            $_REQUEST = unserialize(base64_decode($temp_req['current_query_by_page']));
+            $_REQUEST = sugar_unserialize(base64_decode($temp_req['current_query_by_page']));
             unset($_REQUEST[$seed->module_dir.'2_'.strtoupper($seed->object_name).'_offset']);//after massupdate, the page should redirect to no offset page
             $storeQuery->saveFromRequest($_REQUEST['module']);
             $_REQUEST = array('return_module' => $temp_req['return_module'], 'return_action' => $temp_req['return_action']);//for post_massupdate, to go back to original page.
@@ -690,6 +746,34 @@ class SugarController{
 		    return '0';
 		}
 	}
+
+    /**
+     * Global method to delete an attachment
+     *
+     * If the bean does not have a deleteAttachment method it will return 'false' as a string
+     *
+     * @return void
+     */
+    protected function action_deleteattachment()
+    {
+        $this->view = 'edit';
+        $GLOBALS['view'] = $this->view;
+        ob_clean();
+        $retval = false;
+
+        if(method_exists($this->bean, 'deleteAttachment')) {
+            $duplicate = "false";
+            if (isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == "true") {
+                $duplicate = "true";
+            }
+            if (isset($_REQUEST['duplicateSave']) && $_REQUEST['duplicateSave'] == "true") {
+                $duplicate = "true";
+            }
+            $retval = $this->bean->deleteAttachment($duplicate);
+        }
+        echo json_encode($retval);
+        sugar_cleanup(true);
+    }
 
 	/**
 	 * getActionFilename

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -183,7 +183,7 @@ class DashletGeneric extends Dashlet {
 
         $chooser->args['left_name'] = 'display_tabs';
         $chooser->args['right_name'] = 'hide_tabs';
-        $chooser->args['max_left'] = '8';
+        $chooser->args['max_left'] = '6';
 
         $chooser->args['left_label'] =  $GLOBALS['app_strings']['LBL_DISPLAY_COLUMNS'];
         $chooser->args['right_label'] =  $GLOBALS['app_strings']['LBL_HIDE_COLUMNS'];
@@ -207,13 +207,18 @@ class DashletGeneric extends Dashlet {
                 $name = strtolower($name);
                 $currentSearchFields[$name] = array();
                 $widgetDef = $this->seedBean->field_defs[$name];
-                if($widgetDef['type'] == 'enum') $widgetDef['remove_blank'] = true; // remove the blank option for the dropdown
                 if($widgetDef['name'] == 'assigned_user_name') $widgetDef['name'] = 'assigned_user_id';
                 //bug 39170 - begin
                 if($widgetDef['name'] == 'created_by_name') $name = $widgetDef['name'] = 'created_by';
                 if($widgetDef['name'] == 'modified_by_name') $name = $widgetDef['name'] = 'modified_user_id';
                 //bug 39170 - end
-                $widgetDef['input_name0'] = empty($this->filters[$name]) ? '' : $this->filters[$name];
+                if($widgetDef['type']=='enum'){
+                   $filterNotSelected = array(); // we need to have some value otherwise '' or null values make -none- to be selected by default
+                }else{
+                   $filterNotSelected = '';
+                }
+                $widgetDef['input_name0'] = empty($this->filters[$name]) ? $filterNotSelected : $this->filters[$name];
+
                 $currentSearchFields[$name]['label'] = !empty($params['label']) ? translate($params['label'], $this->seedBean->module_dir) : translate($widgetDef['vname'], $this->seedBean->module_dir);
                 $currentSearchFields[$name]['input'] = $this->layoutManager->widgetDisplayInput($widgetDef, true, (empty($this->filters[$name]) ? '' : $this->filters[$name]));
             }
@@ -284,7 +289,7 @@ class DashletGeneric extends Dashlet {
                 $widgetClass = $this->layoutManager->getClassFromWidgetDef($widgetDef, true);
                 $widgetDef['table'] = $this->seedBean->table_name;
                 $widgetDef['table_alias'] = $this->seedBean->table_name;
-				if(!empty($widgetDef['source']) && $widgetDef['source'] == 'custom_fields'){
+                if(!empty($widgetDef['source']) && $widgetDef['source'] == 'custom_fields') {
                     $widgetDef['table'] = $this->seedBean->table_name."_cstm";
                     $widgetDef['table_alias'] = $widgetDef['table'];
                 }
@@ -308,6 +313,12 @@ class DashletGeneric extends Dashlet {
                             $widgetDef['column_key'] = $name;
                         }
                         // No break here, we want to run through the default handler
+                    case 'relate':
+                        if (isset($widgetDef['link']) && $this->seedBean->load_relationship($widgetDef['link'])) {
+                            $widgetDef['module'] = $this->seedBean->$widgetDef['link']->focus->module_name;
+                            $widgetDef['link'] = $this->seedBean->$widgetDef['link']->getRelationshipObject()->name;
+                        }
+                        // No break - run through the default handler
                     default:
                         $widgetDef['input_name0'] = $params;
                         if(is_array($params) && !empty($params)) { // handle array query

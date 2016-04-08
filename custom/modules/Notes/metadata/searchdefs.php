@@ -1,17 +1,17 @@
 <?php
-$searchdefs ['Notes'] = 
-array (
+// created: 2016-04-08 13:46:17
+$searchdefs['Notes'] = array (
   'layout' => 
   array (
     'basic_search' => 
     array (
-      'name' => 
+      0 => 
       array (
         'name' => 'name',
         'default' => true,
         'width' => '10%',
       ),
-      0 => 
+      1 => 
       array (
         'name' => 'current_user_only',
         'label' => 'LBL_CURRENT_USER_FILTER',
@@ -20,13 +20,13 @@ array (
     ),
     'advanced_search' => 
     array (
-      'name' => 
+      0 => 
       array (
         'name' => 'name',
         'default' => true,
         'width' => '10%',
       ),
-      'parent_name' => 
+      1 => 
       array (
         'type' => 'parent',
         'label' => 'LBL_RELATED_TO',
@@ -34,14 +34,14 @@ array (
         'default' => true,
         'name' => 'parent_name',
       ),
-      'filename' => 
+      2 => 
       array (
         'type' => 'name',
         'name' => 'filename',
         'default' => true,
         'width' => '10%',
       ),
-      'type_c' => 
+      3 => 
       array (
         'type' => 'enum',
         'default' => true,
@@ -50,7 +50,7 @@ array (
         'width' => '10%',
         'name' => 'type_c',
       ),
-      'date_entered' => 
+      4 => 
       array (
         'type' => 'datetime',
         'label' => 'LBL_DATE_ENTERED',
@@ -71,4 +71,3 @@ array (
     ),
   ),
 );
-?>

@@ -3,7 +3,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -76,8 +76,8 @@ $sugar_config['passwordsetting']['linkexpiration'] = true;
 $sugar_config['passwordsetting']['linkexpirationtime'] = 24;
 $sugar_config['passwordsetting']['linkexpirationtype'] = 60;
 $sugar_config['passwordsetting']['minpwdlength'] = 6;
-$sugar_config['passwordsetting']['oneupper'] = true;
-$sugar_config['passwordsetting']['onelower'] = true;
-$sugar_config['passwordsetting']['onenumber'] = true;
+$sugar_config['passwordsetting']['oneupper'] = false;
+$sugar_config['passwordsetting']['onelower'] = false;
+$sugar_config['passwordsetting']['onenumber'] = false;
 
 write_array_to_file( "sugar_config", $sugar_config, "config.php");

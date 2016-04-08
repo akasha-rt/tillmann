@@ -1,8 +1,11 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
@@ -29,12 +32,13 @@
  * 
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 class ViewPopup extends SugarView{
+    protected $override_popup = array();
 	var $type ='list';
 	function ViewPopup(){
 		parent::SugarView();
@@ -50,13 +54,17 @@ class ViewPopup extends SugarView{
 
 		if(isset($_REQUEST['metadata']) && strpos($_REQUEST['metadata'], "..") !== false)
 			die("Directory navigation attack denied.");
-		if(!empty($_REQUEST['metadata']) && $_REQUEST['metadata'] != 'undefined'
-			&& file_exists('modules/' . $this->module . '/metadata/' . $_REQUEST['metadata'] . '.php')) // if custom metadata is requested
-			require_once('modules/' . $this->module . '/metadata/' . $_REQUEST['metadata'] . '.php');
-		elseif(file_exists('custom/modules/' . $this->module . '/metadata/popupdefs.php'))
-	    	require_once('custom/modules/' . $this->module . '/metadata/popupdefs.php');
-	    elseif(file_exists('modules/' . $this->module . '/metadata/popupdefs.php'))
-	    	require_once('modules/' . $this->module . '/metadata/popupdefs.php');
+        if (!empty($_REQUEST['metadata']) && $_REQUEST['metadata'] != 'undefined'
+            && file_exists('custom/modules/' . $this->module . '/metadata/' . $_REQUEST['metadata'] . '.php')) {
+            require 'custom/modules/' . $this->module . '/metadata/' . $_REQUEST['metadata'] . '.php';
+        } elseif (!empty($_REQUEST['metadata']) && $_REQUEST['metadata'] != 'undefined'
+            && file_exists('modules/' . $this->module . '/metadata/' . $_REQUEST['metadata'] . '.php')) {
+            require 'modules/' . $this->module . '/metadata/' . $_REQUEST['metadata'] . '.php';
+        } elseif (file_exists('custom/modules/' . $this->module . '/metadata/popupdefs.php')) {
+            require 'custom/modules/' . $this->module . '/metadata/popupdefs.php';
+        } elseif (file_exists('modules/' . $this->module . '/metadata/popupdefs.php')) {
+            require 'modules/' . $this->module . '/metadata/popupdefs.php';
+        }
 
 	    if(!empty($popupMeta) && !empty($popupMeta['listviewdefs'])){
 	    	if(is_array($popupMeta['listviewdefs'])){
@@ -89,16 +97,24 @@ class ViewPopup extends SugarView{
 	    	require_once('modules/'.$this->module.'/metadata/searchdefs.php');
 		}
 
-		//if you click the pagination button, it will poplate the search criteria here
+		//if you click the pagination button, it will populate the search criteria here
         if(!empty($this->bean) && isset($_REQUEST[$this->module.'2_'.strtoupper($this->bean->object_name).'_offset'])) {
             if(!empty($_REQUEST['current_query_by_page'])) {
                 $blockVariables = array('mass', 'uid', 'massupdate', 'delete', 'merge', 'selectCount',
-                	'lvso', 'sortOrder', 'orderBy', 'request_data', 'current_query_by_page');
-                $current_query_by_page = unserialize(base64_decode($_REQUEST['current_query_by_page']));
+                    'sortOrder', 'orderBy', 'request_data', 'current_query_by_page');
+                $current_query_by_page = sugar_unserialize(base64_decode($_REQUEST['current_query_by_page']));
                 foreach($current_query_by_page as $search_key=>$search_value) {
                     if($search_key != $this->module.'2_'.strtoupper($this->bean->object_name).'_offset'
                     	&& !in_array($search_key, $blockVariables)) {
-						$_REQUEST[$search_key] = $GLOBALS['db']->quote($search_value);
+                        if (!is_array($search_value)) {
+                            $_REQUEST[$search_key] = securexss($search_value);
+                        }
+                        else {
+                            foreach ($search_value as $key=>&$val) {
+                                $val = securexss($val);
+                            }
+                            $_REQUEST[$search_key] = $search_value;
+                        }
                     }
                 }
             }
@@ -126,7 +142,7 @@ class ViewPopup extends SugarView{
 	    	$popup->displayColumns = $displayColumns;
 	    	$popup->filter_fields = $filter_fields;
 	    	$popup->mergeDisplayColumns = true;
-	    	//check to see if popupdes contains searchdefs
+	    	//check to see if popupdefs contains searchdefs
 	    	$popup->_popupMeta = $popupMeta;
             $popup->listviewdefs = $listViewDefs;
 	    	$popup->searchdefs = $searchdefs;
@@ -143,8 +159,24 @@ class ViewPopup extends SugarView{
 			}
 			$popup->massUpdateData = $massUpdateData;
 
-			$popup->setup('include/Popups/tpls/PopupGeneric.tpl');
-			
+            $tpl = 'include/Popups/tpls/PopupGeneric.tpl';
+            if(file_exists($this->getCustomFilePathIfExists("modules/{$this->module}/tpls/popupGeneric.tpl")))
+            {
+                $tpl = $this->getCustomFilePathIfExists("modules/{$this->module}/tpls/popupGeneric.tpl");
+            }
+
+            if(file_exists($this->getCustomFilePathIfExists("modules/{$this->module}/tpls/popupHeader.tpl")))
+            {
+                $popup->headerTpl = $this->getCustomFilePathIfExists("modules/{$this->module}/tpls/popupHeader.tpl");
+            }
+
+            if(file_exists($this->getCustomFilePathIfExists("modules/{$this->module}/tpls/popupFooter.tpl")))
+            {
+                $popup->footerTpl = $this->getCustomFilePathIfExists("modules/{$this->module}/tpls/popupFooter.tpl");
+            }
+
+			$popup->setup($tpl);
+
             //We should at this point show the header and javascript even if to_pdf is true.
             //The insert_popup_header javascript is incomplete and shouldn't be relied on.
             if (isset($this->options['show_all']) && $this->options['show_all'] == false)
@@ -155,6 +187,10 @@ class ViewPopup extends SugarView{
                 $this->_displayJavascript();
             }
             insert_popup_header(null, false);
+            if(isset($this->override_popup['template_data']) && is_array($this->override_popup['template_data']))
+            {
+                 $popup->th->ss->assign($this->override_popup['template_data']);
+            }
 			echo $popup->display();
 
 		}else{

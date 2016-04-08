@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+ *
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2016 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -260,7 +263,7 @@ abstract class DBManager
 	public function __construct()
 	{
 		$this->timedate = TimeDate::getInstance();
-		$this->log = $GLOBALS['log'];
+		$this->log = isset($GLOBALS['log']) ? $GLOBALS['log'] : null;
 		$this->helper = $this; // compatibility
 	}
 
@@ -306,7 +309,7 @@ abstract class DBManager
 	public function checkError($msg = '', $dieOnError = false)
 	{
 		if (empty($this->database)) {
-			$this->registerError("$msg: Database Is Not Connected", $dieOnError);
+			$this->registerError($msg, "Database Is Not Connected", $dieOnError);
 			return true;
 		}
 
@@ -341,7 +344,7 @@ abstract class DBManager
 				if(isset($GLOBALS['app_strings']['ERR_DB_FAIL'])) {
 					sugar_die($GLOBALS['app_strings']['ERR_DB_FAIL']);
 				} else {
-					sugar_die("Database error. Please check sugarcrm.log for details.");
+					sugar_die("Database error. Please check suitecrm.log for details.");
 				}
 			} else {
 				$this->last_error = $message;
@@ -778,11 +781,23 @@ protected function checkQuery($sql, $object_name = false)
 
 		$take_action = false;
 
-		// do column comparisions
+		// do column comparisons
 		$sql .=	"/*COLUMNS*/\n";
-		foreach ($fielddefs as $value) {
+		foreach ($fielddefs as $name => $value) {
 			if (isset($value['source']) && $value['source'] != 'db')
 				continue;
+
+            // Bug #42406. Skipping breaked vardef without type or name
+            if (isset($value['name']) == false || $value['name'] == false)
+            {
+                $sql .= "/* NAME IS MISSING IN VARDEF $tablename::$name */\n";
+                continue;
+            }
+            else if (isset($value['type']) == false || $value['type'] == false)
+            {
+                $sql .= "/* TYPE IS MISSING IN VARDEF $tablename::$name */\n";
+                continue;
+            }
 
 			$name = strtolower($value['name']);
 			// add or fix the field defs per what the DB is expected to give us back
@@ -850,13 +865,13 @@ protected function checkQuery($sql, $object_name = false)
 			}
 		}
 
-		// do index comparisions
+		// do index comparisons
 		$sql .=	"/* INDEXES */\n";
 		$correctedIndexs = array();
 
         $compareIndices_case_insensitive = array();
 
-		// do indicies comparisons case-insensitive
+		// do indices comparisons case-insensitive
 		foreach($compareIndices as $k => $value){
 			$value['name'] = strtolower($value['name']);
 			$compareIndices_case_insensitive[strtolower($k)] = $value;
@@ -891,7 +906,7 @@ protected function checkQuery($sql, $object_name = false)
 				$value['type'] = 'index';
 
 			if ( !isset($compareIndices[$name]) ) {
-				//First check if an index exists that doens't match our name, if so, try to rename it
+				//First check if an index exists that doesn't match our name, if so, try to rename it
 				$found = false;
 				foreach ($compareIndices as $ex_name => $ex_value) {
 					if($this->compareVarDefs($ex_value, $value, true)) {
@@ -956,13 +971,32 @@ protected function checkQuery($sql, $object_name = false)
 	public function compareVarDefs($fielddef1, $fielddef2, $ignoreName = false)
 	{
 		foreach ( $fielddef1 as $key => $value ) {
-			if ( $key == 'name' && ( strtolower($fielddef1[$key]) == strtolower($fielddef2[$key]) || $ignoreName) )
+			if ($key == 'name' && $ignoreName)
 				continue;
-			if ( isset($fielddef2[$key]) && $fielddef1[$key] == $fielddef2[$key] )
-				continue;
+            if (isset($fielddef2[$key]))
+            {
+                if (!is_array($fielddef1[$key]) && !is_array($fielddef2[$key]))
+                {
+                    if (strtolower($fielddef1[$key]) == strtolower($fielddef2[$key]))
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (array_map('strtolower', $fielddef1[$key]) == array_map('strtolower',$fielddef2[$key]))
+                    {
+                        continue;
+                    }
+                }
+            }
 			//Ignore len if its not set in the vardef
 			if ($key == 'len' && empty($fielddef2[$key]))
 				continue;
+            // if the length in db is greather than the vardef, ignore it
+            if ($key == 'len' && ($fielddef1[$key] >= $fielddef2[$key])) {
+                continue;
+            }
 			return false;
 		}
 
@@ -1895,13 +1929,13 @@ protected function checkQuery($sql, $object_name = false)
 			if (isset($fieldDef['source']) && $fieldDef['source'] != 'db')  continue;
 			// Do not write out the id field on the update statement.
     		// We are not allowed to change ids.
-    		if ($fieldDef['name'] == $primaryField['name']) continue;
+    		if (empty($fieldDef['name']) || $fieldDef['name'] == $primaryField['name']) continue;
 
     		// If the field is an auto_increment field, then we shouldn't be setting it.  This was added
     		// specially for Bugs and Cases which have a number associated with them.
     		if (!empty($bean->field_name_map[$field]['auto_increment'])) continue;
 
-    		//custom fields handle their save seperatley
+    		//custom fields handle their save separately
     		if(isset($bean->field_name_map) && !empty($bean->field_name_map[$field]['custom_type']))  continue;
 
     		// no need to clear deleted since we only update not deleted records anyway
@@ -1928,13 +1962,13 @@ protected function checkQuery($sql, $object_name = false)
     		if(!empty($val) && !empty($fieldDef['len']) && strlen($val) > $fieldDef['len']) {
 			    $val = $this->truncate($val, $fieldDef['len']);
 			}
-
+		$columnName = $this->quoteIdentifier($fieldDef['name']);
     		if(!is_null($val) || !empty($fieldDef['required'])) {
-    			$columns[] = "{$fieldDef['name']}=".$this->massageValue($val, $fieldDef);
+    			$columns[] = "{$columnName}=".$this->massageValue($val, $fieldDef);
     		} elseif($this->isNullable($fieldDef)) {
-    			$columns[] = "{$fieldDef['name']}=NULL";
+    			$columns[] = "{$columnName}=NULL";
     		} else {
-    		    $columns[] = "{$fieldDef['name']}=".$this->emptyValue($fieldDef['type']);
+    		    $columns[] = "{$columnName}=".$this->emptyValue($fieldDef['type']);
     		}
 		}
 
@@ -2086,7 +2120,7 @@ protected function checkQuery($sql, $object_name = false)
 
 		if ( is_null($val) ) {
 			if(!empty($fieldDef['required'])) {
-				if (isset($fieldDef['default'])){
+				if (isset($fieldDef['default'])  && $fieldDef['default'] != ''){
 					return $fieldDef['default'];
 				}
 				return $this->emptyValue($type);
@@ -2117,7 +2151,8 @@ protected function checkQuery($sql, $object_name = false)
 		}
 		$type = $this->getColumnType($fieldDef['dbType'],$fieldDef['name'],$tablename);
 		$matches = array();
-		preg_match_all('/(\w+)(?:\(([0-9]+,?[0-9]*)\)|)/i', $type, $matches);
+        // len can be a number or a string like 'max', for example, nvarchar(max)
+        preg_match_all('/(\w+)(?:\(([0-9]+,?[0-9]*|\w+)\)|)/i', $type, $matches);
 		if ( isset($matches[1][0]) )
 			$fieldDef['type'] = $matches[1][0];
 		if ( isset($matches[2][0]) && empty($fieldDef['len']) )
@@ -2187,7 +2222,7 @@ protected function checkQuery($sql, $object_name = false)
 			//"as" used for an alias
 			return trim(substr($string, strripos($string, " as ") + 4));
 		else if (strrpos($string, " ") != 0)
-			//Space used as a delimeter for an alias
+			//Space used as a delimiter for an alias
 			return trim(substr($string, strrpos($string, " ")));
 		else if (strpos($string, ".") !== false)
 			//No alias, but a table.field format was used
@@ -2283,7 +2318,7 @@ protected function checkQuery($sql, $object_name = false)
 		// generate the from clause. Use relations array to generate outer joins
 		// all the rest of the tables will be used as a simple from
 		// relations table define relations between table1 and table2 through column on table 1
-		// table2 is assumed to joing through primaty key called id
+		// table2 is assumed to joining through primary key called id
 		$separator = "";
 		$from = ''; $table_used_in_from = array();
 		foreach ($relations as $table1 => $rightsidearray){
@@ -2293,11 +2328,11 @@ protected function checkQuery($sql, $object_name = false)
 			$table_used_in_from[$table1] = true;
 			foreach ($rightsidearray as $tablearray){
 				$table2 = $tablearray['foreignTable']; // get foreign table
-				$tableAlias = $aliases[$table2]; // get a list of aliases fo thtis table
+				$tableAlias = $aliases[$table2]; // get a list of aliases for this table
 				foreach ($tableAlias as $table2) {
 					//choose first alias that does not match
 					// we are doing this because of self joins.
-					// in case of self joins, the same table will bave many aliases.
+					// in case of self joins, the same table will have many aliases.
 					if ($table2 != $table1) break;
 				}
 
@@ -2365,6 +2400,33 @@ protected function checkQuery($sql, $object_name = false)
 		return null;
 	}
 
+    /**
+     * retrieves the different components from the passed column type as it is used in the type mapping and vardefs
+     * type format: <baseType>[(<len>[,<scale>])]
+     * @param string $type Column type
+     * @return array|bool array containing the different components of the passed in type or false in case the type contains illegal characters
+     */
+    public function getTypeParts($type)
+    {
+        if(preg_match("#(?P<type>\w+)\s*(?P<arg>\((?P<len>\w+)\s*(,\s*(?P<scale>\d+))*\))*#", $type, $matches))
+        {
+            $return = array();  // Not returning matches array as such as we don't want to expose the regex make up on the interface
+            $return['baseType'] = $matches['type'];
+            if( isset($matches['arg'])) {
+                $return['arg'] = $matches['arg'];
+            }
+            if( isset($matches['len'])) {
+                $return['len'] = $matches['len'];
+            }
+            if( isset($matches['scale'])) {
+                $return['scale'] = $matches['scale'];
+            }
+            return $return;
+        } else {
+            return false;
+        }
+    }
+
 	/**
 	 * Returns the defintion for a single column
 	 *
@@ -2378,38 +2440,49 @@ protected function checkQuery($sql, $object_name = false)
 	{
 		$name = $fieldDef['name'];
 		$type = $this->getFieldType($fieldDef);
-		$colType = $this->getColumnType($type);
+        $colType = $this->getColumnType($type);
 
-		if (( $colType == 'nvarchar'
-				or $colType == 'nchar'
-				or $colType == 'varchar'
-				or $colType == 'char'
-				or $colType == 'varchar2') ) {
-			if( !empty($fieldDef['len']))
-				$colType .= "(".$fieldDef['len'].")";
-			else
-				$colType .= "(255)";
-		}
-	if($colType == 'decimal' || $colType == 'float'){
-			if(!empty($fieldDef	['len'])){
-				if(!empty($fieldDef['precision']) && is_numeric($fieldDef['precision']))
-					if(strpos($fieldDef	['len'],',') === false){
-						$colType .= "(".$fieldDef['len'].",".$fieldDef['precision'].")";
-					}else{
-						$colType .= "(".$fieldDef['len'].")";
-					}
-				else
-						$colType .= "(".$fieldDef['len'].")";
-			}
-	}
+        if($parts = $this->getTypeParts($colType))
+        {
+            $colBaseType = $parts['baseType'];
+            $defLen =  isset($parts['len']) ? $parts['len'] : '255'; // Use the mappings length (precision) as default if it exists
+        }
 
+        if(!empty($fieldDef['len'])) {
+            if (in_array($colBaseType, array( 'nvarchar', 'nchar', 'varchar', 'varchar2', 'char',
+                                          'clob', 'blob', 'text'))) {
+          	    $colType = "$colBaseType(${fieldDef['len']})";
+            } elseif(($colBaseType == 'decimal' || $colBaseType == 'float')){
+                  if(!empty($fieldDef['precision']) && is_numeric($fieldDef['precision']))
+                      if(strpos($fieldDef['len'],',') === false){
+                          $colType = $colBaseType . "(".$fieldDef['len'].",".$fieldDef['precision'].")";
+                      }else{
+                          $colType = $colBaseType . "(".$fieldDef['len'].")";
+                      }
+                  else
+                          $colType = $colBaseType . "(".$fieldDef['len'].")";
+              }
+        } else {
+            if (in_array($colBaseType, array( 'nvarchar', 'nchar', 'varchar', 'varchar2', 'char'))) {
+                $colType = "$colBaseType($defLen)";
+            }
+        }
 
-		if (isset($fieldDef['default']) && strlen($fieldDef['default']) > 0)
-			$default = " DEFAULT ".$this->quoted($fieldDef['default']);
-		elseif (!isset($default) && $type == 'bool')
-			$default = " DEFAULT 0 ";
-		elseif (!isset($default))
-			$default = '';
+        $default = '';
+
+        // Bug #52610 We should have ability don't add DEFAULT part to query for boolean fields
+        if (!empty($fieldDef['no_default']))
+        {
+            // nothing to do
+        }
+        elseif (isset($fieldDef['default']) && strlen($fieldDef['default']) > 0)
+        {
+            $default = " DEFAULT ".$this->quoted($fieldDef['default']);
+        }
+        elseif (!isset($default) && $type == 'bool')
+        {
+            $default = " DEFAULT 0 ";
+        }
 
 		$auto_increment = '';
 		if(!empty($fieldDef['auto_increment']) && $fieldDef['auto_increment'])
@@ -2434,6 +2507,7 @@ protected function checkQuery($sql, $object_name = false)
 			return array(
 				'name' => $name,
 				'colType' => $colType,
+                'colBaseType' => $colBaseType,  // Adding base type for easier processing in derived classes
 				'default' => $default,
 				'required' => $required,
 				'auto_increment' => $auto_increment,
@@ -2640,9 +2714,9 @@ protected function checkQuery($sql, $object_name = false)
 		        if(count($parts) > 2) {
 		            // some weird name, cut to table.name
 		            array_splice($parts, 0, count($parts)-2);
-		            $parts = $this->getValidDBName($parts, $ensureUnique, $type, $force);
-                    return join(".", $parts);
 		        }
+		        $parts = $this->getValidDBName($parts, $ensureUnique, $type, $force);
+                return join(".", $parts);
 		    }
 			// first strip any invalid characters - all but word chars (which is alphanumeric and _)
 			$name = preg_replace( '/[^\w]+/i', '', $name ) ;
@@ -2730,11 +2804,9 @@ protected function checkQuery($sql, $object_name = false)
 		$values['field_name']= $this->massageValue($changes['field_name'], $fieldDefs['field_name']);
 		$values['data_type'] = $this->massageValue($changes['data_type'], $fieldDefs['data_type']);
 		if ($changes['data_type']=='text') {
-			$bean->fetched_row[$changes['field_name']]=$changes['after'];;
 			$values['before_value_text'] = $this->massageValue($changes['before'], $fieldDefs['before_value_text']);
 			$values['after_value_text'] = $this->massageValue($changes['after'], $fieldDefs['after_value_text']);
 		} else {
-			$bean->fetched_row[$changes['field_name']]=$changes['after'];;
 			$values['before_value_string'] = $this->massageValue($changes['before'], $fieldDefs['before_value_string']);
 			$values['after_value_string'] = $this->massageValue($changes['after'], $fieldDefs['after_value_string']);
 		}
@@ -2760,63 +2832,110 @@ protected function checkQuery($sql, $object_name = false)
 	}
 
     /**
-     * Uses the audit enabled fields array to find fields whose value has changed.
+     * Finds fields whose value has changed.
      * The before and after values are stored in the bean.
-     * Uses $bean->fetched_row to compare
+     * Uses $bean->fetched_row && $bean->fetched_rel_row to compare
      *
      * @param SugarBean $bean Sugarbean instance that was changed
+     * @param array|null $field_filter Array of filter names to be inspected (NULL means all fields)
      * @return array
      */
-	public function getDataChanges(SugarBean &$bean)
+    public function getDataChanges(SugarBean &$bean, array $field_filter = null)
 	{
-		$changed_values=array();
-		$audit_fields=$bean->getAuditEnabledFieldDefinitions();
+        $changed_values=array();
 
-		if (is_array($audit_fields) and count($audit_fields) > 0) {
-			foreach ($audit_fields as $field=>$properties) {
-				if (!empty($bean->fetched_row) && array_key_exists($field, $bean->fetched_row)) {
-					$before_value=$bean->fetched_row[$field];
-					$after_value=$bean->$field;
-					if (isset($properties['type'])) {
-						$field_type=$properties['type'];
-					} else {
-						if (isset($properties['dbType']))
-							$field_type=$properties['dbType'];
-						else if(isset($properties['data_type']))
-							$field_type=$properties['data_type'];
-						else
-							$field_type=$properties['dbtype'];
-					}
+        $fetched_row = array();
+        if (is_array($bean->fetched_row))
+        {
+            $fetched_row = array_merge($bean->fetched_row, $bean->fetched_rel_row);
+        }
 
-					//Because of bug #25078(sqlserver haven't 'date' type, trim extra "00:00:00" when insert into *_cstm table).
-					// so when we read the audit datetime field from sqlserver, we have to replace the extra "00:00:00" again.
-					if(!empty($field_type) && $field_type == 'date'){
-						$before_value = $this->fromConvert($before_value , $field_type);
-					}
-					//if the type and values match, do nothing.
-					if (!($this->_emptyValue($before_value,$field_type) && $this->_emptyValue($after_value,$field_type))) {
-						if (trim($before_value) !== trim($after_value)) {
-                            // Bug #42475: Don't directly compare numeric values, instead do the subtract and see if the comparison comes out to be "close enough", it is necessary for floating point numbers.
-                            // Manual merge of fix 95727f2eed44852f1b6bce9a9eccbe065fe6249f from DBHelper
-                            // This fix also fixes Bug #44624 in a more generic way and therefore eliminates the need for fix 0a55125b281c4bee87eb347709af462715f33d2d in DBHelper
-							if (!($this->isNumericType($field_type) &&
-                                  abs(
-                                      2*((trim($before_value)+0)-(trim($after_value)+0))/((trim($before_value)+0)+(trim($after_value)+0)) // Using relative difference so that it also works for other numerical types besides currencies
-                                  )<0.0000000001)) {    // Smaller than 10E-10
-								if (!($this->isBooleanType($field_type) && ($this->_getBooleanValue($before_value)== $this->_getBooleanValue($after_value)))) {
-									$changed_values[$field]=array('field_name'=>$field,
-										'data_type'=>$field_type,
-										'before'=>$before_value,
-										'after'=>$after_value);
-								}
-							}
-						}
-					}
-				}
+        if ($fetched_row) {
+
+            $field_defs = $bean->field_defs;
+
+            if (is_array($field_filter)) {
+                $field_defs = array_intersect_key($field_defs, array_flip($field_filter));
+            }
+
+            // remove fields which do not present in fetched row
+            $field_defs = array_intersect_key($field_defs, $fetched_row);
+
+            // remove fields which do not exist as bean property
+            $field_defs = array_intersect_key($field_defs, (array) $bean);
+
+            foreach ($field_defs as $field => $properties) {
+                $before_value = $fetched_row[$field];
+                $after_value=$bean->$field;
+                if (isset($properties['type'])) {
+                    $field_type=$properties['type'];
+                } else {
+                    if (isset($properties['dbType'])) {
+                        $field_type=$properties['dbType'];
+                    }
+                    else if(isset($properties['data_type'])) {
+                        $field_type=$properties['data_type'];
+                    }
+                    else {
+                        $field_type=$properties['dbtype'];
+                    }
+                }
+
+                //Because of bug #25078(sqlserver haven't 'date' type, trim extra "00:00:00" when insert into *_cstm table).
+                // so when we read the audit datetime field from sqlserver, we have to replace the extra "00:00:00" again.
+                if(!empty($field_type) && $field_type == 'date'){
+                    $before_value = $this->fromConvert($before_value , $field_type);
+                }
+                //if the type and values match, do nothing.
+                if (!($this->_emptyValue($before_value,$field_type) && $this->_emptyValue($after_value,$field_type))) {
+                    $change = false;
+                    if (trim($before_value) !== trim($after_value)) {
+                        // Bug #42475: Don't directly compare numeric values, instead do the subtract and see if the comparison comes out to be "close enough", it is necessary for floating point numbers.
+                        // Manual merge of fix 95727f2eed44852f1b6bce9a9eccbe065fe6249f from DBHelper
+                        // This fix also fixes Bug #44624 in a more generic way and therefore eliminates the need for fix 0a55125b281c4bee87eb347709af462715f33d2d in DBHelper
+                        if ($this->isNumericType($field_type)) {
+                            $numerator = abs(2*((trim($before_value)+0)-(trim($after_value)+0)));
+                            $denominator = abs(((trim($before_value)+0)+(trim($after_value)+0)));
+                            // detect whether to use absolute or relative error. use absolute if denominator is zero to avoid division by zero
+                            $error = ($denominator == 0) ? $numerator : $numerator / $denominator;
+                            if ($error >= 0.0000000001) {    // Smaller than 10E-10
+                                $change = true;
+                            }
+                        }
+                        else if ($this->isBooleanType($field_type)) {
+                            if ($this->_getBooleanValue($before_value) != $this->_getBooleanValue($after_value)) {
+                                $change = true;
+                            }
+                        }
+                        else {
+                            $change = true;
+                        }
+                        if ($change) {
+                            $changed_values[$field]=array('field_name'=>$field,
+                                'data_type'=>$field_type,
+                                'before'=>$before_value,
+                                'after'=>$after_value);
+                        }
+                    }
+                }
 			}
 		}
 		return $changed_values;
 	}
+
+    /**
+     * Uses the audit enabled fields array to find fields whose value has changed.
+     * The before and after values are stored in the bean.
+     * Uses $bean->fetched_row && $bean->fetched_rel_row to compare
+     *
+     * @param SugarBean $bean Sugarbean instance that was changed
+     * @return array
+     */
+    public function getAuditDataChanges(SugarBean $bean)
+    {
+        $audit_fields = $bean->getAuditEnabledFieldDefinitions();
+        return $this->getDataChanges($bean, array_keys($audit_fields));
+    }
 
 	/**
 	 * Setup FT indexing
@@ -3152,12 +3271,16 @@ protected function checkQuery($sql, $object_name = false)
 				$item = trim($item, '"');
 			}
 			if($item[0] == '+') {
-				$must_terms[] = substr($item, 1);
-				continue;
+                if (strlen($item) > 1) {
+                    $must_terms[] = substr($item, 1);
+                }
+                continue;
 			}
 			if($item[0] == '-') {
-				$not_terms[] = substr($item, 1);
-				continue;
+                if (strlen($item) > 1) {
+				    $not_terms[] = substr($item, 1);
+                }
+                continue;
 			}
 			$terms[] = $item;
 		}
@@ -3432,6 +3555,8 @@ protected function checkQuery($sql, $object_name = false)
 	 * @return string
 	 */
 	abstract public function quote($string);
+
+    abstract public function quoteIdentifier($string);
 
 	/**
 	 * Use when you need to convert a database string to a different value; this function does it in a
@@ -3749,4 +3874,21 @@ protected function checkQuery($sql, $object_name = false)
 	 * @return array
 	 */
 	abstract public function installConfig();
+
+    /**
+     * Returns a DB specific FROM clause which can be used to select against functions.
+     * Note that depending on the database that this may also be an empty string.
+     * @abstract
+     * @return string
+     */
+    abstract public function getFromDummyTable();
+
+    /**
+     * Returns a DB specific piece of SQL which will generate GUID (UUID)
+     * This string can be used in dynamic SQL to do multiple inserts with a single query.
+     * I.e. generate a unique Sugar id in a sub select of an insert statement.
+     * @abstract
+     * @return string
+     */
+	abstract public function getGuidSQL();
 }

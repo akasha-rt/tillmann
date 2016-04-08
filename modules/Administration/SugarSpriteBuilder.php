@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -306,7 +306,7 @@ class SugarSpriteBuilder
 				);
 			}
 
-			// use seperate class to arrange the images
+			// use separate class to arrange the images
 			$sp = new SpritePlacement($dirs, $config);
 			$sp->processSprites();
 
@@ -410,7 +410,9 @@ background-position: -{$offset_x}px -{$offset_y}px;
 				}
 
 				// common css header
-				$head = rtrim($head, "\n,")." {background: url('../../../index.php?entryPoint=getImage&imageName={$spriteFileName}&spriteNamespace={$nameSpace}'); no-repeat;display:inline-block;}\n";
+                require_once('include/utils.php');
+                $bg_path = getVersionedPath('index.php').'&entryPoint=getImage&imageName='.$spriteFileName.'&spriteNamespace='.$nameSpace;
+				$head = rtrim($head, "\n,")." {background: url('../../../{$bg_path}'); no-repeat;display:inline-block;}\n";
 
 				// append mode for repeatable sprites
                 $fileMode = $isRepeat ? 'a' : 'w';

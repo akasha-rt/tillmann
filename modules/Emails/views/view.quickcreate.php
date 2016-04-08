@@ -3,7 +3,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -74,7 +74,8 @@ class EmailsViewQuickcreate extends ViewQuickcreate
         }
         else {
             $emailAddress = '';
-            if(!empty($this->bean->id) && !in_array($this->bean->object_name,array('EmailMan')) ) {
+            if(!empty($this->bean->id) && !in_array($this->bean->object_name,array('EmailMan'))
+                && !is_null($this->bean->emailAddress) ) {
                 $emailAddress = $this->bean->emailAddress->getPrimaryAddress($this->bean);
             }
             echo "<script>document.location.href='mailto:$emailAddress';lastLoadedMenu=undefined;DCMenu.closeOverlay();</script>";

@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -50,6 +50,7 @@ function email2init() {
  	 tinyMCE.init({
  		 convert_urls : false,
          theme_advanced_toolbar_align : tinyConfig.theme_advanced_toolbar_align,
+         valid_children : tinyConfig.valid_children,
          width: tinyConfig.width,
          theme: tinyConfig.theme,
          theme_advanced_toolbar_location : tinyConfig.theme_advanced_toolbar_location,
@@ -62,12 +63,10 @@ function email2init() {
          extended_valid_elements : tinyConfig.extended_valid_elements,
          mode: tinyConfig.mode,
          strict_loading_mode : true,
-	 force_br_newlines : false,
+		 force_br_newlines : true,
          forced_root_block : '',
-         force_p_newlines : false, 
          directionality : (typeof(rtl) == "undefined") ? "ltr" : "rtl",
-         //Enable Spell checker auto - dhaval
-         gecko_spellcheck : true
+         gecko_spellcheck : tinyConfig.gecko_spellcheck
      });
     }
 
@@ -198,25 +197,13 @@ function email2init() {
                         text: app_strings.LBL_EMAIL_MARK + " " + app_strings.LBL_EMAIL_MARK_READ,
                         onclick: { fn: SEC.markRead }
                     },
-                    /*{
+                    {
                         text: app_strings.LBL_EMAIL_MARK + " " + app_strings.LBL_EMAIL_MARK_FLAGGED,
                         onclick: { fn: SEC.markFlagged }
                     },
                     {
                         text: app_strings.LBL_EMAIL_MARK + " " + app_strings.LBL_EMAIL_MARK_UNFLAGGED,
                         onclick: {  fn: SEC.markUnflagged }
-                    }*/
-                    /*{
-                        text: app_strings.LBL_EMAIL_MARK + " " + app_strings.LBL_EMAIL_MARK_ASSIGNED,
-                        onclick: { fn: SEC.markAssigned }
-                    },*/
-                    {
-                        text: app_strings.LBL_EMAIL_MARK + " " + app_strings.LBL_EMAIL_MARK_PENDING,
-                        onclick: {  fn: SEC.markPending }
-                    },
-                    {
-                        text: app_strings.LBL_EMAIL_MARK + " " + app_strings.LBL_EMAIL_MARK_CLOSED,
-                        onclick: {  fn: SEC.markClosed }
                     }
                 ]
             }

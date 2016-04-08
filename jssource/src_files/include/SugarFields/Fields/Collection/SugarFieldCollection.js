@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -611,25 +611,31 @@ if(typeof(SUGAR.collection) == "undefined") {
 		
 		var newNode = document.createElement(e.tagName);
 		if (!newNode) return false;
-		
-		var properties = ['class', 'style', 'name', 'type', 'valign', 'border', 'width', 'height', 'top', 'bottom', 'left', 'right', 'scope', 'row', 'columns', 'src', 'href', 'className', 'align', 'nowrap'];
+
+        var properties = [ 'id', 'class', 'style', 'name', 'type', 'valign', 'border', 'width', 'height', 'top', 'bottom', 'left', 'right', 'scope', 'row', 'columns', 'src', 'href', 'className', 'align', 'nowrap'];
 
         //clee. - Bug: 44976 - IE7 just does not calculate height properties correctly for input elements
-		if(SUGAR.isIE7 && e.tagName.toLowerCase() == 'input')
-		{
-			var properties = ['class', 'style', 'name', 'type', 'valign', 'border', 'width', 'top', 'bottom', 'left', 'right', 'scope', 'row', 'columns', 'src', 'href', 'className', 'align', 'nowrap'];
-		} else {
-			var properties = ['class', 'style', 'name', 'type', 'valign', 'border', 'width', 'height', 'top', 'bottom', 'left', 'right', 'scope', 'row', 'columns', 'src', 'href', 'className', 'align', 'nowrap'];
-		}
+        if(SUGAR.isIE7 && e.tagName.toLowerCase() == 'input')
+        {
+            var properties = [ 'id', 'class', 'style', 'name', 'type', 'valign', 'border', 'width', 'top', 'bottom', 'left', 'right', 'scope', 'row', 'columns', 'src', 'href', 'className', 'align', 'nowrap'];
+        }
 		
 		for (var i in properties)
 		{
 			if (e[properties[i]])
 			{
-				if ((properties[i] != 'style' || !SUGAR.isIE) && 
-					//Only <a> and <iframe> tags can have hrefs
-					(properties[i] != 'href'  || e.tagName == 'a' || e.tagName == 'iframe'))
-					newNode[properties[i]] = e[properties[i]];
+                //There are two groups of conditional checks here:
+                //The first group is to ignore the style and type attributes for IE browsers
+                //The second group is to ensure that only <a> and <iframe> tags have href attribute
+                if ((properties[i] != 'style' || !SUGAR.isIE) &&
+                    //Only <a> and <iframe> tags can have hrefs
+                    (properties[i] != 'href'  || e.tagName == 'a' || e.tagName == 'iframe')) {
+                        if(properties[i] == "type") {
+                            newNode.setAttribute(properties[i], e[properties[i]]);
+                        } else {
+                            newNode[properties[i]] = e[properties[i]];
+                        }
+                }
 			}
 		}
 		if(recursive)

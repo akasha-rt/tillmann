@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 require_once("include/EditView/EditView2.php");
@@ -110,10 +113,52 @@ class ViewConvertLead extends SugarView
         echo $this->getModuleTitle();
 
         require_once("include/QuickSearchDefaults.php");
-        $qsd = new QuickSearchDefaults();
+        $qsd = QuickSearchDefaults::getQuickSearchDefaults();
         $qsd->setFormName("ConvertLead");
 
         $this->contact = new Contact();
+        
+        /*
+         * Setup filter for Account/Contact popup picker
+         */ 
+        $filter = '';
+        // Check if Lead has an account set
+        if (!empty($this->focus->account_name))
+        {
+            $filter .= '&name_advanced=' . urlencode($this->focus->account_name);
+        }
+        // Check if Lead First name is available
+        if (!empty($this->focus->first_name))
+        {
+            $filter .= '&first_name_advanced=' . urlencode($this->focus->first_name);
+        }
+        // Lead Last Name is always available
+        $filter .= '&last_name_advanced=' . urlencode($this->focus->last_name);
+        
+        $smarty->assign('initialFilter', $filter);
+        $smarty->assign('displayParams', array('initial_filter' => '{$initialFilter}'));
+        
+        $relatedFields = $this->contact->get_related_fields();
+        $selectFields = array();
+        foreach ($this->defs as $moduleName => $mDefs)
+        {   
+            if (!empty($mDefs[$ev->view]['select']) && !empty($relatedFields[$mDefs[$ev->view]['select']]))
+            {
+                $selectFields[$moduleName] = $mDefs[$ev->view]['select'];
+                continue;
+            }
+            foreach ($relatedFields as $fDef)
+            {
+                if (!empty($fDef['link']) && !empty($fDef['module']) && $fDef['module'] == $moduleName)
+                {
+                    $selectFields[$moduleName] = $fDef['name'];
+                    break;
+                }
+            }
+        }
+        
+        $smarty->assign('selectFields', $selectFields);
+
         $smarty->assign("contact_def", $this->contact->field_defs);
         $smarty->assign("form_name", "ConvertLead");
         $smarty->assign("form_id", "ConvertLead");
@@ -148,8 +193,17 @@ class ViewConvertLead extends SugarView
             {
                 continue;
             }
+
+
             $bean = $beanList[$module];
             $focus = new $bean();
+
+            // skip if we aren't allowed to save this bean
+            if (!$focus->ACLAccess('save'))
+            {
+                continue;
+            }
+
             $focus->fill_in_additional_detail_fields();
             foreach($focus->field_defs as $field => $def)
             {
@@ -211,6 +265,8 @@ class ViewConvertLead extends SugarView
         }
         echo "</div>";
         echo ($qsd->getQSScriptsJSONAlreadyDefined());
+        // need to re-assign bean as it gets overridden by $ev->display
+        $smarty->assign("bean", $this->focus);
         $smarty->display("modules/Leads/tpls/ConvertLeadFooter.tpl");
     }
 
@@ -333,12 +389,11 @@ class ViewConvertLead extends SugarView
         $beans = array();
         $selectedBeans = array();
         $selects = array();
-        //Make sure the contact object is availible for relationships.
+        
+        // Make sure the contact object is availible for relationships.
         $beans['Contacts'] = new Contact();
-        $beans['Contacts']->id = create_guid();
-        $beans['Contacts']->new_with_id = true;
-
-        // Bug 39287 - Check for Duplicates on selected modules before save
+        
+        // Contacts
         if (!empty($_REQUEST['selectedContact']))
         {
             $beans['Contacts']->retrieve($_REQUEST['selectedContact']);
@@ -361,7 +416,10 @@ class ViewConvertLead extends SugarView
                 return;
             }
             $this->new_contact = true;
+        } elseif (isset($_POST['ContinueContact'])) {
+            $this->new_contact = true;
         }
+        // Accounts
         if (!empty($_REQUEST['selectedAccount']))
         {
             $_REQUEST['account_id'] = $_REQUEST['selectedAccount'];
@@ -391,7 +449,14 @@ class ViewConvertLead extends SugarView
 	            	$beans[$module] = new $bean();
 
             	$this->populateNewBean($module, $beans[$module], $beans['Contacts'], $lead);
-
+                // when creating a new contact, create the id for linking with other modules
+                // and do not populate it with lead's old account_id
+                if ($module == 'Contacts')
+                {
+                    $beans[$module]->id = create_guid();
+                    $beans[$module]->new_with_id = true;
+                    $beans[$module]->account_id = '';
+                }
             }
             //If an existing bean was selected, relate it to the contact
             else if (!empty($vdef['ConvertLead']['select'])) 
@@ -411,6 +476,11 @@ class ViewConvertLead extends SugarView
                     $bean = loadBean($module);
                     $bean->retrieve($_REQUEST[$fieldDef['id_name']]);
                     $selectedBeans[$module] = $bean;
+                    // If we selected the Contact, just overwrite the $beans['Contacts']
+                    if ($module == 'Contacts')
+                    {
+                        $beans[$module] = $bean;
+                    }
                 }
             }
         }
@@ -424,11 +494,33 @@ class ViewConvertLead extends SugarView
         {
             $lead->account_id = $selectedBeans['Accounts']->id;
         }
+        
+        // link account to contact, if we picked an existing contact and created a new account
+        if (!empty($beans['Accounts']->id) && !empty($beans['Contacts']->account_id) 
+                && $beans['Accounts']->id != $beans['Contacts']->account_id)
+        {
+            $beans['Contacts']->account_id = $beans['Accounts']->id;
+        }
+        
+        // Saving beans with priorities.
+        // Contacts and Accounts should be saved before lead activities to create correct relations
+        $saveBeanPriority = array('Contacts', 'Accounts');
+        $tempBeans = array();
+
+        foreach ($saveBeanPriority as $name)
+        {
+            if (isset($beans[$name]))
+            {
+                $tempBeans[$name] = $beans[$name];
+            }
+        }
+
+        $beans = array_merge($tempBeans, $beans);
+        unset($tempBeans);
 
         //Handle non-contacts relationships
         foreach ($beans as $bean)
         {
-
             if (!empty($lead))
             {
                 if (empty($bean->assigned_user_id))
@@ -552,6 +644,20 @@ class ViewConvertLead extends SugarView
 
     	$activities = $this->getActivitiesFromLead($lead);
 
+        //if account is being created, we will specify the account as the parent bean
+        $accountParentInfo = array();
+
+        //determine the account id info ahead of time if it is being created as part of this conversion
+        if(!empty($beans['Accounts'])){
+            $account_id = create_guid();
+            if(!empty($beans['Accounts']->id)){
+                $account_id = $beans['Accounts']->id;
+            }else{
+                $beans['Accounts']->id = $account_id;
+            }
+            $accountParentInfo = array('id'=>$account_id,'type'=>'Accounts');
+        }
+
     	foreach($beans as $module => $bean)
     	{
 	    	if (isset($parent_types[$module]))
@@ -561,7 +667,7 @@ class ViewConvertLead extends SugarView
                     $bean->id = create_guid();
 		            $bean->new_with_id = true;
                 }
-                if( isset($_POST['lead_conv_ac_op_sel']) && $_POST['lead_conv_ac_op_sel'] != $app_strings['LBL_NONE'])
+                if( isset($_POST['lead_conv_ac_op_sel']) && $_POST['lead_conv_ac_op_sel'] != 'None')
                 {
 	                foreach($activities as $activity)
 			    	{
@@ -571,7 +677,7 @@ class ViewConvertLead extends SugarView
 	                                    if (is_array($_POST['lead_conv_ac_op_sel'])) {
 	                                        foreach ($_POST['lead_conv_ac_op_sel'] as $mod) {
 	                                            if ($mod == $module) {
-	                                                $this->copyActivityAndRelateToBean($activity, $bean);
+	                                                $this->copyActivityAndRelateToBean($activity, $bean, $accountParentInfo);
 	                                                break;
 	                                            }
 	                                        }
@@ -654,7 +760,7 @@ class ViewConvertLead extends SugarView
 		{
 			$beanName = $beanList[$module];
 			$activity = new $beanName();
-			$query = "SELECT id FROM {$activity->table_name} WHERE parent_id = '{$lead->id}' AND parent_type = 'Leads'";
+			$query = "SELECT id FROM {$activity->table_name} WHERE parent_id = '{$lead->id}' AND parent_type = 'Leads' AND deleted = 0";
 			$result = $db->query($query,true);
             while($row = $db->fetchByAssoc($result))
             {
@@ -670,7 +776,8 @@ class ViewConvertLead extends SugarView
 
 	protected function copyActivityAndRelateToBean(
 	    $activity,
-	    $bean
+	    $bean,
+        $parentArr = array()
 	    )
 	{
 		global $beanList;
@@ -679,14 +786,34 @@ class ViewConvertLead extends SugarView
 		$newActivity->id = create_guid();
 		$newActivity->new_with_id = true;
 
+        //set the parent id and type if it was passed in, otherwise use blank to wipe it out
+        $parentID = '';
+        $parentType = '';
+        if(!empty($parentArr)){
+            if(!empty($parentArr['id'])){
+                $parentID = $parentArr['id'];
+            }
+
+            if(!empty($parentArr['type'])){
+                $parentType = $parentArr['type'];
+            }
+
+        }
+
 		//Special case to prevent duplicated tasks from appearing under Contacts multiple times
     	if ($newActivity->module_dir == "Tasks" && $bean->module_dir != "Contacts")
     	{
-    		$newActivity->contact_id = $activity->contact_name = "";
+            $newActivity->contact_id = $newActivity->contact_name = "";
     	}
 
 		if ($rel = $this->findRelationship($newActivity, $bean))
         {
+            if (isset($newActivity->$rel))
+            {
+                // this comes form $activity, get rid of it and load our own
+                $newActivity->$rel = '';
+            }
+
             $newActivity->load_relationship ($rel) ;
             $relObj = $newActivity->$rel->getRelationshipObject();
             if ( $relObj->relationship_type=='one-to-one' || $relObj->relationship_type == 'one-to-many' )
@@ -694,9 +821,13 @@ class ViewConvertLead extends SugarView
                 $key = $relObj->rhs_key;
                 $newActivity->$key = $bean->id;
             }
-            $newActivity->parent_id = $bean->id;
-	        $newActivity->parent_type = $bean->module_dir;
-	        $newActivity->update_date_modified = false; //bug 41747 
+
+            //parent (related to field) should be blank unless it is explicitly sent in
+            //it is not sent in unless the account is being created as well during lead conversion
+            $newActivity->parent_id =  $parentID;
+            $newActivity->parent_type = $parentType;
+
+	        $newActivity->update_date_modified = false; //bug 41747
 	        $newActivity->save();
             $newActivity->$rel->add($bean);
             if ($newActivity->module_dir == "Notes" && $newActivity->filename) {
@@ -718,8 +849,6 @@ class ViewConvertLead extends SugarView
 	    $lead
 	    )
 	{
-		populateFromPost($module, $bean, true);
-
 		//Copy data from the contact to new bean
 		foreach($bean->field_defs as $field => $def)
 		{
@@ -729,6 +858,7 @@ class ViewConvertLead extends SugarView
 				if($field == 'date_entered') $bean->$field = gmdate($GLOBALS['timedate']->get_db_date_time_format()); //bug 41030
 			}
 		}
+        populateFromPost($module, $bean, true);
 		//Try to link to the new contact
 		$contactRel = "";
 		if (!empty($vdef['ConvertLead']['select']))
@@ -885,7 +1015,7 @@ class ViewConvertLead extends SugarView
     	{
     		echo ("<span class='error'>" . translate('LBL_CONVERTLEAD_WARNING'));
     		$dupes = array();
-    		$q = "SELECT id, first_name, last_name FROM contacts WHERE first_name LIKE '{$lead->first_name}' AND last_name LIKE '{$lead->last_name}'";
+    		$q = "SELECT id, first_name, last_name FROM contacts WHERE first_name LIKE '{$lead->first_name}' AND last_name LIKE '{$lead->last_name}' AND deleted = 0";
     		$result = $lead->db->query($q);
     		while($row = $lead->db->fetchByAssoc($result)) {
     			$contact = new Contact();

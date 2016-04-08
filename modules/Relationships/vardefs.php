@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -109,21 +109,33 @@ $dictionary['Relationship'] =
     			'name' => 'join_table',
     			'vname' => 'LBL_JOIN_TABLE',
     			'type' => 'varchar',
-    			'len' => 64
+                  // Bug #41454 : Custom Relationships with Long Names do not Deploy Properly in MSSQL Environments
+                  // Maximum length of identifiers for MSSQL, DB2 is 128 symbols
+                  // @see e.g. MssqlManager :: $maxNameLengths property
+                  // @see AbstractRelationship::getRelationshipMetaData()
+                  'len' => 128
   			),
   			'join_key_lhs' =>
   			array (
     			'name' => 'join_key_lhs',
     			'vname' => 'LBL_JOIN_KEY_LHS',
     			'type' => 'varchar',
-    			'len' => 64
+                  // Bug #41454 : Custom Relationships with Long Names do not Deploy Properly in MSSQL Environments
+                  // Maximum length of identifiers for MSSQL, DB2 is 128 symbols
+                  // @see e.g. MssqlManager :: $maxNameLengths property
+                  // @see AbstractRelationship::getRelationshipMetaData()
+                  'len' => 128
   			),
   			'join_key_rhs' =>
   			array (
     			'name' => 'join_key_rhs',
     			'vname' => 'LBL_JOIN_KEY_RHS',
     			'type' => 'varchar',
-    			'len' => 64
+                  // Bug #41454 : Custom Relationships with Long Names do not Deploy Properly in MSSQL Environments
+                  // Maximum length of identifiers for MSSQL, DB2 is 128 symbols
+                  // @see e.g. MssqlManager :: $maxNameLengths property
+                  // @see AbstractRelationship::getRelationshipMetaData()
+                  'len' => 128
   			),
   			'relationship_type' =>
   			array (

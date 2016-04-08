@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -135,7 +135,7 @@ function ie_test_open_popup_with_submit(module_name, action, pageTarget, width, 
 		+ '&email_user=' + words[0]
 		+ '&protocol=' + protocol
 		+ '&port=' + port
-		+ '&email_password=' + words[1]
+		+ '&email_password=' + encodeURIComponent(words[1])
 		+ '&mailbox=' + words[2]
 		+ '&ssl=' + ssl
 		+ '&ie_id=' + ie_id
@@ -170,7 +170,7 @@ function ie_test_open_popup_with_submit(module_name, action, pageTarget, width, 
     SI.testDlg.render(document.body);
 	var Connect = YAHOO.util.Connect;
 	if (Connect.url) URL = Connect.url + "&" +  url;
-    Connect.asyncRequest("GET", URL, {success:SI.testDlg._updateContent, failure:SI.testDlg.hide, scope:SI.testDlg});
+    Connect.asyncRequest("POST", URL, {success:SI.testDlg._updateContent, failure:SI.testDlg.hide, scope:SI.testDlg});
     SI.testDlg.show();
 
 }
@@ -232,7 +232,7 @@ function getFoldersListForInboundAccount(module_name, action, pageTarget, width,
         + '&email_user=' + words[0]
         + '&protocol=' + protocol
         + '&port=' + port
-        + '&email_password=' + words[1]
+        + '&email_password=' + encodeURIComponent(words[1])
         + '&mailbox=' + words[2]
         + '&ssl=' + ssl
         + '&personal=' + isPersonal
@@ -263,7 +263,7 @@ function getFoldersListForInboundAccount(module_name, action, pageTarget, width,
     SI.listDlg.render(document.body);
     var Connect = YAHOO.util.Connect;
     if (Connect.url) URL = Connect.url + "&" +  url;
-    Connect.asyncRequest("GET", URL, {success:SI.listDlg._updateContent, failure:SI.listDlg.hide, scope:SI.listDlg});
+    Connect.asyncRequest("POST", URL, {success:SI.listDlg._updateContent, failure:SI.listDlg.hide, scope:SI.listDlg});
     SI.listDlg.show();
 
 } // fn

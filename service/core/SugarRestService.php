@@ -2,7 +2,7 @@
  if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -126,7 +126,7 @@ class SugarRestService extends SugarWebService{
 
 		$responseServer = new $response($this->implementation);
 		$this->server->faultServer = $responseServer;
-		$this->responseServer->faultServer = $responseServer;
+		$responseServer->faultServer = $responseServer;
 		$responseServer->generateResponse($this->server->serve());
 		$GLOBALS['log']->info('End: SugarRestService->serve');
 	} // fn

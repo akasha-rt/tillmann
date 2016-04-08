@@ -1,24 +1,20 @@
 <?php
-// created: 2012-02-10 06:38:12
+// created: 2016-04-08 13:51:52
 $modules_sources = array (
   'Accounts' => 
   array (
-    'ext_rest_linkedin' => 'ext_rest_linkedin',
     'ext_rest_insideview' => 'ext_rest_insideview',
   ),
   'Contacts' => 
   array (
-    'ext_rest_linkedin' => 'ext_rest_linkedin',
     'ext_rest_insideview' => 'ext_rest_insideview',
   ),
   'Leads' => 
   array (
-    'ext_rest_linkedin' => 'ext_rest_linkedin',
     'ext_rest_insideview' => 'ext_rest_insideview',
   ),
   'Prospects' => 
   array (
-    'ext_rest_linkedin' => 'ext_rest_linkedin',
   ),
   'Opportunities' => 
   array (

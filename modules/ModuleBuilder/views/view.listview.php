@@ -3,7 +3,7 @@ if (! defined ( 'sugarEntry' ) || ! sugarEntry)
     die ( 'Not A Valid Entry Point' ) ;
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -37,13 +37,10 @@ if (! defined ( 'sugarEntry' ) || ! sugarEntry)
  ********************************************************************************/
 
 
-//Load the parent view class if it exists.  Check for custom file first
-loadParentView('edit');
-
 require_once 'modules/ModuleBuilder/parsers/constants.php' ;
 require_once ('include/SubPanel/SubPanel.php') ;
 
-class ViewListView extends ViewEdit
+class ViewListView extends SugarView
 {
     /**
 	 * @see SugarView::_getModuleTitleParams()
@@ -129,8 +126,13 @@ class ViewListView extends ViewEdit
                 $ajax->addCrumb ( translate ( 'LBL_AVAILABLE_SUBPANELS', 'ModuleBuilder' ), '' ) ;
                 if ($this->subpanelLabel)
                 {
-                    $ajax->addCrumb ( $this->subpanelLabel, '' ) ;
-                    $this->translatedViewType = $this->subpanelLabel . "&nbsp;" . translate("LBL_SUBPANEL", "ModuleBuilder");
+                    $subpanelLabel = $this->subpanelLabel;
+                    // If the subpanel title has changed, use that for the label instead
+                    if( !empty($_REQUEST['subpanel_title'] ) && $_REQUEST['subpanelLabel'] != $_REQUEST['subpanel_title'] )
+                        $subpanelLabel = $_REQUEST['subpanel_title'];
+
+                    $ajax->addCrumb( $subpanelLabel, '' );
+                    $this->translatedViewType = $subpanelLabel . "&nbsp;" . translate("LBL_SUBPANEL", "ModuleBuilder");
                 } else
                 {
                     $ajax->addCrumb ( $this->subpanel, '' ) ;
@@ -151,8 +153,13 @@ class ViewListView extends ViewEdit
                 $ajax->addCrumb ( translate ( 'LBL_SUBPANELS', 'ModuleBuilder' ), 'ModuleBuilder.getContent("module=ModuleBuilder&action=wizard&view=subpanels&view_module=' . $this->editModule . '")' ) ;
                 if ($this->subpanelLabel)
                 {
-                    $ajax->addCrumb ( $this->subpanelLabel, '' ) ;
-                    $this->translatedViewType = $this->subpanelLabel . "&nbsp;" . translate("LBL_SUBPANEL", "ModuleBuilder");
+                    $subpanelLabel = $this->subpanelLabel;
+                    // If the subpanel title has changed, use that for the label instead
+                    if( !empty($_REQUEST['subpanel_title'] ) && $_REQUEST['subpanelLabel'] != $_REQUEST['subpanel_title'] )
+                        $subpanelLabel = $_REQUEST['subpanel_title'];
+
+                    $ajax->addCrumb( $subpanelLabel, '' );
+                    $this->translatedViewType = $subpanelLabel . "&nbsp;" . translate("LBL_SUBPANEL", "ModuleBuilder");
                 } else
                 {
                     $ajax->addCrumb ( $this->subpanel, '' ) ;

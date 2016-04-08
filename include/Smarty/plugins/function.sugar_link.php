@@ -36,7 +36,7 @@ r42268 - 2008-12-02 13:29:54 -0800 (Tue, 02 Dec 2008) - rob - Get some tweaks to
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -101,6 +101,7 @@ function smarty_function_sugar_link($params, &$smarty)
 	$class = (!empty($params['class']))?' class="'.$params['class'].'"':'';
 	$style = (!empty($params['style']))?' style="'.$params['style'].'"':'';
 	$title = (!empty($params['title']))?' title="'.$params['title'].'"':'';
+    $module = ' module="'.$params['module'].'"';
 	$accesskey = (!empty($params['accesskey']))?' accesskey="'.$params['accesskey'].'" ':'';
     $options = (!empty($params['options']))?' '.$params['options'].'':'';
     if(!empty($params['data']) && is_array($params['data']))
@@ -110,6 +111,6 @@ function smarty_function_sugar_link($params, &$smarty)
 	else
 	    $label = (!empty($GLOBALS['app_list_strings']['moduleList'][$params['module']]))?$GLOBALS['app_list_strings']['moduleList'][$params['module']]:$params['module'];
 
-    $link = '<a href="'.ajaxLink($link_url).'"'.$id.$class.$style.$options.'>'.$label.'</a>';
+    $link = '<a href="'.ajaxLink($link_url).'"'.$id.$class.$style.$options.$title.$module.'>'.$label.'</a>';
     return $link;
 }

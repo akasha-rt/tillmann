@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -94,7 +94,7 @@ function login($user_auth, $application){
 	//rrs
 		$system_config = new Administration();
 	$system_config->retrieveSettings('system');
-	$authController = new AuthenticationController((!empty($sugar_config['authenticationClass'])? $sugar_config['authenticationClass'] : 'SugarAuthenticate'));
+	$authController = new AuthenticationController();
 	//rrs
 	$isLoginSuccess = $authController->login($user_auth['user_name'], $user_auth['password'], array('passwordEncrypted' => true));
 	$usr_id=$user->retrieve_user_id($user_auth['user_name']);
@@ -123,7 +123,7 @@ function login($user_auth, $application){
 			return array('id'=>-1, 'error'=>$error);
 	} else if(function_exists('mcrypt_cbc')){
 		$password = decrypt_string($user_auth['password']);
-		$authController = new AuthenticationController((!empty($sugar_config['authenticationClass'])? $sugar_config['authenticationClass'] : 'SugarAuthenticate'));
+		$authController = new AuthenticationController();
 		if($authController->login($user_auth['user_name'], $password) && isset($_SESSION['authenticated_user_id'])){
 			$success = true;
 		} // if
@@ -265,7 +265,7 @@ function seamless_login($session){
 		if(!validate_authenticated($session)){
 			return 0;
 		}
-		$_SESSION['seamless_login'] = true;
+		
 		return 1;
 }
 
@@ -298,7 +298,7 @@ $server->register(
  *               'error' -- The SOAP error, if any
  */
 function get_entry_list($session, $module_name, $query, $order_by,$offset, $select_fields, $max_results, $deleted ){
-	global  $beanList, $beanFiles;
+	global  $beanList, $beanFiles, $current_user;
 	$error = new SoapError();
 	if(!validate_authenticated($session)){
 		$error->set_error('invalid_login');
@@ -367,6 +367,13 @@ function get_entry_list($session, $module_name, $query, $order_by,$offset, $sele
     }
 	// retrieve the vardef information on the bean's fields.
 	$field_list = array();
+    
+    require_once 'modules/Currencies/Currency.php';
+
+    $userCurrencyId = $current_user->getPreference('currency');
+    $userCurrency = new Currency;
+    $userCurrency->retrieve($userCurrencyId);
+
 	foreach($list as $value)
 	{
 		if(isset($value->emailAddress)){
@@ -376,6 +383,36 @@ function get_entry_list($session, $module_name, $query, $order_by,$offset, $sele
             $value->retrieveEmailText();
         }
 		$value->fill_in_additional_detail_fields();
+
+        // bug 55129 - populate currency from user settings
+        if (property_exists($value, 'currency_id') && $userCurrency->deleted != 1)
+        {
+            // walk through all currency-related fields
+            foreach ($value->field_defs as $temp_field)
+            {
+                if (isset($temp_field['type']) && 'relate' == $temp_field['type']
+                    && isset($temp_field['module'])  && 'Currencies' == $temp_field['module']
+                    && isset($temp_field['id_name']) && 'currency_id' == $temp_field['id_name'])
+                {
+                    // populate related properties manually
+                    $temp_property     = $temp_field['name'];
+                    $currency_property = $temp_field['rname'];
+                    $value->$temp_property = $userCurrency->$currency_property;
+                }
+                else if ($value->currency_id != $userCurrency->id
+                         && isset($temp_field['type'])
+                         && 'currency' == $temp_field['type']
+                         && substr($temp_field['name'], -9) != '_usdollar')
+                {
+                    $temp_property = $temp_field['name'];
+                    $value->$temp_property *= $userCurrency->conversion_rate;
+                }
+            }
+
+            $value->currency_id = $userCurrencyId;
+        }
+        // end of bug 55129
+
 		$output_list[] = get_return_value($value, $module_name);
 		if(empty($field_list)){
 			$field_list = get_field_list($value);
@@ -996,6 +1033,29 @@ function get_user_team_id($session){
 }
 
 $server->register(
+    'get_user_team_set_id',
+    array('session'=>'xsd:string'),
+    array('return'=>'xsd:string'),
+    $NAMESPACE);
+
+/**
+ * Return the Team Set ID for the user that is logged into the current session.
+ *
+ * @param String $session -- Session ID returned by a previous call to login.
+ * @return String -- the Team Set ID of the current user
+ *                  1 for Community Edition
+ *                  -1 on error.
+ */
+function get_user_team_set_id($session){
+    if(validate_authenticated($session))
+    {
+         return 1;
+    }else{
+        return '-1';
+    }
+}
+
+$server->register(
     'get_server_time',
     array(),
     array('return'=>'xsd:string'),
@@ -1142,6 +1202,11 @@ function get_relationships($session, $module_name, $module_id, $related_module, 
 	$sql = "SELECT {$related_mod->table_name}.id FROM {$related_mod->table_name} ";
 
 
+    if (isset($related_mod->custom_fields)) {
+        $customJoin = $related_mod->custom_fields->getJOIN();
+        $sql .= $customJoin ? $customJoin['join'] : '';
+    }
+
 	$sql .= " WHERE {$related_mod->table_name}.id IN ({$in}) ";
 
 	if (!empty($related_module_query)) {
@@ -1194,7 +1259,7 @@ function set_relationship($session, $set_relationship_value){
 		$error->set_error('invalid_login');
 		return $error->get_soap_array();
 	}
-	return handle_set_relationship($set_relationship_value);
+	return handle_set_relationship($set_relationship_value, $session);
 }
 
 $server->register(
@@ -1223,7 +1288,7 @@ function set_relationships($session, $set_relationship_list){
 	$count = 0;
 	$failed = 0;
 	foreach($set_relationship_list as $set_relationship_value){
-		$reter = handle_set_relationship($set_relationship_value);
+		$reter = handle_set_relationship($set_relationship_value, $session);
 		if($reter['number'] == 0){
 			$count++;
 		}else{
@@ -1246,7 +1311,7 @@ function set_relationships($session, $set_relationship_list){
  *      'module2_id' -- The ID of the bean in the specified module
  * @return Empty error on success, Error on failure
  */
-function handle_set_relationship($set_relationship_value)
+function handle_set_relationship($set_relationship_value, $session='')
 {
     global  $beanList, $beanFiles;
     $error = new SoapError();
@@ -1363,7 +1428,17 @@ function handle_set_relationship($set_relationship_value)
     	$key = strtolower($module2);
     	$mod->load_relationship($key);
     	$mod->$key->add($module2_id);
-    }else{
+    }
+    else if ($module1 == 'Contacts' && ($module2 == 'Notes' || $module2 == 'Calls' || $module2 == 'Meetings' || $module2 == 'Tasks') && !empty($session)){
+        $mod->$key = $module2_id;
+        $mod->save_relationship_changes(false);
+        if (!empty($mod->account_id)) {
+            // when setting a relationship from a Contact to these activities, if the Contacts is related to an Account,
+            // we want to associate that Account to the activity as well
+            $ret = set_relationship($session, array('module1'=>'Accounts', 'module1_id'=>$mod->account_id, 'module2'=>$module2, 'module2_id'=>$module2_id));
+        }
+    }
+    else{
     	$mod->$key = $module2_id;
     	$mod->save_relationship_changes(false);
     }
@@ -1458,6 +1533,31 @@ function search_by_module($user_name, $password, $search_string, $modules, $offs
 							'Users'=>array('where'=>array('EmailAddresses' => array(0 => "ea.email_address like '{0}%'")),'fields'=>"users.id, users.user_name, users.first_name, ea.email_address"),
 						);
 
+	$more_query_array = array();
+	foreach($modules as $module) {
+	    if (!array_key_exists($module, $query_array)) {
+            $seed = new $beanList[$module]();
+            $table_name = $seed->table_name;
+            if (!empty($seed->field_defs['name']['db_concat_fields'])) {
+                $namefield = $seed->db->concat($table_name, $seed->field_defs['name']['db_concat_fields']);
+            } else {
+                $namefield = "$table_name.name";
+            }
+            $more_query_array[$module] = array(
+                'where' => array(
+                    $module => array(
+                        0 => "$namefield like '%{0}%'",
+                    ),
+                ),
+                'fields' => "$table_name.id, $namefield AS name"
+            );
+     }
+	}
+
+	if (!empty($more_query_array)) {
+	    $query_array = array_merge($query_array, $more_query_array);
+	}
+
 	if(!empty($search_string) && isset($search_string)){
 		foreach($modules as $module_name){
 			$class_name = $beanList[$module_name];
@@ -1514,15 +1614,17 @@ function search_by_module($user_name, $password, $search_string, $modules, $offs
 								$count++;
 							}
 						}else{
-							$where .= 'ea.email_address IN (';
-							foreach($search_terms as $term){
-								$where .= "'".$GLOBALS['db']->quote($term)."'";
-								if($count < $termCount){
-									$where .= ",";
-								}
-								$count++;
-							}
-							$where .= ')';
+                            $where .= '(';
+                            foreach ($search_terms as $term)
+                            {
+                                $where .= "ea.email_address LIKE '".$GLOBALS['db']->quote($term)."'";
+                                if ($count < $termCount)
+                                {
+                                    $where .= " OR ";
+                                }
+                                $count++;
+                            }
+                            $where .= ')';
 						}
 						$tmpQuery .= $where;
 						$tmpQuery .= ") AND $seed->table_name.deleted = 0";
@@ -1535,10 +1637,8 @@ function search_by_module($user_name, $password, $search_string, $modules, $offs
 
 				while(($row = $seed->db->fetchByAssoc($result)) != null){
 					$list = array();
-					$fields = explode(", ", $query_array[$module_name]['fields']);
-					foreach($fields as $field){
-						$field_names = explode(".", $field);
-						$list[$field] = array('name'=>$field_names[1], 'value'=>$row[$field_names[1]]);
+                    foreach ($row as $field_key => $field_value) {
+                        $list[$field_key] = array('name'=>$field_key, 'value'=>$field_value);
 					}
 
 					$output_list[] = array('id'=>$row['id'],
@@ -1791,8 +1891,32 @@ function get_mailmerge_document2($session, $file_name, $fields)
                     if($seed1->field_name_map[$master_field]['type'] == 'enum'){
                         //pull in the translated dom
                          $html .='<td>'.$app_list_strings[$seed1->field_name_map[$master_field]['options']][$seed1->$master_field].'</td>';
-                    }else{
-                        $html .='<td>'.$seed1->$master_field.'</td>';
+                    } else if ($seed1->field_name_map[$master_field]['type'] == 'multienum') {
+
+                        if(isset($app_list_strings[$seed1->field_name_map[$master_field]['options']]) )
+                        {
+                            $items = unencodeMultienum($seed1->$master_field);
+                            $output = array();
+                            foreach($items as $item) {
+                                if ( !empty($app_list_strings[$seed1->field_name_map[$master_field]['options']][$item]) )
+                                {
+                                    array_push($output, $app_list_strings[$seed1->field_name_map[$master_field]['options']][$item]);
+
+                                }
+
+                            } // foreach
+
+                            $encoded_output = encodeMultienumValue($output);
+                            $html .= "<td>$encoded_output</td>";
+
+                        }
+                    } else if ($seed1->field_name_map[$master_field]['type'] == 'currency') {
+                        $amount_field = $seed1->$master_field;
+                        $params = array( 'currency_symbol' => false );
+                        $amount_field = currency_format_number($amount_field, $params);
+                        $html .='<td>'.$amount_field.'</td>';
+                    } else {
+                       $html .='<td>'.$seed1->$master_field.'</td>';
                     }
                 }
                 else{
@@ -1807,6 +1931,11 @@ function get_mailmerge_document2($session, $file_name, $fields)
                         if($seed2->field_name_map[$related_field]['type'] == 'enum'){
                             //pull in the translated dom
                             $html .='<td>'.$app_list_strings[$seed2->field_name_map[$related_field]['options']][$seed2->$related_field].'</td>';
+                        } else if ($seed2->field_name_map[$related_field]['type'] == 'currency') {
+                            $amount_field = $seed2->$related_field;
+                            $params = array( 'currency_symbol' => false );
+                            $amount_field = currency_format_number($amount_field, $params);
+                            $html .='<td>'.$amount_field.'</td>';
                         }else{
                             $html .= '<td>'.$seed2->$related_field.'</td>';
                         }
@@ -1820,8 +1949,8 @@ function get_mailmerge_document2($session, $file_name, $fields)
         }
         $html .= "</table></body></html>";
      }
-
     $result = base64_encode($html);
+
     return array('html' => $result, 'name_value_list' => $resultIds, 'error' => $error);
 }
 
@@ -1951,6 +2080,9 @@ function get_entries_count($session, $module_name, $query, $deleted) {
 
 	$sql = 'SELECT COUNT(*) result_count FROM ' . $seed->table_name . ' ';
 
+
+    $customJoin = $seed->getCustomJoin();
+    $sql .= $customJoin['join'];
 
 	// build WHERE clauses, if any
 	$where_clauses = array();
@@ -2097,7 +2229,8 @@ function handle_set_entries($module_name, $name_value_lists, $select_fields = FA
 			}
 
             //Apply the non-empty values now since this will be used for duplicate checks
-            if(!empty($val))
+            //allow string or int of 0 to be updated if set.
+            if(!empty($val) || ($val==='0' || $val===0))
             {
                 $seed->$value['name'] = $val;
             }
@@ -2150,27 +2283,54 @@ function handle_set_entries($module_name, $name_value_lists, $select_fields = FA
 			//we are going to check if we have a meeting in the system
 			//with the same outlook_id. If we do find one then we will grab that
 			//id and save it
-			if( $seed->ACLAccess('Save') && ($seed->deleted != 1 || $seed->ACLAccess('Delete'))){
-				if(empty($seed->id) && !isset($seed->id)){
-					if(!empty($seed->outlook_id) && isset($seed->outlook_id)){
-						//at this point we have an object that does not have
-						//the id set, but does have the outlook_id set
-						//so we need to query the db to find if we already
-						//have an object with this outlook_id, if we do
-						//then we can set the id, otherwise this is a new object
-						$order_by = "";
-						$query = $seed->table_name.".outlook_id = '".$seed->outlook_id."'";
-						$response = $seed->get_list($order_by, $query, 0,-1,-1,0);
-						$list = $response['list'];
-						if(count($list) > 0){
-							foreach($list as $value)
-							{
-								$seed->id = $value->id;
-								break;
-							}
-						}//fi
-					}//fi
-				}//fi
+            if ($seed->ACLAccess('Save') && ($seed->deleted != 1 || $seed->ACLAccess('Delete'))) {
+                // Check if we're updating an old record, or creating a new
+                if (empty($seed->id)) {
+                    // If it's a new one, and we have outlook_id set
+                    // which means we're syncing from OPI check if it already exists
+                    if (!empty($seed->outlook_id)) {
+                        $GLOBALS['log']->debug(
+                            'Looking for ' . $module_name . ' with outlook_id ' . $seed->outlook_id
+                        );
+
+                        $fields = array(
+                            'outlook_id' => $seed->outlook_id
+                        );
+                        // Try to fetch a bean with this outlook_id
+                        $temp = BeanFactory::getBean($module_name);
+                        $temp = $temp->retrieve_by_string_fields($fields);
+
+                        // If we fetched one, just copy the ID to the one we're syncing
+                        if (!empty($temp)) {
+                            $seed->id = $temp->id;
+                        } else {
+                            $GLOBALS['log']->debug(
+                                'Looking for ' . $module_name .
+                                ' with name/date_start/duration_hours/duration_minutes ' .
+                                $seed->name . '/' . $seed->date_start . '/' .
+                                $seed->duration_hours . '/' . $seed->duration_minutes
+                            );
+
+                            // If we didn't, try to find the meeting by comparing the passed
+                            // Subject, start date and duration
+                            $fields = array(
+                                'name' => $seed->name,
+                                'date_start' => $seed->date_start,
+                                'duration_hours' => $seed->duration_hours,
+                                'duration_minutes' => $seed->duration_minutes
+                            );
+                            $temp = BeanFactory::getBean($module_name);
+                            $temp = $temp->retrieve_by_string_fields($fields);
+
+                            if (!empty($temp)) {
+                                $seed->id = $temp->id;
+                            }
+                        }
+                        $GLOBALS['log']->debug(
+                            $module_name . ' found: ' . !empty($seed->id)
+                        );
+                    }
+                }
 				if (empty($seed->reminder_time)) {
                     $seed->reminder_time = -1;
                 }
@@ -2182,6 +2342,9 @@ function handle_set_entries($module_name, $name_value_lists, $select_fields = FA
 					}
 				}
 				$seed->save();
+				if ($seed->deleted == 1) {
+					$seed->mark_deleted($seed->id);
+				}
 				$ids[] = $seed->id;
 			}//fi
 		}
@@ -2220,4 +2383,3 @@ function handle_set_entries($module_name, $name_value_lists, $select_fields = FA
 	}
 }
 
-?>

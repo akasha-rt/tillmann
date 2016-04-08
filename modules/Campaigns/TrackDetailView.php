@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -116,7 +116,7 @@ if(isset($focus->campaign_type) && $focus->campaign_type == "NewsLetter"){
     $smarty->assign("REFER_URL", $focus->refer_url);
 
     if(isset($focus->campaign_type) && $focus->campaign_type == "Email" || $focus->campaign_type == "NewsLetter") {
-        $smarty->assign("TRACK_DELETE_BUTTON","<input title=\"{$mod_strings['LBL_TRACK_DELETE_BUTTON_TITLE']}\" accessKey=\"{$mod_strings['LBL_TRACK_DELETE_BUTTON_KEY']}\" class=\"button\" onclick=\"this.form.module.value='Campaigns'; this.form.action.value='Delete';this.form.return_module.value='Campaigns'; this.form.return_action.value='TrackDetailView';this.form.mode.value='Test';return confirm('{$mod_strings['LBL_TRACK_DELETE_CONFIRM']}');\" type=\"submit\" name=\"button\" value=\"  {$mod_strings['LBL_TRACK_DELETE_BUTTON_LABEL']}  \">");
+        $smarty->assign("TRACK_DELETE_BUTTON","<input title=\"{$mod_strings['LBL_TRACK_DELETE_BUTTON_TITLE']}\" class=\"button\" onclick=\"this.form.module.value='Campaigns'; this.form.action.value='Delete';this.form.return_module.value='Campaigns'; this.form.return_action.value='TrackDetailView';this.form.mode.value='Test';return confirm('{$mod_strings['LBL_TRACK_DELETE_CONFIRM']}');\" type=\"submit\" name=\"button\" value=\"  {$mod_strings['LBL_TRACK_DELETE_BUTTON_LABEL']}  \">");
     }
 
     	$currency  = new Currency();
@@ -229,6 +229,10 @@ $subpanel = new SubPanelTiles($focus, 'Campaigns');
     if(empty($latest_marketing_id) || $latest_marketing_id === 'all'){
         //do nothing, no filtering is needed
     }else{
+
+        // assign selected marketing ID back to request in order to let ListView use it as a part of subpanel base URL
+        $_GET['mkt_id'] = $latest_marketing_id;
+
         //get array of layout defs
         $layoutDefsArr= $subpanel->subpanel_definitions->layout_defs;
 
@@ -257,6 +261,15 @@ $subpanel = new SubPanelTiles($focus, 'Campaigns');
 
         }//_pp($subpanel->subpanel_definitions->layout_defs);
     }//end else
+
+$deletedCampaignLogLeadsCount = $focus->getDeletedCampaignLogLeadsCount();
+if ($deletedCampaignLogLeadsCount > 0)
+{
+    $subpanel->subpanel_definitions->layout_defs['subpanel_setup']['lead']['top_buttons'][] = array(
+        'widget_class' => 'SubPanelTopMessage',
+        'message' => string_format($mod_strings['LBL_LEADS_DELETED_SINCE_CREATED'], array($deletedCampaignLogLeadsCount)),
+    );
+}
 
 $alltabs=$subpanel->subpanel_definitions->get_available_tabs();
 if (!empty($alltabs)) {

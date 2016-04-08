@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -82,6 +82,47 @@ YAHOO.util.Event.addListener('search_form_clear', 'click', {$id}_range_reset);
 {rdelim}
 
 {rdelim});
+
+YAHOO.util.Event.onDOMReady(function() {ldelim}
+ 	 if(document.getElementById('search_form_clear_advanced'))
+ 	 {ldelim}
+ 	     YAHOO.util.Event.addListener('search_form_clear_advanced', 'click', {$id}_range_reset);
+ 	 {rdelim}
+{rdelim});
+
+YAHOO.util.Event.onDOMReady(function() {ldelim}
+    //register on basic search form button if it exists
+    if(document.getElementById('search_form_submit'))
+     {ldelim}
+         YAHOO.util.Event.addListener('search_form_submit', 'click',{$id}_range_validate);
+     {rdelim}
+    //register on advanced search submit button if it exists
+   if(document.getElementById('search_form_submit_advanced'))
+    {ldelim}
+        YAHOO.util.Event.addListener('search_form_submit_advanced', 'click',{$id}_range_validate);
+    {rdelim}
+
+{rdelim});
+
+// this function is specific to range searches and will check that both start and end range fields have been
+// filled prior to submitting search form.  It is called from the listener added above.
+function {$id}_range_validate(e){ldelim}
+    if (
+            (document.getElementById("start_range_{$id}").value.length >0 && document.getElementById("end_range_{$id}").value.length == 0)
+          ||(document.getElementById("end_range_{$id}").value.length >0 && document.getElementById("start_range_{$id}").value.length == 0)
+       )
+    {ldelim}
+        e.preventDefault();
+        alert('{$APP.LBL_CHOOSE_START_AND_END_ENTRIES}');
+        if (document.getElementById("start_range_{$id}").value.length == 0) {ldelim}
+            document.getElementById("start_range_{$id}").focus();
+        {rdelim}
+        else {ldelim}
+            document.getElementById("end_range_{$id}").focus();
+        {rdelim}
+    {rdelim}
+
+{rdelim}
 </script>
 
 <span style="white-space:nowrap !important;">

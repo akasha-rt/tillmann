@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -95,18 +95,20 @@ if($install_type == 'module' && $mode != 'Uninstall'){
 }
 
 //Scan the unzip dir for unsafe files
-if(!empty($GLOBALS['sugar_config']['moduleInstaller']['packageScan']) && $install_type != 'patch'){
+if (((defined('MODULE_INSTALLER_PACKAGE_SCAN') && MODULE_INSTALLER_PACKAGE_SCAN)
+    || !empty($GLOBALS['sugar_config']['moduleInstaller']['packageScan'])) && $install_type != 'patch') {
 	require_once('ModuleInstall/ModuleScanner.php');
 	$ms = new ModuleScanner();
 	$ms->scanPackage($unzip_dir);
 	if($ms->hasIssues()){
+	    rmdir_recursive($unzip_dir);
 		$ms->displayIssues();
 		sugar_cleanup(true);
 	}
 }
 
 // assumption -- already validated manifest.php at time of upload
-require_once( "$unzip_dir/manifest.php" );
+require( "$unzip_dir/manifest.php" );
 
 
 
@@ -343,7 +345,7 @@ switch( $mode ){
 
 
 ?>
-<input type=submit value="<?php echo $mod_strings['LBL_ML_COMMIT'];?>" class="button" />
+<input type=submit value="<?php echo $mod_strings['LBL_ML_COMMIT'];?>" class="button" id="submit_button" />
 <input type=button value="<?php echo $mod_strings['LBL_ML_CANCEL'];?>" class="button" onClick="location.href='index.php?module=Administration&action=UpgradeWizard&view=module';"/>
 
 <?php
@@ -497,6 +499,7 @@ echo '<script>' .
                 }
             }
         }
+        document.getElementById("submit_button").disabled = true;
         return true;
     }
     var keys = [ "license","readme"];

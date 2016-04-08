@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -50,15 +53,6 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  */
 function get_message_scope_dom($campaign_id, $campaign_name,$db=null, $mod_strings=array()) {
 
-    //find prospect list attached to this campaign..
-    $query =  "SELECT prospect_list_id, prospect_lists.name ";
-    $query .= "FROM prospect_list_campaigns ";
-    $query .= "INNER join prospect_lists on prospect_lists.id = prospect_list_campaigns.prospect_list_id ";
-    $query .= "WHERE prospect_lists.deleted = 0 ";
-    $query .= "AND prospect_list_campaigns.deleted=0 ";
-    $query .= "AND campaign_id='".$campaign_id."'";
-    $query.=" and prospect_lists.list_type not like 'exempt%'";
-
     if (empty($db)) {
         $db = DBManagerFactory::getInstance();
     }
@@ -66,6 +60,15 @@ function get_message_scope_dom($campaign_id, $campaign_name,$db=null, $mod_strin
         global $current_language;
         $mod_strings = return_module_language($current_language, 'Campaigns');
     }
+
+    //find prospect list attached to this campaign..
+    $query =  "SELECT prospect_list_id, prospect_lists.name ";
+    $query .= "FROM prospect_list_campaigns ";
+    $query .= "INNER join prospect_lists on prospect_lists.id = prospect_list_campaigns.prospect_list_id ";
+    $query .= "WHERE prospect_lists.deleted = 0 ";
+    $query .= "AND prospect_list_campaigns.deleted=0 ";
+    $query .= "AND campaign_id='". $db->quote($campaign_id)."'";
+    $query.=" and prospect_lists.list_type not like 'exempt%'";
 
     //add campaign to the result array.
     //$return_array[$campaign_id]= $campaign_name . ' (' . $mod_strings['LBL_DEFAULT'] . ')';
@@ -175,6 +178,7 @@ function log_campaign_activity($identifier, $activity, $update=true, $clicked_ur
                 $data['activity_type']="'" .  $activity . "'";
                 $data['activity_date']="'" . TimeDate::getInstance()->nowDb() . "'";
                 $data['hits']=1;
+                $data['deleted']=0;
                 if (!empty($clicked_url_key)) {
                     $data['related_id']="'".$clicked_url_key."'";
                     $data['related_type']="'".'CampaignTrackers'."'";
@@ -236,6 +240,7 @@ function log_campaign_activity($identifier, $activity, $update=true, $clicked_ur
                 $data['list_id']="'" .  $row['list_id'] . "'";
                 $data['marketing_id']="'" .  $row['marketing_id'] . "'";
                 $data['hits']=1;
+                $data['deleted']=0;
                 if (!empty($clicked_url_key)) {
                     $data['related_id']="'".$clicked_url_key."'";
                     $data['related_type']="'".'CampaignTrackers'."'";
@@ -276,8 +281,8 @@ function log_campaign_activity($identifier, $activity, $update=true, $clicked_ur
 
 
  /**
-     * 
-     * This method is deprecated 
+     *
+     * This method is deprecated
      * @deprecated 62_Joneses - June 24, 2011
      * @see campaign_log_lead_or_contact_entry()
      */
@@ -304,7 +309,7 @@ function campaign_log_lead_or_contact_entry($campaign_id, $parent_bean,$child_be
     //save the campaign log entry
     $campaign_log->save();
 }
-    
+
 
 function get_campaign_urls($campaign_id) {
     $return_array=array();
@@ -312,6 +317,8 @@ function get_campaign_urls($campaign_id) {
     if (!empty($campaign_id)) {
 
         $db = DBManagerFactory::getInstance();
+
+        $campaign_id = $db->quote($campaign_id);
 
         $query1="select * from campaign_trkrs where campaign_id='$campaign_id' and deleted=0";
         $current=$db->query($query1);
@@ -337,6 +344,17 @@ function get_subscription_lists_query($focus, $additional_fields = null) {
     $all_news_type_pl_query .= "and c.campaign_type = 'NewsLetter'  and pl.deleted = 0 and c.deleted=0 and plc.deleted=0 ";
     $all_news_type_pl_query .= "and (pl.list_type like 'exempt%' or pl.list_type ='default') ";
 
+	/* BEGIN - SECURITY GROUPS */
+	if($focus->bean_implements('ACL') && ACLController::requireSecurityGroup('Campaigns', 'list') )
+	{
+		require_once('modules/SecurityGroups/SecurityGroup.php');
+		global $current_user;
+		$owner_where = $focus->getOwnerWhere($current_user->id);
+		$group_where = SecurityGroup::getGroupWhere('c','Campaigns',$current_user->id);
+		$all_news_type_pl_query .= " AND ( c.assigned_user_id ='".$current_user->id."' or ".$group_where.") ";
+	}
+	/* END - SECURITY GROUPS */
+		
     $all_news_type_list =$focus->db->query($all_news_type_pl_query);
 
     //build array of all newsletter campaigns
@@ -354,12 +372,12 @@ function get_subscription_lists_query($focus, $additional_fields = null) {
     return array('current_plp_arr' => $current_plp_arr, 'news_type_list_arr' => $news_type_list_arr);
 }
 /*
- * This function takes in a bean from a lead, propsect, or contact and returns an array containing
+ * This function takes in a bean from a lead, prospect, or contact and returns an array containing
  * all subscription lists that the bean is a part of, and all the subscriptions that the bean is not
  * a part of.  The array elements have the key names of "subscribed" and "unsusbscribed".  These elements contain an array
  * of the corresponding list.  In other words, the "subscribed" element holds another array that holds the subscription information.
  *
- * The subscription information is a concatenated string that holds the prospect list id and the campaign id, seperated by at "@" character.
+ * The subscription information is a concatenated string that holds the prospect list id and the campaign id, separated by at "@" character.
  * To parse these information string into something more usable, use the "process subscriptions()" function
  *
  * */
@@ -402,7 +420,7 @@ function get_subscription_lists($focus, $descriptions = false) {
                 	if(!array_search($temp,$unsubs_arr)){
                         $subs_arr[$news_list['name']] = "prospect_list@".$news_list['prospect_list_id']."@campaign@".$news_list['campaign_id'];
                         $match = 'true';
-                        //unset($unsubs_arr[$news_list['name']]);
+                        unset($unsubs_arr[$news_list['name']]);
                     }
                 }
             }else{
@@ -411,7 +429,8 @@ function get_subscription_lists($focus, $descriptions = false) {
         }
          //if this newsletter id never matched a user subscription..
          //..then add to available(unsubscribed) NewsLetters if list is not of type exempt
-         if(($match == 'false') && (strpos($news_list['list_type'],  'exempt') === false)){
+        if (($match == 'false') && (strpos($news_list['list_type'], 'exempt') === false) && (!array_key_exists($news_list['name'], $subs_arr)))
+        {
             $unsubs_arr[$news_list['name']] = "prospect_list@".$news_list['prospect_list_id']."@campaign@".$news_list['campaign_id'];
         }
 
@@ -422,7 +441,7 @@ function get_subscription_lists($focus, $descriptions = false) {
 }
 
 /**
- * same function as get_subscription_lists, but with the data seperated in an associated array
+ * same function as get_subscription_lists, but with the data separated in an associated array
  */
 function get_subscription_lists_keyed($focus) {
     $subs_arr = array();
@@ -858,7 +877,7 @@ function write_mail_merge_log_entry($campaign_id,$pl_row) {
         $data['activity_date']="'" . TimeDate::getInstance()->nowDb() . "'";
         $data['list_id']="'" .  $GLOBALS['db']->quote($pl_row['prospect_list_id']) . "'";
         $data['hits']=1;
-
+        $data['deleted']=0;
         $insert_query="INSERT into campaign_log (" . implode(",",array_keys($data)) . ")";
         $insert_query.=" VALUES  (" . implode(",",array_values($data)) . ")";
         $GLOBALS['db']->query($insert_query);
@@ -866,32 +885,25 @@ function write_mail_merge_log_entry($campaign_id,$pl_row) {
 }
 
     function track_campaign_prospects($focus){
-		$delete_query="delete from campaign_log where campaign_id='".$GLOBALS['db']->quote($focus->id)."' and activity_type='targeted'";
-		$focus->db->query($delete_query);
+        $campaign_id = $GLOBALS['db']->quote($focus->id);
+        $delete_query="delete from campaign_log where campaign_id='".$campaign_id."' and activity_type='targeted'";
+        $focus->db->query($delete_query);
 
-		$query="SELECT prospect_lists.id prospect_list_id from prospect_lists ";
-		$query.=" INNER JOIN prospect_list_campaigns plc ON plc.prospect_list_id = prospect_lists.id";
-		$query.=" WHERE plc.campaign_id='".$GLOBALS['db']->quote($focus->id)."'"; 
-		$query.=" AND prospect_lists.deleted=0";
-		$query.=" AND plc.deleted=0";
-		$query.=" AND prospect_lists.list_type!='test' AND prospect_lists.list_type not like 'exempt%'";
-		$result=$focus->db->query($query);
-		while (($row=$focus->db->fetchByAssoc($result))!=null ) {
-			$prospect_list_id=$row['prospect_list_id'];
-            $guid = create_guid();
-            $current_date = $focus->db->now();
+        $current_date = $focus->db->now();
+        $guidSQL = $focus->db->getGuidSQL();
 
-			$insert_query= "INSERT INTO campaign_log (id,activity_date, campaign_id, target_tracker_key,list_id, target_id, target_type, activity_type";
-			$insert_query.=')';
-			$insert_query.= " SELECT '{$guid}',$current_date,plc.campaign_id,'{$guid}',plp.prospect_list_id, plp.related_id, plp.related_type,'targeted' ";
-			$insert_query.= "FROM prospect_lists_prospects plp ";
-			$insert_query.= "INNER JOIN prospect_list_campaigns plc ON plc.prospect_list_id = plp.prospect_list_id ";
-			$insert_query.= "WHERE plp.prospect_list_id = '{$prospect_list_id}' ";
-			$insert_query.= "AND plp.deleted=0 ";
-			$insert_query.= "AND plc.deleted=0 ";
-			$insert_query.= "AND plc.campaign_id='{$focus->id}'";
-			$focus->db->query($insert_query);
-		}
+        $insert_query= "INSERT INTO campaign_log (id,activity_date, campaign_id, target_tracker_key,list_id, target_id, target_type, activity_type, deleted";
+        $insert_query.=')';
+        $insert_query.="SELECT {$guidSQL}, $current_date, plc.campaign_id,{$guidSQL},plp.prospect_list_id, plp.related_id, plp.related_type,'targeted',0 ";
+        $insert_query.="FROM prospect_lists INNER JOIN prospect_lists_prospects plp ON plp.prospect_list_id = prospect_lists.id";
+        $insert_query.=" INNER JOIN prospect_list_campaigns plc ON plc.prospect_list_id = prospect_lists.id";
+        $insert_query.=" WHERE plc.campaign_id='".$GLOBALS['db']->quote($focus->id)."'";
+        $insert_query.=" AND prospect_lists.deleted=0";
+        $insert_query.=" AND plc.deleted=0";
+        $insert_query.=" AND plp.deleted=0";
+        $insert_query.=" AND prospect_lists.list_type!='test' AND prospect_lists.list_type not like 'exempt%'";
+        $focus->db->query($insert_query);
+
         global $mod_strings;
         //return success message
         return $mod_strings['LBL_DEFAULT_LIST_ENTRIES_WERE_PROCESSED'];

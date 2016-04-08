@@ -1,30 +1,28 @@
 <?php
-$viewdefs ['Notes'] = 
-array (
-  'EditView' => 
+// created: 2016-04-08 13:01:38
+$viewdefs['Notes']['EditView'] = array (
+  'templateMeta' => 
   array (
-    'templateMeta' => 
+    'form' => 
     array (
-      'form' => 
+      'enctype' => 'multipart/form-data',
+      'headerTpl' => 'modules/Notes/tpls/EditViewHeader.tpl',
+    ),
+    'maxColumns' => '2',
+    'widths' => 
+    array (
+      0 => 
       array (
-        'enctype' => 'multipart/form-data',
-        'headerTpl' => 'modules/Notes/tpls/EditViewHeader.tpl',
+        'label' => '10',
+        'field' => '30',
       ),
-      'maxColumns' => '2',
-      'widths' => 
+      1 => 
       array (
-        0 => 
-        array (
-          'label' => '10',
-          'field' => '30',
-        ),
-        1 => 
-        array (
-          'label' => '10',
-          'field' => '30',
-        ),
+        'label' => '10',
+        'field' => '30',
       ),
-      'javascript' => '{sugar_getscript file="include/javascript/dashlets.js"}
+    ),
+    'javascript' => '{sugar_getscript file="include/javascript/dashlets.js"}
 <script>
 function deleteAttachmentCallBack(text)
 	{literal} { {/literal}
@@ -39,56 +37,67 @@ function deleteAttachmentCallBack(text)
 {literal} } {/literal}
 </script>
 <script>toggle_portal_flag(); function toggle_portal_flag()  {literal} { {/literal} {$TOGGLE_JS} {literal} } {/literal} </script>',
-      'useTabs' => false,
-    ),
-    'panels' => 
+    'useTabs' => false,
+    'tabDefs' => 
     array (
-      'lbl_note_information' => 
+      'LBL_NOTE_INFORMATION' => 
       array (
-        0 => 
-        array (
-          0 => 
-          array (
-            'name' => 'name',
-            'displayParams' => 
-            array (
-              'size' => 60,
-            ),
-          ),
-          1 => 'parent_name',
-        ),
-        1 => 
-        array (
-          0 => 'filename',
-          1 => 'contact_name',
-        ),
-        2 => 
-        array (
-          0 => 
-          array (
-            'name' => 'description',
-            'label' => 'LBL_NOTE_STATUS',
-          ),
-          1 => 
-          array (
-            'name' => 'type_c',
-            'studio' => 'visible',
-            'label' => 'LBL_TYPE',
-          ),
-        ),
+        'newTab' => false,
+        'panelDefault' => 'expanded',
       ),
       'LBL_PANEL_ASSIGNMENT' => 
       array (
+        'newTab' => false,
+        'panelDefault' => 'expanded',
+      ),
+    ),
+  ),
+  'panels' => 
+  array (
+    'lbl_note_information' => 
+    array (
+      0 => 
+      array (
         0 => 
         array (
-          0 => 
+          'name' => 'name',
+          'displayParams' => 
           array (
-            'name' => 'assigned_user_name',
-            'label' => 'LBL_ASSIGNED_TO',
+            'size' => 60,
           ),
+        ),
+        1 => 'parent_name',
+      ),
+      1 => 
+      array (
+        0 => 'filename',
+        1 => 'contact_name',
+      ),
+      2 => 
+      array (
+        0 => 
+        array (
+          'name' => 'description',
+          'label' => 'LBL_NOTE_STATUS',
+        ),
+        1 => 
+        array (
+          'name' => 'type_c',
+          'studio' => 'visible',
+          'label' => 'LBL_TYPE',
+        ),
+      ),
+    ),
+    'LBL_PANEL_ASSIGNMENT' => 
+    array (
+      0 => 
+      array (
+        0 => 
+        array (
+          'name' => 'assigned_user_name',
+          'label' => 'LBL_ASSIGNED_TO',
         ),
       ),
     ),
   ),
 );
-?>

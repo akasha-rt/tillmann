@@ -4,6 +4,9 @@
 
 Modification information for LGPL compliance
 
+r51275 - 2011-03-15 - jpark - Author: Justin Park<jpark@sugarcrm.com>
+    #51275: Add appendTo on sugarbutton to keep the list of buttons to generate rendering list
+
 r58076 - 2010-09-03 10:29:58 -0700 (Fri, 03 Sep 2010) - kjing - Author: Rob Aagaard <rob@sugarcrm.com>
     #39462: Fix the Shortcut bar quick create full form button to cancel the confirm navigation alert for that form.
 
@@ -61,19 +64,19 @@ r53119 - 2009-12-09 19:23:33 -0800 (Wed, 09 Dec 2009) - mitani - fixes tags for 
 
 r53116 - 2009-12-09 17:24:37 -0800 (Wed, 09 Dec 2009) - mitani - Merge Kobe into Windex Revision 51633 to 53087
 
-r52448 - 2009-11-13 02:21:35 -0800 (Fri, 13 Nov 2009) - mitani - Fixes issues with quick create buttons, removes buttons from the top of the quick create form for productivity bar, aligns navigation buttons with other buttons on detail and edit views fixes an issue with calls edit view still calling on leads 
+r52448 - 2009-11-13 02:21:35 -0800 (Fri, 13 Nov 2009) - mitani - Fixes issues with quick create buttons, removes buttons from the top of the quick create form for productivity bar, aligns navigation buttons with other buttons on detail and edit views fixes an issue with calls edit view still calling on leads
 
-r52277 - 2009-11-06 12:41:42 -0800 (Fri, 06 Nov 2009) - mitani - Updates the Productivity Bar  UI and adds Spot :) 
+r52277 - 2009-11-06 12:41:42 -0800 (Fri, 06 Nov 2009) - mitani - Updates the Productivity Bar  UI and adds Spot :)
 
 r52120 - 2009-11-02 14:45:24 -0800 (Mon, 02 Nov 2009) - clee - Fixed errors with default connector buttons/hover buttons not appearing in default install for sales edition.
 
-r51719 - 2009-10-22 10:18:00 -0700 (Thu, 22 Oct 2009) - mitani - Converted to Build 3  tags and updated the build system 
+r51719 - 2009-10-22 10:18:00 -0700 (Thu, 22 Oct 2009) - mitani - Converted to Build 3  tags and updated the build system
 
 r51634 - 2009-10-19 13:32:22 -0700 (Mon, 19 Oct 2009) - mitani - Windex is the branch for Sugar Sales 1.0 development
 
 r50375 - 2009-08-24 18:07:43 -0700 (Mon, 24 Aug 2009) - dwong - branch kobe2 from tokyo r50372
 
-r48227 - 2009-06-08 14:59:16 -0700 (Mon, 08 Jun 2009) - tyoung - 23828: replaced the PHP mechanism to calculate the subpanel name based on the module name, which failed as a result of the switch from module-based subpanel names to relationship-based names, which a javascript mechanism embedded in the two affected methods in SubpanelUtils - inlineSave() and cancelCreate(). 
+r48227 - 2009-06-08 14:59:16 -0700 (Mon, 08 Jun 2009) - tyoung - 23828: replaced the PHP mechanism to calculate the subpanel name based on the module name, which failed as a result of the switch from module-based subpanel names to relationship-based names, which a javascript mechanism embedded in the two affected methods in SubpanelUtils - inlineSave() and cancelCreate().
 The new mechanism works out from the save or cancel button, respectively, until it encounters a subpanel (marked by a new CSS class 'quickcreate'). It then uses that subpanel name in later operations. This mechanism is now reliable for relationship-based subpanel names. Furthermore, it does not require modifications to the method-chain. To fix this issue by passing the subpanel name along the method-chain would require changing the method signature of the smarty method, sugar_button, which would be very broad-ranging.
 
 r45148 - 2009-03-16 07:43:29 -0700 (Mon, 16 Mar 2009) - clee - Bug:28522
@@ -112,7 +115,7 @@ r41336 - 2008-11-04 15:00:45 -0800 (Tue, 04 Nov 2008) - awu - merging Milan code
 r39146 - 2008-08-26 17:16:04 -0700 (Tue, 26 Aug 2008) - awu - Merging pre_5_1_0 to trunk
 
 r38393 - 2008-07-29 12:44:00 -0700 (Tue, 29 Jul 2008) - Collin Lee - Bug:23873
-Spoke with Ran more about this issue. It turns out the "Select" button was not the only button that needed to have a unique id. All subpanel and subpanel quick create buttons where no unique id exists for the element are candidates for change. Modified sugar widget subpanel classes to use a unique id for "Create" and "Select" buttons. Modified function.sugar_button.php to uniquely identify subpanel buttons as well.   
+Spoke with Ran more about this issue. It turns out the "Select" button was not the only button that needed to have a unique id. All subpanel and subpanel quick create buttons where no unique id exists for the element are candidates for change. Modified sugar widget subpanel classes to use a unique id for "Create" and "Select" buttons. Modified function.sugar_button.php to uniquely identify subpanel buttons as well.
 
 r37505 - 2008-07-02 10:12:55 -0700 (Wed, 02 Jul 2008) - roger - bug: 23283 - buttons in EditView were grouped together without spacing.
 
@@ -173,12 +176,12 @@ Fixed include/Smarty/plugins/function.sugar_button.php
 r28643 - 2007-10-22 13:58:23 -0700 (Mon, 22 Oct 2007) - majed - bug #16757
 fixes duplicate so it returns to the detail view of the new record instead of the index page
 
-r28573 - 2007-10-21 01:24:14 -0700 (Sun, 21 Oct 2007) - majed - adds support for metadata driven quick creates and adds the ability to create from subpanels for any module 
+r28573 - 2007-10-21 01:24:14 -0700 (Sun, 21 Oct 2007) - majed - adds support for metadata driven quick creates and adds the ability to create from subpanels for any module
 bug # 16541
 
-r28324 - 2007-10-17 16:24:57 -0700 (Wed, 17 Oct 2007) - majed - bug #13311 fixes delete button showing up when it shouldn't in most scenarios some places the button may be disabled instead of disappearing and in worst case it should display you do not have access if you don't 
+r28324 - 2007-10-17 16:24:57 -0700 (Wed, 17 Oct 2007) - majed - bug #13311 fixes delete button showing up when it shouldn't in most scenarios some places the button may be disabled instead of disappearing and in worst case it should display you do not have access if you don't
 
-r28178 - 2007-10-15 16:56:47 -0700 (Mon, 15 Oct 2007) - majed - Checkin to add first side quick create for meta data driven ui. 
+r28178 - 2007-10-15 16:56:47 -0700 (Mon, 15 Oct 2007) - majed - Checkin to add first side quick create for meta data driven ui.
 
 r25427 - 2007-08-11 13:52:09 -0700 (Sat, 11 Aug 2007) - clee - Added empty id check so we do not show the audit button when creating a new record.
 
@@ -286,6 +289,8 @@ function smarty_function_sugar_button($params, &$smarty)
    	  $smarty->trigger_error("sugar_button: missing required param (view)");
    }
 
+   $js_form = (empty($params['form_id'])) ? "var _form = (this.form) ? this.form : document.forms[0];" : "var _form = document.getElementById('{$params['form_id']}');";
+
    $type = $params['id'];
    $location = (empty($params['location'])) ? "" : "_".$params['location'];
 
@@ -294,79 +299,126 @@ function smarty_function_sugar_button($params, &$smarty)
    	  $view = $params['view'];
    	  switch(strtoupper($type)) {
 			case "SEARCH":
-			return '<input tabindex="2" title="{$APP.LBL_SEARCH_BUTTON_TITLE}" accessKey="{$APP.LBL_SEARCH_BUTTON_KEY}" onclick="SUGAR.savedViews.setChooser();" class="button" type="submit" name="button" value="{$APP.LBL_SEARCH_BUTTON_LABEL}" id="search_form_submit"/>&nbsp;';
+                $output = '<input tabindex="2" title="{$APP.LBL_SEARCH_BUTTON_TITLE}" onclick="SUGAR.savedViews.setChooser();" class="button" type="submit" name="button" value="{$APP.LBL_SEARCH_BUTTON_LABEL}" id="search_form_submit"/>&nbsp;';
 			break;
 
 			case "CANCEL":
-			$cancelButton  = '{if !empty($smarty.request.return_action) && ($smarty.request.return_action == "DetailView" && !empty($smarty.request.return_id))}';
-			$cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=DetailView&module={$smarty.request.return_module}&record={$smarty.request.return_id}\'); return false;" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" type="button" id="'.$type.$location.'"> ';
-			$cancelButton .= '{elseif !empty($smarty.request.return_action) && ($smarty.request.return_action == "DetailView" && !empty($fields.id.value))}';
-			$cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=DetailView&module={$smarty.request.return_module}&record={$fields.id.value}\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
-			$cancelButton .= '{elseif empty($smarty.request.return_action) || empty($smarty.request.return_id) && !empty($fields.id.value)}';
-			$cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=index&module='.$module.'\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
-			$cancelButton .= '{else}';
-			$cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=index&module={$smarty.request.return_module}&record={$smarty.request.return_id}\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
-			$cancelButton .= '{/if}';
-			return $cancelButton;
+
+                //If the return action is not empty and the return action is detail view and the id is not empty
+                $cancelButton  = '{if !empty($smarty.request.return_action) && ($smarty.request.return_action == "DetailView" && !empty($smarty.request.return_id))}';
+                $cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=DetailView&module={$smarty.request.return_module|escape:"url"}&record={$smarty.request.return_id|escape:"url"}\'); return false;" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" type="button" id="'.$type.$location.'"> ';
+
+                //If the return action is not empty and the return action is detail view and the id (from fields) is not empty
+                $cancelButton .= '{elseif !empty($smarty.request.return_action) && ($smarty.request.return_action == "DetailView" && !empty($fields.id.value))}';
+                $cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=DetailView&module={$smarty.request.return_module|escape:"url"}&record={$fields.id.value}\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
+
+                //Bug 1057 If the return action is not empty and the return action is detail view and the id (from both locations) are empty, go to the modules listview
+                $cancelButton .= '{elseif !empty($smarty.request.return_action) && ($smarty.request.return_action == "DetailView" && empty($fields.id.value)) && empty($smarty.request.return_id)}';
+                $cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=ListView&module={$smarty.request.return_module|escape:"url"}&record={$fields.id.value}\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
+
+
+                //Bug 893 if the return action is not empty and the return module is not empty, go back to that page
+                $cancelButton .= '{elseif !empty($smarty.request.return_action) && !empty($smarty.request.return_module)}';
+                $cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action={$smarty.request.return_action}&module={$smarty.request.return_module|escape:"url"}\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
+
+                //If the return action is empty but the return id is in fields
+                $cancelButton .= '{elseif empty($smarty.request.return_action) || empty($smarty.request.return_id) && !empty($fields.id.value)}';
+                $cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=index&module='.$module.'\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
+
+
+
+                $cancelButton .= '{else}';
+                $cancelButton .= '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="SUGAR.ajaxUI.loadContent(\'index.php?action=index&module={$smarty.request.return_module|escape:"url"}&record={$smarty.request.return_id|escape:"url"}\'); return false;" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" id="'.$type.$location.'"> ';
+                $cancelButton .= '{/if}';
+
+
+                //$cancelButton = '{$smarty.request.return_action}'.'{$smarty.request.return_module}';
+
+
+                $output = $cancelButton;
 			break;
 
 			case "DELETE":
-			return '{if $bean->aclAccess("delete")}<input title="{$APP.LBL_DELETE_BUTTON_TITLE}" accessKey="{$APP.LBL_DELETE_BUTTON_KEY}" class="button" onclick="this.form.return_module.value=\'' . $module . '\'; this.form.return_action.value=\'ListView\'; this.form.action.value=\'Delete\'; return confirm(\'{$APP.NTC_DELETE_CONFIRMATION}\');" type="submit" name="Delete" value="{$APP.LBL_DELETE_BUTTON_LABEL}" id="delete_button">{/if} ';
-			break;
+                $output = '{if $bean->aclAccess("delete")}<input title="{$APP.LBL_DELETE_BUTTON_TITLE}" accessKey="{$APP.LBL_DELETE_BUTTON_KEY}" class="button" onclick="'.$js_form.' _form.return_module.value=\'' . $module . '\'; _form.return_action.value=\'ListView\'; _form.action.value=\'Delete\'; if(confirm(\'{$APP.NTC_DELETE_CONFIRMATION}\')) SUGAR.ajaxUI.submitForm(_form);" type="submit" name="Delete" value="{$APP.LBL_DELETE_BUTTON_LABEL}" id="delete_button">{/if} ';
+            break;
 
 			case "DUPLICATE":
-			return '{if $bean->aclAccess("edit")}<input title="{$APP.LBL_DUPLICATE_BUTTON_TITLE}" accessKey="{$APP.LBL_DUPLICATE_BUTTON_KEY}" class="button" onclick="this.form.return_module.value=\''. $module . '\'; this.form.return_action.value=\'DetailView\'; this.form.isDuplicate.value=true; this.form.action.value=\'' . $view . '\'; this.form.return_id.value=\'{$id}\';SUGAR.ajaxUI.submitForm(this.form);" type="button" name="Duplicate" value="{$APP.LBL_DUPLICATE_BUTTON_LABEL}" id="duplicate_button">{/if} ';
-			break;
+			    $output = '{if $bean->aclAccess("edit")}<input title="{$APP.LBL_DUPLICATE_BUTTON_TITLE}" accessKey="{$APP.LBL_DUPLICATE_BUTTON_KEY}" class="button" onclick="'.$js_form.' _form.return_module.value=\''. $module . '\'; _form.return_action.value=\'DetailView\'; _form.isDuplicate.value=true; _form.action.value=\'' . $view . '\'; _form.return_id.value=\'{$id}\';SUGAR.ajaxUI.submitForm(_form);" type="button" name="Duplicate" value="{$APP.LBL_DUPLICATE_BUTTON_LABEL}" id="duplicate_button">{/if} ';
+            break;
 
 			case "EDIT";
-			return '{if $bean->aclAccess("edit")}<input title="{$APP.LBL_EDIT_BUTTON_TITLE}" accessKey="{$APP.LBL_EDIT_BUTTON_KEY}" class="button primary" onclick="this.form.return_module.value=\'' . $module . '\'; this.form.return_action.value=\'DetailView\'; this.form.return_id.value=\'{$id}\'; this.form.action.value=\'EditView\';SUGAR.ajaxUI.submitForm(this.form);" type="button" name="Edit" id="edit_button" value="{$APP.LBL_EDIT_BUTTON_LABEL}">{/if} ';
-			break;
+			    $output = '{if $bean->aclAccess("edit")}<input title="{$APP.LBL_EDIT_BUTTON_TITLE}" accessKey="{$APP.LBL_EDIT_BUTTON_KEY}" class="button primary" onclick="'.$js_form.' _form.return_module.value=\'' . $module . '\'; _form.return_action.value=\'DetailView\'; _form.return_id.value=\'{$id}\'; _form.action.value=\'EditView\';SUGAR.ajaxUI.submitForm(_form);" type="button" name="Edit" id="edit_button" value="{$APP.LBL_EDIT_BUTTON_LABEL}">{/if} ';
+            break;
 
 			case "FIND_DUPLICATES":
-			return '{if $bean->aclAccess("edit") && $bean->aclAccess("delete")}<input title="{$APP.LBL_DUP_MERGE}" accessKey="M" class="button" onclick="this.form.return_module.value=\'' . $module . '\'; this.form.return_action.value=\'DetailView\'; this.form.return_id.value=\'{$id}\'; this.form.action.value=\'Step1\'; this.form.module.value=\'MergeRecords\';SUGAR.ajaxUI.submitForm(this.form);" type="button" name="Merge" value="{$APP.LBL_DUP_MERGE}" id="merge_duplicate_button">{/if} ';
-			break;
+			    $output = '{if $bean->aclAccess("edit") && $bean->aclAccess("delete")}<input title="{$APP.LBL_DUP_MERGE}" class="button" onclick="'.$js_form.' _form.return_module.value=\'' . $module . '\'; _form.return_action.value=\'DetailView\'; _form.return_id.value=\'{$id}\'; _form.action.value=\'Step1\'; _form.module.value=\'MergeRecords\';SUGAR.ajaxUI.submitForm(_form);" type="button" name="Merge" value="{$APP.LBL_DUP_MERGE}" id="merge_duplicate_button">{/if} ';
+            break;
 
 			case "SAVE":
 				$view = ($_REQUEST['action'] == 'EditView') ? 'EditView' : (($view == 'EditView') ? 'EditView' : $view);
-				return '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="button primary" onclick="{if $isDuplicate}this.form.return_id.value=\'\'; {/if}this.form.action.value=\'Save\'; if(check_form(\'' . $view . '\'))SUGAR.ajaxUI.submitForm(this.form);return false;" type="submit" name="button" value="{$APP.LBL_SAVE_BUTTON_LABEL}" id="'.$type.$location.'">{/if} ';
+				$output = '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="button primary" onclick="'.$js_form.' {if $isDuplicate}_form.return_id.value=\'\'; {/if}_form.action.value=\'Save\'; if(check_form(\'' . $view . '\'))SUGAR.ajaxUI.submitForm(_form);return false;" type="submit" name="button" value="{$APP.LBL_SAVE_BUTTON_LABEL}" id="'.$type.$location.'">{/if} ';
 			break;
 
 			case "SUBPANELSAVE":
-                if($view == 'QuickCreate' || (isset($_REQUEST['target_action']) && strtolower($_REQUEST['target_action'])) == 'quickcreate') $view =  "form_SubpanelQuickCreate_{$module}";
-                return '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="button" onclick="disableOnUnloadEditView();this.form.action.value=\'Save\';if(check_form(\''.$view.'\'))return SUGAR.subpanelUtils.inlineSave(this.form.id, \'' . $params['module'] . '_subpanel_save_button\');return false;" type="submit" name="' . $params['module'] . '_subpanel_save_button" id="' . $params['module'] . '_subpanel_save_button" value="{$APP.LBL_SAVE_BUTTON_LABEL}">{/if} ';
+                if($view == 'QuickCreate' || (isset($_REQUEST['target_action']) && strtolower($_REQUEST['target_action']) == 'quickcreate')) $view =  "form_SubpanelQuickCreate_{$module}";
+
+                /* BEGIN - SECURITY GROUPS - redirect a subpanel save to the detail view if select popup and user in more than 1 group*/ 
+                /**
+                global $current_user, $sugar_config;
+                if(isset($sugar_config['securitysuite_popup_select']) && $sugar_config['securitysuite_popup_select'] == true) {     
+                    require_once('modules/SecurityGroups/SecurityGroup.php');
+                    $groupFocus = new SecurityGroup();
+
+                    if($groupFocus->getMembershipCount($current_user->id) > 1) {
+                        $output = '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" class="button" onclick="'.$js_form.' disableOnUnloadEditView(); _form.action.value=\'Save\';_form.module.value=\'{$module}\';_form.return_module.value=\'{$module}\';_form.return_action.value=\'DetailView\';_form.return_id.value=\'\';" type="submit" name="' . $params['module'] . '_subpanel_save_button" id="' . $params['module'] . '_subpanel_save_button" value="{$APP.LBL_SAVE_BUTTON_LABEL}">{/if} ';
+                    }
+                }
+                //if different here then change the group return right above
+                $output = '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}"  class="button" onclick="'.$js_form.' disableOnUnloadEditView(); _form.action.value=\'Save\';if(check_form(\''.$view.'\'))return SUGAR.subpanelUtils.inlineSave(_form.id, \'' . $params['module'] . '_subpanel_save_button\');return false;" type="submit" name="' . $params['module'] . '_subpanel_save_button" id="' . $params['module'] . '_subpanel_save_button" value="{$APP.LBL_SAVE_BUTTON_LABEL}">{/if} ';
+                
+                */
+                $output = '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}"  class="button" onclick="'.$js_form.' disableOnUnloadEditView(); _form.action.value=\'Save\';if(check_form(\''.$view.'\'))return SUGAR.subpanelUtils.inlineSave(_form.id, \'' . $params['module'] . '_subpanel_save_button\');return false;" type="submit" name="' . $params['module'] . '_subpanel_save_button" id="' . $params['module'] . '_subpanel_save_button" value="{$APP.LBL_SAVE_BUTTON_LABEL}">{/if} ';
+                /* END - SECURITY GROUPS */
+
+            break;
 			case "SUBPANELCANCEL":
-				return '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="return SUGAR.subpanelUtils.cancelCreate(\'' . $params['module'] . '_subpanel_cancel_button\');return false;" type="submit" name="' . $params['module'] . '_subpanel_cancel_button" id="' . $params['module'] . '_subpanel_cancel_button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}"> ';
+                $output = '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" class="button" onclick="return SUGAR.subpanelUtils.cancelCreate($(this).attr(\'id\'));return false;" type="submit" name="' . $params['module'] . '_subpanel_cancel_button" id="' . $params['module'] . '_subpanel_cancel_button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}"> ';
+
+            break;
 		    case "SUBPANELFULLFORM":
-				$html = '<input title="{$APP.LBL_FULL_FORM_BUTTON_TITLE}" accessKey="{$APP.LBL_FULL_FORM_BUTTON_KEY}" class="button" onclick="disableOnUnloadEditView(this.form); this.form.return_action.value=\'DetailView\'; this.form.action.value=\'EditView\'; if(typeof(this.form.to_pdf)!=\'undefined\') this.form.to_pdf.value=\'0\';" type="submit" name="' . $params['module'] . '_subpanel_full_form_button" id="' . $params['module'] . '_subpanel_full_form_button" value="{$APP.LBL_FULL_FORM_BUTTON_LABEL}"> ';
-				$html .= '<input type="hidden" name="full_form" value="full_form">';
-		        return $html;
+                $output = '<input title="{$APP.LBL_FULL_FORM_BUTTON_TITLE}" class="button" onclick="'.$js_form.' disableOnUnloadEditView(_form); _form.return_action.value=\'DetailView\'; _form.action.value=\'EditView\'; if(typeof(_form.to_pdf)!=\'undefined\') _form.to_pdf.value=\'0\';" type="submit" name="' . $params['module'] . '_subpanel_full_form_button" id="' . $params['module'] . '_subpanel_full_form_button" value="{$APP.LBL_FULL_FORM_BUTTON_LABEL}"> ';
+                $output .= '<input type="hidden" name="full_form" value="full_form">';
+            break;
 			case "DCMENUCANCEL":
-				return '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="javascript:lastLoadedMenu=undefined;DCMenu.closeOverlay();return false;" type="submit" name="' . $params['module'] . '_dcmenu_cancel_button" id="' . $params['module'] . '_dcmenu_cancel_button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}"> ';
-		   
+                $output = '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" onclick="javascript:lastLoadedMenu=undefined;DCMenu.closeOverlay();return false;" type="submit" name="' . $params['module'] . '_dcmenu_cancel_button" id="' . $params['module'] . '_dcmenu_cancel_button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}"> ';
+            break;
 			case "DCMENUSAVE":
                             if ($view == 'QuickCreate') {
                                 $view = "form_DCQuickCreate_{$module}";
                             } else if ($view == 'EditView') {
                                 $view = "form_DCEditView_{$module}";
                             }
-				return '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="button primary" onclick="this.form.action.value=\'Save\';if(check_form(\''.$view.'\'))return DCMenu.save(this.form.id, \'' . $params['module'] . '_subpanel_save_button\');return false;" type="submit" name="' . $params['module'] . '_dcmenu_save_button" id="' . $params['module'] . '_dcmenu_save_button" value="{$APP.LBL_SAVE_BUTTON_LABEL}">{/if} ';
+				$output = '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="button primary" onclick="'.$js_form.' _form.action.value=\'Save\';if(check_form(\''.$view.'\'))return DCMenu.save(_form.id, \'' . $params['module'] . '_subpanel_save_button\');return false;" type="submit" name="' . $params['module'] . '_dcmenu_save_button" id="' . $params['module'] . '_dcmenu_save_button" value="{$APP.LBL_SAVE_BUTTON_LABEL}">{/if} ';
+            break;
 			case "DCMENUFULLFORM":
-                $html = '<input title="{$APP.LBL_FULL_FORM_BUTTON_TITLE}" accessKey="{$APP.LBL_FULL_FORM_BUTTON_KEY}" class="button" onclick="disableOnUnloadEditView(this.form); this.form.return_action.value=\'DetailView\'; this.form.action.value=\'EditView\'; this.form.return_module.value=\'' . $params['module'] . '\';this.form.return_id.value=this.form.record.value;if(typeof(this.form.to_pdf)!=\'undefined\') this.form.to_pdf.value=\'0\';SUGAR.ajaxUI.submitForm(this.form,null,true);DCMenu.closeOverlay();" type="button" name="' . $params['module'] . '_subpanel_full_form_button" id="' . $params['module'] . '_subpanel_full_form_button" value="{$APP.LBL_FULL_FORM_BUTTON_LABEL}"> ';
-				$html .= '<input type="hidden" name="full_form" value="full_form">';
-		        return $html;	
+                $output = '<input title="{$APP.LBL_FULL_FORM_BUTTON_TITLE}" accessKey="{$APP.LBL_FULL_FORM_BUTTON_KEY}" class="button" onclick="'.$js_form.' disableOnUnloadEditView(_form); _form.return_action.value=\'DetailView\'; _form.action.value=\'EditView\'; _form.return_module.value=\'' . $params['module'] . '\';_form.return_id.value=_form.record.value;if(typeof(_form.to_pdf)!=\'undefined\') _form.to_pdf.value=\'0\';SUGAR.ajaxUI.submitForm(_form,null,true);DCMenu.closeOverlay();" type="button" name="' . $params['module'] . '_subpanel_full_form_button" id="' . $params['module'] . '_subpanel_full_form_button" value="{$APP.LBL_FULL_FORM_BUTTON_LABEL}"> ';
+                $output .= '<input type="hidden" name="full_form" value="full_form">';
+                $output .= '<input type="hidden" name="is_admin" value="">';
+            break;
 			case "POPUPSAVE":
-				$view = $view == 'QuickCreate' ? "form_QuickCreate_{$module}" : $view;
-				return '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" '
-					 . 'class="button primary" onclick="this.form.action.value=\'Popup\';' 
-					 . 'return check_form(\''.$view.'\')" type="submit" name="' . $params['module'] 
-					 . '_popupcreate_save_button" id="' . $params['module'] 
+				$view = ($view == 'QuickCreate') ? "form_QuickCreate_{$module}" : $view;
+				$output = '{if $bean->aclAccess("save")}<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" '
+					 . 'class="button primary" onclick="'.$js_form.' _form.action.value=\'Popup\';'
+					 . 'return check_form(\''.$view.'\')" type="submit" name="' . $params['module']
+					 . '_popupcreate_save_button" id="' . $params['module']
 					 . '_popupcreate_save_button" value="{$APP.LBL_SAVE_BUTTON_LABEL}">{/if} ';
+            break;
 			case "POPUPCANCEL":
-				return '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" ' 
-					 . 'class="button" onclick="toggleDisplay(\'addform\');return false;" ' 
-					 . 'name="' . $params['module'] . '_popup_cancel_button" type="submit"' 
+                $output = '<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" '
+					 . 'class="button" onclick="toggleDisplay(\'addform\');return false;" '
+					 . 'name="' . $params['module'] . '_popup_cancel_button" type="submit"'
 					 . 'id="' . $params['module'] . '_popup_cancel_button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}"> ';
-		    
+            break;
 			case "AUDIT":
 	            $popup_request_data = array(
 			        'call_back_function' => 'set_return',
@@ -378,16 +430,142 @@ function smarty_function_sugar_button($params, &$smarty)
 	            require_once('include/SugarFields/Parsers/MetaParser.php');
 	            $encoded_popup_request_data = MetaParser::parseDelimiters($json->encode($popup_request_data));
 	 			$audit_link = '<input id="btn_view_change_log" title="{$APP.LNK_VIEW_CHANGE_LOG}" class="button" onclick=\'open_popup("Audit", "600", "400", "&record={$fields.id.value}&module_name=' . $params['module'] . '", true, false, ' . $encoded_popup_request_data . '); return false;\' type="button" value="{$APP.LNK_VIEW_CHANGE_LOG}">';
-				$view = '{if $bean->aclAccess("detail")}{if !empty($fields.id.value) && $isAuditEnabled}'.$audit_link.'{/if}{/if}';
-				return $view;
+                $output = '{if $bean->aclAccess("detail")}{if !empty($fields.id.value) && $isAuditEnabled}'.$audit_link.'{/if}{/if}';
+            break;
 
 
    	  } //switch
+      if(isset($params['appendTo'])) {
+          $smarty->append($params['appendTo'], $output);
+          return;
+      }
+      return $output;
+   } else if(is_array($type) && isset($type['sugar_html'])) {
+       require_once('include/SugarHtml/SugarHtml.php');
 
+       $dom_tree = SugarHtml::parseSugarHtml($type['sugar_html']);
+       replaceFormClick($dom_tree, $js_form);
+       $output = SugarHtml::createHtml($dom_tree);
+
+       if(isset($params['appendTo'])) {
+           $smarty->append($params['appendTo'], $output);
+           return;
+       }
+       return $output;
    } else if(is_array($type) && isset($type['customCode'])) {
-   	  return $type['customCode'];
+       require_once('include/SugarHtml/SugarHtml.php');
+
+       $dom_tree = SugarHtml::parseHtmlTag($type['customCode']);
+       $hidden_exists = false;
+
+       replaceFormClick($dom_tree, $js_form, $hidden_exists);
+       if($hidden_exists) {
+           //If the customCode contains hidden fields, the extracted hidden fields need to append in the original form
+           $form = $smarty->get_template_vars('form');
+           $hidden_fields = $dom_tree;
+           extractHiddenInputs($hidden_fields);
+           if(!isset($form)) {
+               $form = array();
+           }
+           if(!isset($form['hidden'])) {
+               $form['hidden'] = array();
+           }
+           $form['hidden'][] = SugarHtml::createHtml($hidden_fields);
+           $smarty->assign('form', $form);
+       }
+       $output = SugarHtml::createHtml($dom_tree);
+
+       if(isset($params['appendTo'])) {
+           $smarty->append($params['appendTo'], $output);
+           return;
+       }
+       return $output;
    }
 
 }
+/**
+ * Bug#51862: Reproduce the JS onclick for upgraded instances
+ *
+ * @param array $dom_tree - Cascade array form generated by SugarHtml::parseHtmlTag
+ * @param string $js_form - JS getter to assign _form object by ID
+ * @param bool $hidden_field_exists - whether the selected element contains hidden fields or not
+ * @return array - two boolean variables.
+ *                 $set_submit - whether the replace operation is excuted or not
+ *                 $is_hidden_field - where current attributes contains the key "hidden" or not
+ */
+function replaceFormClick(&$dom_tree = array(), $js_form = '', &$hidden_field_exists = false) {
+    $set_submit = false;
+    $is_hidden_field = false;
+    //if the code is wrapped with the form element, it will escape the operation for JS replacement
+    if(isset($dom_tree['tag']) && $dom_tree['tag'] == 'form')
+        return false;
 
-?>
+    if(isset($dom_tree['type']) && $dom_tree['type'] == 'hidden') {
+        $is_hidden_field = true;
+    }
+
+    //Replace the JS syntax where the sugar_button contains the event handler for this.form
+    if(isset($dom_tree['onclick'])) {
+        if(strpos($dom_tree['onclick'], "this.form") !== false) {
+            $dom_tree['onclick'] = str_replace("this.form", "_form", $dom_tree['onclick']);
+            if(substr($dom_tree['onclick'], -1) != ';')
+                $dom_tree['onclick'] .= ";";
+            //Onclick handler contains returning a variable, for example it prompts a confirm message.
+            if(strpos($dom_tree['onclick'], "return ") !== false ) {
+                $dom_tree['onclick'] = $js_form.' var _onclick=(function(){ldelim}'.$dom_tree['onclick']."{rdelim}()); if(_onclick!==false) _form.submit();";
+            } else {
+                $dom_tree['onclick'] = $js_form.$dom_tree['onclick']."_form.submit();";
+            }
+
+            $set_submit = true;
+        }
+    }
+    foreach($dom_tree as $key => $sub_tree) {
+        if(is_array($sub_tree)) {
+            list($_submit, $_hidden) = replaceFormClick($dom_tree[$key], $js_form, $hidden_field_exists);
+            $set_submit = ($set_submit) ? $set_submit : $_submit;
+            $is_hidden_field = ($is_hidden_field) ? $is_hidden_field : $_hidden;
+        }
+    }
+
+    if($set_submit && isset($dom_tree['type'])) {
+        $dom_tree['type'] = "button";
+        $set_submit = false;
+    }
+    if($is_hidden_field && isset($dom_tree['tag']) && $dom_tree['tag'] == 'input' ) {
+        $hidden_field_exists = true;
+        $is_hidden_field = false;
+    }
+
+    return array($set_submit, $is_hidden_field);
+}
+
+/**
+ * Bug#51862: Extract hidden field form the original dom structure
+ * @param array $dom_tree - Cascade array form generated by SugarHtml::parseHtmlTag
+ */
+function extractHiddenInputs(&$dom_tree = array()) {
+    $allow_types = array(
+        'hidden'
+    );
+    //all hidden fields in the form elements must NOT attach in the original form
+    if(isset($dom_tree['tag']) && $dom_tree['tag'] == 'form') {
+        $dom_tree = array();
+    }
+    foreach($dom_tree as $key => $sub_tree) {
+        if(is_numeric($key) && isset($sub_tree['tag']) && $sub_tree['tag'] == 'input') {
+            if( !isset($sub_tree['type']) || in_array($sub_tree['type'], $allow_types) === false ) {
+                unset($dom_tree[$key]);
+            }
+        } else if(is_array($sub_tree)) {
+            extractHiddenInputs($dom_tree[$key]);
+        }
+    }
+    if(isset($dom_tree['tag']) && $dom_tree['tag'] == 'input') {
+        if( !isset($dom_tree['type']) || in_array($dom_tree['type'], $allow_types) === false ) {
+            $dom_tree = array();
+        }
+    }
+}
+
+

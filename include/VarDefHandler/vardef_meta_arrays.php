@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -50,7 +50,6 @@ $vardef_meta_array = array (
 		'exclusion' =>	array(
 			'type' => array('id'),
 			'name' => array('parent_type', 'deleted'),
-			'reportable' => array('false'),
 		//end exclusion
 		),
 		'inc_override' => array(
@@ -71,7 +70,6 @@ $vardef_meta_array = array (
 			'type' => array('id', 'link', 'datetime', 'date','datetimecombo'),
 			'custom_type' => array('id', 'link', 'datetime', 'date','datetimecombo'),
 			'name' => array('assigned_user_name', 'parent_type', 'deleted','filename', 'file_mime_type', 'file_url'),
-			'reportable' => array('false'),
 			'source' => array('non-db'),
 		//end exclusion
 		),
@@ -97,7 +95,6 @@ $vardef_meta_array = array (
 			'type' => array('id', 'link'),
 			'custom_type' => array('id', 'link'),
 			'name' => array('assigned_user_name', 'parent_type', 'deleted','filename', 'file_mime_type', 'file_url'),
-			'reportable' => array('false'),
 			'source' => array('non-db'),
 		//end exclusion
 		),
@@ -145,9 +142,9 @@ $vardef_meta_array = array (
 		'exclusion' =>	array(
 			'type' => array('id', 'link', 'datetime', 'time'),
 			'custom_type' => array('id', 'link', 'datetime', 'time'),
-			'reportable' => array('false'),
 			'source' => array('non-db'),
 			'name' => array('created_by', 'parent_type', 'deleted', 'assigned_user_name', 'deleted' ,'filename', 'file_mime_type', 'file_url', 'resource_id'),
+			'auto_increment' => array(true),
 		//end exclusion
 		),
 
@@ -245,7 +242,6 @@ $vardef_meta_array = array (
 		'exclusion' =>	array(
 			'type' => array('id', 'link'),
 			'custom_type' => array('id', 'link'),
-			'reportable' => array('false'),
 			'source' => array('non-db'),
 			'name' => array('created_by', 'parent_type', 'deleted', 'assigned_user_name', 'filename', 'file_mime_type', 'file_url'),
 		//end exclusion
@@ -253,6 +249,7 @@ $vardef_meta_array = array (
 
 		'inc_override' => array(
 			'name' => array('assigned_user_id', 'assigned_user_name', 'modified_user_id', 'modified_by_name', 'created_by', 'created_by_name', 'full_name', 'email1', 'email2', 'team_name', 'shipper_name'),
+            'type' => array('relate'),
 		//end inc_override
 		),
 		'ex_override' => array(
@@ -271,7 +268,6 @@ $vardef_meta_array = array (
 			'type' => array('id', 'link', 'datetime', 'date'),
 			'custom_type' => array('id', 'link', 'datetime', 'date'),
 			'name' => array('assigned_user_name', 'parent_type', 'deleted', 'filename', 'file_mime_type', 'file_url'),
-			'reportable' => array('false'),
 			'source' => array('non-db'),
 		//end exclusion
 		),

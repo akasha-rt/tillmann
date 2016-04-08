@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -246,8 +246,8 @@ function setMouseOverForField(field, on){
 
     if(on){
         field.onmouseover = function(){
-            return overlib(document.getElementById(this.id + 'b').innerHTML,  FGCLASS, 'olFgClass',
-            CGCLASS, 'olCgClass', BGCLASS, 'olBgClass', TEXTFONTCLASS, 'olFontClass', CAPTIONFONTCLASS, 'olCapFontClass');
+        	
+        	$(this).tipTip({maxWidth: "auto", edgeOffset: 10, content: document.getElementById(this.id + 'b').innerHTML});
 
         };
         field.onmouseout = function(){

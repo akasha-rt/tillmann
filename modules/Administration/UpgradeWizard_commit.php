@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -135,6 +135,18 @@ if(empty($_REQUEST['install_file'])){
 
 $install_file   = hashToFile($_REQUEST['install_file'] );
 $install_type   = getInstallType( $install_file );
+
+//from here on out, the install_file is used as the file path to copy or rename the physical file, so let's remove the stream wrapper if it's set
+//and replace it with the proper upload location
+if(strpos($install_file,'upload://') === 0){
+    //get the upload location if it's set, or default to 'upload'
+    $upload_dir = empty($GLOBALS['sugar_config']['upload_dir']) ? 'upload' : rtrim($GLOBALS['sugar_config']['upload_dir'], '/\\');
+
+    //replace the wrapper in the file name with the directory
+    $install_file = str_replace('upload:/',$upload_dir,$install_file);
+    $_REQUEST['install_file'] = $install_file;
+}
+
 $id_name = '';
 if(isset($_REQUEST['id_name'])){
  $id_name = $_REQUEST['id_name'];
@@ -193,8 +205,10 @@ $uh_status      = "";
 $rest_dir = remove_file_extension($install_file)."-restore";
 
 $files_to_handle  = array();
+register_shutdown_function("rmdir_recursive", $unzip_dir);
 
-if(!empty($GLOBALS['sugar_config']['moduleInstaller']['packageScan']) && $install_type != 'patch'){
+if (((defined('MODULE_INSTALLER_PACKAGE_SCAN') && MODULE_INSTALLER_PACKAGE_SCAN)
+    || !empty($GLOBALS['sugar_config']['moduleInstaller']['packageScan'])) && $install_type != 'patch') {
 	require_once('ModuleInstall/ModuleScanner.php');
 	$ms = new ModuleScanner();
 	$ms->scanPackage($unzip_dir);
@@ -372,6 +386,7 @@ switch( $install_type ){
             default:
                 break;
         }
+        $current_user->incrementETag("mainMenuETag");
         break;
     case "full":
         // purposely flow into "case: patch"

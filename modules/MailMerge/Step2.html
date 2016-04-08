@@ -1,7 +1,7 @@
 <!--
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -63,7 +63,7 @@
 	<tr><td><slot>&nbsp;</slot></td></tr>
 	<tr>
 	<td><input type='text' id="searchText" name="searchText" ONKEYDOWN="javascript:return displayKeyCode(event)"></td>
-	<td><input type="submit" id="searchSubmit" value="Search" accessKey="" onClick="search();" class='button'></td>
+	<td><input type="submit" id="searchSubmit" value="Search"  onClick="search();" class='button'></td>
 	</tr>
 	<tr><td>{MAIL_MERGE_CAMPAIGN_PROSPECT_SELECTOR}</td></tr>
 	</table>
@@ -80,7 +80,7 @@
 	
 		<table border="0" cellspacing="0" cellpadding="0">
 			<tr>
-				<td scope="row">Available
+				<td scope="row">{MOD.LBL_AVAILABLE}
 					<table>
 						<tr>
 							<td><slot><select id="display_objs" name="display_objs[]" size="10" multiple="multiple" ></select></slot></td>
@@ -99,7 +99,7 @@
 	
 		<table border="0" cellspacing="0" cellpadding="0">
 			<tr>
-				<td scope="row">Selected
+				<td scope="row">{MOD.LBL_SELECTED}
 					<table>
 						<tr>
 							<td><slot><select id="selected_objs" name="selected_objs[]" size="10" multiple="multiple" >{MAILMERGE_PRESELECTED_OBJECTS}</select></slot></td>
@@ -117,8 +117,8 @@
 </table>
 </p>
 <p><table width="100%" cellpadding="2" cellspacing="0" border="0"><tr> 
-	<td align="left"><input id="prevButton" title="{MOD.LBL_BACK}" accessKey="" class="button" type="submit" name="button" value="  {MOD.LBL_BACK}  "  onclick="this.form.step.value='1'; return submit_form();"></td>
-	<td align="right"><input id="nextButton" title="{MOD.LBL_NEXT}" accessKey="" class="button" type="submit" name="button" value="  {MOD.LBL_NEXT}  "  onclick="set_selected_items();return validateForm();"></td>
+	<td align="left"><input id="prevButton" title="{MOD.LBL_BACK}"  class="button" type="submit" name="button" value="  {MOD.LBL_BACK}  "  onclick="this.form.step.value='1'; return submit_form();"></td>
+	<td align="right"><input id="nextButton" title="{MOD.LBL_NEXT}"  class="button" type="submit" name="button" value="  {MOD.LBL_NEXT}  "  onclick="set_selected_items();return validateForm();"></td>
 </tr>
 </table>  </p>
 	</form>
@@ -396,7 +396,7 @@ function validateForm()
 	}
 	else
 	{
-		alert("Please select at least one item.");
+        alert(SUGAR.language.get('MailMerge', 'LBL_SELECT_ONE'));
 		return false;
 	}	
 }

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -70,7 +70,8 @@ class TopCampaignsDashlet extends Dashlet
        	$qry = "SELECT C.name AS campaign_name, SUM(O.amount) AS revenue, C.id as campaign_id " .
 			   "FROM campaigns C, opportunities O " .
 			   "WHERE C.id = O.campaign_id " . 
-			   "AND O.sales_stage = 'Closed Won' " . 
+			   "AND O.sales_stage = 'Closed Won' " .
+               "AND O.deleted = 0 " .
 			   "GROUP BY C.name,C.id ORDER BY revenue desc";
 
 		$result = $this->seedBean->db->limitQuery($qry, 0, 10);

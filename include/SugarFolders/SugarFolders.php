@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -83,8 +83,7 @@ class SugarFolder {
             'subject' => 'name',
             'date'    => 'date_sent',
             'AssignedTo' => 'assigned_user_id',
-            'flagged' => 'flagged',
-            'emailstatus' => 'status'
+            'flagged' => 'flagged'
         );
     var $defaultSort = 'date';
     var $defaultDirection = "DESC";
@@ -281,21 +280,40 @@ class SugarFolder {
 	    $r = $this->db->query($query);
 	}
 
-	function generateSugarsDynamicFolderQuery() {
+	protected function generateArchiveFolderQuery()
+	{
+		global $current_user;
+	    $q = <<<ENDQ
+SELECT emails.id , emails.name, emails.date_sent, emails.status, emails.type, emails.flagged, emails.reply_to_status, emails_text.from_addr, emails_text.to_addrs, 'Emails' polymorphic_module FROM emails
+JOIN emails_text on emails.id = emails_text.email_id
+WHERE emails.deleted=0 AND emails.type NOT IN ('out', 'draft') AND emails.status NOT IN ('sent', 'draft') AND emails.id IN (
+SELECT eear.email_id FROM emails_email_addr_rel eear
+JOIN email_addr_bean_rel eabr ON eabr.email_address_id=eear.email_address_id AND eabr.bean_id = '{$current_user->id}' AND eabr.bean_module = 'Users'
+WHERE eear.deleted=0
+)
+ENDQ;
+        return $q;
+	}
+
+	function generateSugarsDynamicFolderQuery()
+	{
 		global $current_user;
 		$type = $this->folder_type;
+		if($type == 'archived') {
+		    return $this->generateArchiveFolderQuery();
+		}
 		$status = $type;
 		if($type == "sent") {
 			$type = "out";
 		}
 		if($type == 'inbound') {
-			$ret = " AND status NOT IN ('sent', 'archived', 'draft') AND type NOT IN ('out', 'archived', 'draft')";
+			$ret = " AND emails.status NOT IN ('sent', 'archived', 'draft') AND emails.type NOT IN ('out', 'archived', 'draft')";
 		} else {
-			$ret = " AND status NOT IN ('archived') AND type NOT IN ('archived')";
+			$ret = " AND emails.status NOT IN ('archived') AND emails.type NOT IN ('archived')";
 		}
 		$q = "SELECT emails.id , emails.name, emails.date_sent, emails.status, emails.type, emails.flagged, emails.reply_to_status, emails_text.from_addr, emails_text.to_addrs, 'Emails' polymorphic_module FROM emails" .
 								   " JOIN emails_text on emails.id = emails_text.email_id
-                                   WHERE (type = '{$type}' OR status = '{$status}') AND assigned_user_id = '{$current_user->id}' AND emails.deleted = '0'";
+                                   WHERE (type = '{$type}' OR status = '{$status}') AND assigned_user_id = '{$current_user->id}' AND emails.deleted=0";
 		return $q . $ret;
 	} // fn
 
@@ -310,78 +328,43 @@ class SugarFolder {
 		global $beanList;
 		global $sugar_config;
 		global $app_strings;
-                global $app_list_strings;
 
 		$this->retrieve($folderId);
 		$start = ($page - 1) * $pageSize;
 
 		$sort = (empty($sort)) ? $this->defaultSort : $sort;
-        $direction = (empty($direction)) ? $this->defaultDirection : $direction;
-        //Dhaval - query was failing due to no order by col set
-        if(!isset($this->hrSortLocal[$sort]) || $this->hrSortLocal[$sort] == ''){
-            $orderBy = 'date_sent';
-        }  else {
-            $orderBy = $this->hrSortLocal[$sort] ;
+        if (!in_array(strtolower($direction), array('asc', 'desc'))) {
+            $direction = $this->defaultDirection;
         }
-        
-        //$order = " ORDER BY {$this->hrSortLocal[$sort]} {$direction}";
-        $order = " ORDER BY {$orderBy} {$direction}";
-        //End - Dhaval
+
+        if (!empty($this->hrSortLocal[$sort])) {
+            $order = " ORDER BY {$this->hrSortLocal[$sort]} {$direction}";
+        } else {
+            $order = "";
+        }
 
 		if($this->is_dynamic) {
 			$r = $this->db->limitQuery(from_html($this->generateSugarsDynamicFolderQuery() . $order), $start, $pageSize);
 		} else {
 			// get items and iterate through them
-			/**
-                         * To hide closed emails
-                         * @author Dhaval darji 
-                         */
-                        $q = "SELECT emails.id , emails.name, emails.date_sent, emails.status, emails.type, emails.flagged, emails.reply_to_status, emails_text.from_addr, emails_text.to_addrs, 'Emails' polymorphic_module FROM emails JOIN folders_rel ON emails.id = folders_rel.polymorphic_id" .
+			$q = "SELECT emails.id , emails.name, emails.date_sent, emails.status, emails.type, emails.flagged, emails.reply_to_status, emails_text.from_addr, emails_text.to_addrs, 'Emails' polymorphic_module FROM emails JOIN folders_rel ON emails.id = folders_rel.polymorphic_id" .
 				  " JOIN emails_text on emails.id = emails_text.email_id
-                  WHERE folders_rel.folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0
-                  AND emails.status <> 'closed'";
-		  if ($this->is_group) {
-				$q = $q . " AND emails.assigned_user_id is null";
+                  WHERE folders_rel.folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0";
+			if ($this->is_group) {
+				$q = $q . " AND (emails.assigned_user_id is null or emails.assigned_user_id = '')";
 			}
-                  //End - Dhaval
 			$r = $this->db->limitQuery($q . $order, $start, $pageSize);
 		}
 
 		$return = array();
 
 		$email = new Email(); //Needed for email specific functions.
-                require_once 'modules/Contacts/ContactFormBase.php';                
-                $contactFormBase = new ContactFormBase();
 
 		while($a = $this->db->fetchByAssoc($r)) {
-                    $fromname = explode("<", html_entity_decode($a['from_addr']));
-                    $ltPos = strpos(html_entity_decode($a['from_addr']), '<', 1);
-                    $gtPos = strpos(html_entity_decode($a['from_addr']), '>', 1);
-                    $emailid = (($ltPos == true) && ($gtPos == true)) ? substr(html_entity_decode($a['from_addr']) , $ltPos + 1, $gtPos - $ltPos - 1) : html_entity_decode($a['from_addr']);
-                    $name = explode(" ",$fromname[0]);
-                    $fname = $name[0];
-                    $lname = $name[1];
-                    $contactFormBase->moduleName = 'Contacts';
-                    $_POST['first_name'] = $fname;
-                    $_POST['last_name'] = $lname;
-                    $_POST["Contacts0emailAddress0"] = $emailid;
-                    $dup = $contactFormBase->checkForDuplicates();
-                    $con_img = (isset($dup))?'<img src="custom/include/images/green.png" />':'';
 
-                    $email->retrieve($a['id']);
-                    $email->load_relationship('cases');
-                    $emailCase = $email->cases->getBeans();
-                    foreach ($emailCase as $emailcasenumber) {
-                        $case_number = $emailcasenumber->case_number;
-                    }
-
-                        $case_img = (count($emailCase) > 0) ? $case_number : '';
 			$temp = array();
 			$temp['flagged'] = (is_null($a['flagged']) || $a['flagged'] == '0') ? '' : 1;
 			$temp['status'] = (is_null($a['reply_to_status']) || $a['reply_to_status'] == '0') ? '' : 1;
-                        $temp['caseflag'] = $case_img;                                                
-                        $temp['contactflag'] = $con_img;
-                        $temp['emailstatus'] = $app_list_strings['dom_email_status'][$a['status']];
 			$temp['from']	= preg_replace('/[\x00-\x08\x0B-\x1F]/', '', $a['from_addr']);
 			$temp['subject'] = $a['name'];
 			$temp['date']	= $timedate->to_display_date_time($this->db->fromConvert($a['date_sent'], 'datetime'));
@@ -421,15 +404,10 @@ class SugarFolder {
 	    	$r = $this->db->query ( from_html ( $modified_select_query )) ;
 		} else {
 			// get items and iterate through them
-			/**
-                         * To hide closed emails
-                         * @author Dhaval darji 
-                         */
-                        $q = "SELECT count(*) c FROM folders_rel JOIN emails ON emails.id = folders_rel.polymorphic_id" .
-			" WHERE folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0
-                        AND emails.status <> 'closed'" ;
+			$q = "SELECT count(*) c FROM folders_rel JOIN emails ON emails.id = folders_rel.polymorphic_id" .
+			" WHERE folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0" ;
 			if ($this->is_group) {
-				$q .= " AND emails.assigned_user_id IS null";
+				$q .= " AND (emails.assigned_user_id is null or emails.assigned_user_id = '')";
 			}
 			$r = $this->db->query ( $q ) ;
 		}
@@ -452,14 +430,10 @@ class SugarFolder {
 	    	$r = $this->db->query (from_html($modified_select_query) . " AND emails.status = 'unread'") ;
         } else {
             // get items and iterate through them
-           /**
-            * To hide closed emails
-            * @author Dhaval darji 
-            */
             $q = "SELECT count(*) c FROM folders_rel fr JOIN emails on fr.folder_id = '{$folderId}' AND fr.deleted = 0 " .
                "AND fr.polymorphic_id = emails.id AND emails.status = 'unread' AND emails.deleted = 0" ;
             if ($this->is_group) {
-                $q .= " AND emails.assigned_user_id IS null";
+                $q .= " AND (emails.assigned_user_id is null or emails.assigned_user_id = '')";
             }
             $r = $this->db->query ( $q ) ;
         }
@@ -621,12 +595,12 @@ class SugarFolder {
 		{
 		   unset($a['dynamic_query']);
 		}
-		
-		for($i=0; $i<$this->_depth; $i++) 
+
+		for($i=0; $i<$this->_depth; $i++)
 		{
 			$a['name'] = ".".$a['name'];
 		}
-		
+
 		$collection[] = $a;
 
 		if($a['has_child'] == 1) {

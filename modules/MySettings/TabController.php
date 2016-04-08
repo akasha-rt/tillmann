@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -40,6 +40,11 @@ class TabController{
 
 var $required_modules = array('Home');
 
+    /**
+     * @var bool flag of validation of the cache
+     */
+    static protected $isCacheValid = false;
+
 function is_system_tabs_in_db(){
         
         $administration = new Administration();
@@ -60,7 +65,7 @@ function get_system_tabs(){
 	static $system_tabs_result = null;
 	
 	// if the value is not already cached, then retrieve it.
-	if(empty($system_tabs_result))
+    if (empty($system_tabs_result) || !self::$isCacheValid)
 	{
 		
 		$administration = new Administration();
@@ -88,6 +93,7 @@ function get_system_tabs(){
 		{
 			$system_tabs_result = $this->get_key_array($moduleList);
 		}
+        self::$isCacheValid = true;
 	}
 		
 	return $system_tabs_result;
@@ -121,6 +127,7 @@ function set_system_tabs($tabs){
 	$administration = new Administration();
 	$serialized = base64_encode(serialize($tabs));
 	$administration->saveSetting('MySettings', 'tab', $serialized);
+    self::$isCacheValid = false;
 }
 
 function get_users_can_edit(){
@@ -332,6 +339,3 @@ function restore_system_tabs(){
 
 
 }
-
-
-?>

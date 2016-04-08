@@ -2,7 +2,7 @@
 if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -232,6 +232,10 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
             if($module_name == 'Users' && !empty($seed->id) && ($seed->id != $current_user->id) && $name == 'user_hash'){
                 continue;
             }
+            if(!empty($seed->field_name_map[$name]['sensitive'])) {
+                    continue;
+            }
+
             if(!is_array($value)){
                 $seed->$name = $value;
                 $return_fields[] = $name;
@@ -285,7 +289,7 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
         //rrs
         $system_config = new Administration();
         $system_config->retrieveSettings('system');
-        $authController = new AuthenticationController((!empty($sugar_config['authenticationClass'])? $sugar_config['authenticationClass'] : 'SugarAuthenticate'));
+        $authController = new AuthenticationController();
         //rrs
         if(!empty($user_auth['encryption']) && $user_auth['encryption'] === 'PLAIN' && $authController->authController->userAuthenticateClass != "LDAPAuthenticateUser")
         {
@@ -375,18 +379,6 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
             $nameValueArray['mobile_max_list_entries'] = self::$helperObject->get_name_value('mobile_max_list_entries', $sugar_config['wl_list_max_entries_per_page'] );
             $nameValueArray['mobile_max_subpanel_entries'] = self::$helperObject->get_name_value('mobile_max_subpanel_entries', $sugar_config['wl_list_max_entries_per_subpanel'] );
 
-            if($application == 'mobile')
-            {
-                $modules = $availModuleNames = array();
-                $availModules = array_keys($_SESSION['avail_modules']); //ACL check already performed.
-                $modules = self::$helperObject->get_visible_mobile_modules($availModules);
-                $nameValueArray['available_modules'] = $modules;
-                //Get the vardefs md5
-                foreach($modules as $mod_def)
-                    $availModuleNames[] = $mod_def['module_key'];
-
-                $nameValueArray['vardefs_md5'] = self::get_module_fields_md5(session_id(), $availModuleNames);
-            }
 
             $currencyObject = new Currency();
             $currencyObject->retrieve($cur_id);
@@ -427,9 +419,6 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
     	    case 'default':
     	        $modules = self::$helperObject->get_visible_modules($availModules);
     	       break;
-    	    case 'mobile':
-    	        $modules = self::$helperObject->get_visible_mobile_modules($availModules);
-    	        break;
     	    case 'all':
     	    default:
     	        $modules = self::$helperObject->getModulesFromList(array_flip($availModules), $availModules);
@@ -658,7 +647,7 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
 
     /**
      * Given a list of modules to search and a search string, return the id, module_name, along with the fields
-     * We will support Accounts, Bug Tracker, Cases, Contacts, Leads, Opportunities, Project, ProjectTask, Quotes
+     * We will support Accounts, Bugs, Cases, Contacts, Leads, Opportunities, Project, ProjectTask, Quotes
      *
      * @param string $session			- Session ID returned by a previous call to login.
      * @param string $search_string 	- string to search
@@ -748,6 +737,7 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
     				} // if
     			}
 
+    			$selectOnlyQueryFields = array();
     			if ($beanName != "User"
     			    && $beanName != "ProjectTask"
     			    ) {
@@ -787,7 +777,6 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
     				}
 
     				//Pull in any db fields used for the unified search query so the correct joins will be added
-    				$selectOnlyQueryFields = array();
     				foreach ($unifiedSearchFields[$name] as $field => $def){
     				    if( isset($def['db_field']) && !in_array($field,$filterFields) ){
     				        $filterFields[] = $field;
@@ -817,7 +806,7 @@ class SugarWebServiceImplv3_1 extends SugarWebServiceImplv3 {
     				if ($beanName == "User") {
     					$filterFields = array('id', 'user_name', 'first_name', 'last_name', 'email_address');
     					$main_query = "select users.id, ea.email_address, users.user_name, first_name, last_name from users ";
-    					$main_query = $main_query . " LEFT JOIN email_addr_bean_rel eabl ON eabl.bean_module = '{$seed->module_dir}'
+    					$main_query = $main_query . " LEFT JOIN email_addr_bean_rel eabl ON (users.id = eabl.bean_id and eabl.bean_module = '{$seed->module_dir}')
     LEFT JOIN email_addresses ea ON (ea.id = eabl.email_address_id) ";
     					$main_query = $main_query . "where ((users.first_name like '{$search_string}') or (users.last_name like '{$search_string}') or (users.user_name like '{$search_string}') or (ea.email_address like '{$search_string}')) and users.deleted = 0 and users.is_group = 0 and users.employee_status = 'Active'";
     				} // if

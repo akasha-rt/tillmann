@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -56,17 +56,47 @@ Calendar.getHighestZIndex = function (containerEl)
    return (highestIndex == Number.MAX_VALUE) ? Number.MAX_VALUE : highestIndex+1;
 };
 
+/**
+ * Returns a HTML Element reference by looking for the id in the given form
+ *
+ * @param id - id of the input element
+ * @param form - form (id) in which to look for the element
+ * @return HTMLInputElement
+ */
+Calendar.getDateField = function (id, form)
+{
+    var input;
+
+    // If we have a form, try to pull the element from it
+    if (form) {
+        var formElement = document.getElementById(form);
+        if (formElement) {
+            for (var i = 0; i < formElement.elements.length; i++) {
+                if (formElement.elements[i].id == id) {
+                    input = formElement.elements[i];
+                    break;
+                }
+            }
+        }
+    } else {
+        input = document.getElementById(id);
+    }
+
+    return input;
+};
+
 Calendar.setup = function (params) {
 
     YAHOO.util.Event.onDOMReady(function(){
-    	
+
         var Event = YAHOO.util.Event;
         var Dom = YAHOO.util.Dom;
         var dialog;
         var calendar;
         var showButton = params.button ? params.button : params.buttonObj;
         var userDateFormat = params.ifFormat ? params.ifFormat : (params.daFormat ? params.daFormat : "m/d/Y");
-        var inputField = params.inputField ? params.inputField : params.inputFieldObj;
+        var inputField = params.inputField ? params.inputField : params.inputFieldObj.id;
+        var form = params.form ? params.form : '';
         var startWeekday = params.startWeekday ? params.startWeekday : 0;
         var dateFormat = userDateFormat.substr(0,10);
         var date_field_delimiter = /([-.\\/])/.exec(dateFormat)[0];
@@ -93,7 +123,8 @@ Calendar.setup = function (params) {
                     buttons:[],
                     draggable:false,
                     close:true,
-                    zIndex: Calendar.getHighestZIndex(document.body)
+                    zIndex: Calendar.getHighestZIndex(document.body),
+                    constraintoviewport:true
                 });
                 
                 dialog.setHeader(SUGAR.language.get('app_strings', 'LBL_MASSUPDATE_DATE'));
@@ -108,8 +139,10 @@ Calendar.setup = function (params) {
                 Event.addListener("callnav_today", "click", function(){ 
                     calendar.clear();
                     var now = new Date();
-                    //Reset the input field value
-                    Dom.get(inputField).value = formatSelectedDate(now);
+                    // Reset the input field value
+                    var input = Calendar.getDateField(inputField, form);
+
+                    input.value = formatSelectedDate(now);
                     //Highlight the cell
                     var cellIndex = calendar.getCellIndex(now);
                     if(cellIndex > -1 )
@@ -117,6 +150,14 @@ Calendar.setup = function (params) {
                         var cell = calendar.cells[cellIndex];
                         Dom.addClass(cell, calendar.Style.CSS_CELL_SELECTED);
                     }
+
+                    //bug 50740 - explicitly fire onchange event for this input
+                    if(input.onchange)
+                        input.onchange();
+
+                    //Fire any on-change events for this input field
+                    SUGAR.util.callOnChangeListers(input);
+
                     //Must return false to prevent onbeforeunload from firing in IE8
                     return false;
                 });
@@ -253,7 +294,7 @@ Calendar.setup = function (params) {
 
                 calendar.selectEvent.subscribe(function(type, args, obj) {
 
-                    var input = Dom.get(inputField);
+                    var input = Calendar.getDateField(inputField, form);
 					if (calendar.getSelectedDates().length > 0) {
 
                         input.value = formatSelectedDate(calendar.getSelectedDates()[0]);
@@ -358,8 +399,8 @@ Calendar.setup = function (params) {
             	}
             	return returnArray.join(dateParams.delim);
             };
-            
-            var sanitizedDate = sanitizeDate(Dom.get(inputField).value, dateParams);
+
+            var sanitizedDate = sanitizeDate(Calendar.getDateField(inputField, form).value, dateParams);
             var sanitizedDateArray = sanitizedDate.split(dateParams.delim);
             calendar.cfg.setProperty("selected", sanitizedDate);
             calendar.cfg.setProperty("pageDate", sanitizedDateArray[monthPos] + dateParams.delim + sanitizedDateArray[yearPos]);

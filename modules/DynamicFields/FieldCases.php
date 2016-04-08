@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -62,6 +62,7 @@ require_once('modules/DynamicFields/templates/Fields/TemplateEncrypt.php');
 require_once('modules/DynamicFields/templates/Fields/TemplateId.php');
 require_once('modules/DynamicFields/templates/Fields/TemplateImage.php');
 require_once('modules/DynamicFields/templates/Fields/TemplateDecimal.php');
+require_once('modules/DynamicFields/templates/Fields/TemplateLink.php');
 function get_widget($type)
 {
 
@@ -123,6 +124,8 @@ function get_widget($type)
 						$local_temp = new TemplateDatetimecombo(); break;
             case 'image':
                         $local_temp = new TemplateImage(); break;
+            case 'link':
+                        $local_temp = new TemplateLink(); break;
 			default:
 						$file = false;
 						if(file_exists('custom/modules/DynamicFields/templates/Fields/Template'. ucfirst($type) . '.php')){

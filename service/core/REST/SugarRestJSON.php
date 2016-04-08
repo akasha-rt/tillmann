@@ -2,7 +2,7 @@
 if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -53,10 +53,18 @@ class SugarRestJSON extends SugarRestSerialize{
 	function generateResponse($input){
 		$json = getJSONObj();
 		ob_clean();
+		header('Content-Type: application/json; charset=UTF-8');
 		if (isset($this->faultObject)) {
 			$this->generateFaultResponse($this->faultObject);
 		} else {
+			// JSONP support
+			if ( isset($_GET["jsoncallback"]) ) {
+				echo $_GET["jsoncallback"] . "(";
+			}
 			echo $json->encode($input);
+			if ( isset($_GET["jsoncallback"]) ) {
+				echo ")";
+			}
 		}
 	} // fn
 
@@ -98,7 +106,14 @@ class SugarRestJSON extends SugarRestSerialize{
 		$GLOBALS['log']->error($error);
 		$json = getJSONObj();
 		ob_clean();
+		// JSONP support
+		if ( isset($_GET["jsoncallback"]) ) {
+			echo $_GET["jsoncallback"] . "(";
+		}
 		echo $json->encode($errorObject);
+		if ( isset($_GET["jsoncallback"]) ) {
+			echo ")";
+		}
 	} // fn
 
 

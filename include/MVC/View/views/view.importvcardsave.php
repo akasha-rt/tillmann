@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -46,25 +46,43 @@ require_once('include/vCard.php');
 
 class ViewImportvcardsave extends SugarView
 {
-	var $type = 'detail';
-    
+    var $type = 'save';
+
     public function __construct()
     {
- 		parent::SugarView();
- 	}
- 	
+        parent::SugarView();
+    }
+
     /**
      * @see SugarView::display()
      */
-	public function display()
+    public function display()
     {
-        if ( isset($_FILES['vcard']['tmp_name']) && isset($_FILES['vcard']['size']) > 0 ) {
+        $redirect = "index.php?action=Importvcard&module={$_REQUEST['module']}";
+
+        if (!empty($_FILES['vcard']) && $_FILES['vcard']['error'] == 0) {
             $vcard = new vCard();
-            $record = $vcard->importVCard($_FILES['vcard']['tmp_name'],$_REQUEST['module']);
+            $record = $vcard->importVCard($_FILES['vcard']['tmp_name'], $_REQUEST['module']);
+
+            if (empty($record)) {
+                SugarApplication::redirect($redirect . '&error=vcardErrorRequired');
+            }
+
             SugarApplication::redirect("index.php?action=DetailView&module={$_REQUEST['module']}&record=$record");
+        } else {
+            switch ($_FILES['vcard']['error'])
+            {
+                case UPLOAD_ERR_FORM_SIZE:
+                    $redirect .= "&error=vcardErrorFilesize";
+                break;
+                default:
+                    $redirect .= "&error=vcardErrorDefault";
+                    $GLOBALS['log']->error('Upload error code: ' . $_FILES['vcard']['error'] . '. Please refer to the error codes http://php.net/manual/en/features.file-upload.errors.php');
+                break;
+            }
+
+            SugarApplication::redirect($redirect);
         }
-        else
-            SugarApplication::redirect("index.php?action=Importvcard&module={$_REQUEST['module']}");
- 	}
+    }
 }
 ?>

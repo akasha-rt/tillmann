@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -174,9 +174,8 @@ function getFormFooter($prefic, $mod=''){
 global $app_strings;
 global $app_list_strings;
 $lbl_save_button_title = $app_strings['LBL_SAVE_BUTTON_TITLE'];
-$lbl_save_button_key = $app_strings['LBL_SAVE_BUTTON_KEY'];
 $lbl_save_button_label = $app_strings['LBL_SAVE_BUTTON_LABEL'];
-$the_form = "	<p><input title='$lbl_save_button_title' accessKey='$lbl_save_button_key' class='button' type='submit' name='button' value=' $lbl_save_button_label ' ></p></form>";
+$the_form = "	<p><input title='$lbl_save_button_title' class='button' type='submit' name='button' value=' $lbl_save_button_label ' ></p></form>";
 $the_form .= get_left_form_footer();
 $the_form .= get_validate_record_js();
 return $the_form;
@@ -222,6 +221,17 @@ function handleSave($prefix,$redirect=true,$useRequired=false) {
 		$_POST[$prefix.'reminder_time'] = $current_user->getPreference('reminder_time');
 	}
 
+	if(!isset($_POST['email_reminder_checked']) || (isset($_POST['email_reminder_checked']) && $_POST['email_reminder_checked'] == '0')) {
+		$_POST['email_reminder_time'] = -1;
+	}
+	if(!isset($_POST['email_reminder_time'])){
+		$_POST['email_reminder_time'] = $current_user->getPreference('email_reminder_time');
+		$_POST['email_reminder_checked'] = 1;
+	}
+
+	// don't allow to set recurring_source from a form
+	unset($_POST['recurring_source']);
+
 	$time_format = $timedate->get_user_time_format();
     $time_separator = ":";
     if(preg_match('/\d+([^\d])\d+([^\d]*)/s', $time_format, $match)) {
@@ -247,6 +257,11 @@ function handleSave($prefix,$redirect=true,$useRequired=false) {
 	   sugar_cleanup(true);
 	}
 
+        $newBean = true;
+        if (!empty($focus->id)) {
+            $newBean = false;
+        }
+
 	//add assigned user and current user if this is the first time bean is saved
   	if(empty($focus->id) && !empty($_REQUEST['return_module']) && $_REQUEST['return_module'] =='Calls' && !empty($_REQUEST['return_action']) && $_REQUEST['return_action'] =='DetailView'){
 		//if return action is set to detail view and return module to call, then this is from the long form, do not add the assigned user (only the current user)
@@ -255,22 +270,23 @@ function handleSave($prefix,$redirect=true,$useRequired=false) {
   			$_POST['user_invitees'] .= ','.$_POST['assigned_user_id'].', ';
   			$_POST['user_invitees'] = str_replace(',,', ',', $_POST['user_invitees']);
   		}
-  	}elseif (empty($focus->id) ){
+  	}else {
 	  	//this is not from long form so add assigned and current user automatically as there is no invitee list UI.
 	  	//This call could be through an ajax call from subpanels or shortcut bar
 	  	$_POST['user_invitees'] .= ','.$_POST['assigned_user_id'].', ';
 
 	  	//add current user if the assigned to user is different than current user.
-	  	if($current_user->id != $_POST['assigned_user_id']){
+	  	if($current_user->id != $_POST['assigned_user_id'] && $_REQUEST['module'] != "Calendar"){
 	  		$_POST['user_invitees'] .= ','.$current_user->id.', ';
 	  	}
 
-	  	//remove any double comma's introduced during appending
+	  	//remove any double commas introduced during appending
 	    $_POST['user_invitees'] = str_replace(',,', ',', $_POST['user_invitees']);
   	}
 
     if( (isset($_POST['isSaveFromDetailView']) && $_POST['isSaveFromDetailView'] == 'true') ||
-        (isset($_POST['is_ajax_call']) && !empty($_POST['is_ajax_call']) && !empty($focus->id))
+        (isset($_POST['is_ajax_call']) && !empty($_POST['is_ajax_call']) && !empty($focus->id) ||
+        (isset($_POST['return_action']) && $_POST['return_action'] == 'SubPanelViewer') && !empty($focus->id))
     ){
         $focus->save(true);
         $return_id = $focus->id;
@@ -400,6 +416,7 @@ function handleSave($prefix,$redirect=true,$useRequired=false) {
 	    	}
 	    	// Call the Call module's save function to handle saving other fields besides
 	    	// the users and contacts relationships
+            $focus->update_vcal = false;    // Bug #49195 : don't update vcal b/s related users aren't saved yet, create vcal cache below
 	    	$focus->save(true);
 	    	$return_id = $focus->id;
 
@@ -471,14 +488,27 @@ function handleSave($prefix,$redirect=true,$useRequired=false) {
 	    		}
 	    	}
 
+            // Bug #49195 : update vcal
+            vCal::cache_sugar_vcal($current_user);
+            
 	    	// CCL - Comment out call to set $current_user as invitee
 	    	//set organizer to auto-accept
-	    	//$focus->set_accept_status($current_user, 'accept');
+            if ($focus->assigned_user_id == $current_user->id && $newBean) {
+	    	$focus->set_accept_status($current_user, 'accept');
+            }
 
 	    	////	END REBUILD INVITEE RELATIONSHIPS
 	    	///////////////////////////////////////////////////////////////////////////
 	    }
     }
+
+	if(!empty($_POST['is_ajax_call']))
+	{
+		$json = getJSONobj();
+		echo $json->encode(array('status' => 'success', 'get' => ''));
+		exit;
+	}
+
 	if (isset($_REQUEST['return_module']) && $_REQUEST['return_module'] == 'Home'){
 		$_REQUEST['return_action'] = 'index';
         handleRedirect('', 'Home');

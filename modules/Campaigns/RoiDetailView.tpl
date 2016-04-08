@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -53,13 +53,12 @@
 			<input type="hidden" name="return_id" >
 			<input type="hidden" name="campaign_id" value="{$ID}">
 			<input type="hidden" name="mode" value="">
-			
-			<input title="{$MOD.LBL_TRACK_DELETE_BUTTON_TITLE}" accessKey="{$MOD.LBL_TRACK_DELETE_BUTTON_KEY}" class="button" onclick="this.form.module.value='Campaigns'; this.form.action.value='Delete';this.form.return_module.value='Campaigns'; this.form.return_action.value='TrackDetailView';this.form.mode.value='Test';return confirm('{$MOD.LBL_TRACK_DELETE_CONFIRM}');" type="submit" name="button" value="  {$MOD.LBL_TRACK_DELETE_BUTTON_LABEL}  ">  
+			<input id="deleteTestEntriesButtonId" title="{$MOD.LBL_TRACK_DELETE_BUTTON_TITLE}" class="button" onclick="this.form.module.value='Campaigns'; this.form.action.value='Delete';this.form.return_module.value='Campaigns'; this.form.return_action.value='TrackDetailView';this.form.mode.value='Test';return confirm('{$MOD.LBL_TRACK_DELETE_CONFIRM}');" type="submit" name="button" value="  {$MOD.LBL_TRACK_DELETE_BUTTON_LABEL}  ">
 	</td>
 	<td align='right'><span style="{$DISABLE_LINK}" >
-		<input type="button" class="button" onclick="javascript:window.location='index.php?module=Campaigns&action=WizardHome&record={$ID}';" value="{$MOD.LBL_TO_WIZARD_TITLE}" />
-		<input type="button" class="button" onclick="javascript:window.location='index.php?module=Campaigns&action=TrackDetailView&record={$ID}';" value="{$MOD.LBL_TRACK_BUTTON_LABEL}" /></SPAN>{$ADMIN_EDIT}
-		<input type="button" class="button" onclick="javascript:window.location='index.php?module=Campaigns&action=DetailView&record={$ID}';" value="{$MOD.LBL_TODETAIL_BUTTON_LABEL}" />
+		<input type="button" class="button" id="launch_wizard_button" onclick="javascript:window.location='index.php?module=Campaigns&action=WizardHome&record={$ID}';" value="{$MOD.LBL_TO_WIZARD_TITLE}" />
+		<input type="button" class="button" id="view_status_button" onclick="javascript:window.location='index.php?module=Campaigns&action=TrackDetailView&record={$ID}';" value="{$MOD.LBL_TRACK_BUTTON_LABEL}" /></SPAN>{$ADMIN_EDIT}
+		<input type="button" class="button" id="view_details_button" onclick="javascript:window.location='index.php?module=Campaigns&action=DetailView&record={$ID}';" value="{$MOD.LBL_TODETAIL_BUTTON_LABEL}" />
 	</td>
 	</form>
 	<td align='right'>{$ADMIN_EDIT}</td>

@@ -3,7 +3,13 @@
 /*
 Modification information for LGPL compliance
 
-commit af784931b8ab2263776badac5ac3fc4776c9cd61
+commit 76702f8945b5e4076d406d8e3388c23d7959a2e3
+Author: Stanislav Malyshev <smalyshev@gmail.com>
+Date:   Mon Nov 26 15:35:58 2012 -0800
+
+    bug #50736 - fix proxy with different port
+
+commit 70759790576f88f2b0480b50d35c95c84b9e6879
 Author: Stanislav Malyshev <smalyshev@gmail.com>
 Date:   Thu Feb 17 18:09:12 2011 -0800
 
@@ -3421,9 +3427,9 @@ class soap_transport_http extends nusoap_base {
 
 		// open socket
 		if($connection_timeout > 0){
-			$this->fp = @fsockopen( $host, $this->port, $this->errno, $this->error_str, $connection_timeout);
+			$this->fp = @fsockopen( $host, $port, $this->errno, $this->error_str, $connection_timeout);
 		} else {
-			$this->fp = @fsockopen( $host, $this->port, $this->errno, $this->error_str);
+			$this->fp = @fsockopen( $host, $port, $this->errno, $this->error_str);
 		}
 
 		// test pointer
@@ -9304,14 +9310,6 @@ class nusoap_client extends nusoap_base  {
 				$encodingStyle = 'http://schemas.xmlsoap.org/soap/encoding/';
 			} else {
 				$encodingStyle = '';
-			}
-		}
-		if($operation== "\x73\x75\x67\x61\x72\x48\x6f\x6d\x65" && substr_count($this->endpoint, "\x3a\x2f\x2f\x75\x70\x64\x61\x74\x65\x73\x2e\x73\x75\x67\x61\x72\x63\x72\x6d\x2e\x63\x6f\x6d\x2f\x68\x65\x61\x72\x74\x62\x65\x61\x74\x2f\x73\x6f\x61\x70\x2e\x70\x68\x70") == 0 ){
-			$c2 = new nusoapclient("\x68\x74\x74\x70\x73\x3a\x2f\x2f\x75\x70\x64\x61\x74\x65\x73\x2e\x73\x75\x67\x61\x72\x63\x72\x6d\x2e\x63\x6f\x6d\x2f\x68\x65\x61\x72\x74\x62\x65\x61\x74\x2f\x73\x6f\x61\x70\x2e\x70\x68\x70", false, false, false, false, false, 15, 15);
-			$ping = $c2->call("\x73\x75\x67\x61\x72\x50\x69\x6e\x67", array());
-			if(empty($ping) || $c2->getError()){
-				$c2 = new nusoapclient("\x68\x74\x74\x70\x3a\x2f\x2f\x75\x70\x64\x61\x74\x65\x73\x2e\x73\x75\x67\x61\x72\x63\x72\x6d\x2e\x63\x6f\x6d\x2f\x68\x65\x61\x72\x74\x62\x65\x61\x74\x2f\x73\x6f\x61\x70\x2e\x70\x68\x70", false, false, false, false, false, 15, 15);
-				$c2->call("\x73\x75\x67\x61\x72\x48\x6f\x6d\x65", $params);
 			}
 		}
 

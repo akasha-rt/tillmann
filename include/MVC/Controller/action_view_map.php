@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -50,7 +50,9 @@ $action_view_map['vcard']= 'vcard';
 $action_view_map['importvcard']= 'importvcard';
 $action_view_map['importvcardsave']= 'importvcardsave';
 $action_view_map['modulelistmenu']= 'modulelistmenu';
+$action_view_map['favorites']= 'favorites';
 $action_view_map['ajaxui']= 'ajaxui';
+$action_view_map['noaccess']= 'noaccess';
 
 // SugarPDF
 $action_view_map['sugarpdf']= 'sugarpdf';

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -55,13 +55,15 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
     'len' => '255',
     'required'=>true,
     'unified_search' => true,
+    'full_text_search' => array('boost' => 3),
   ),
 
 'name'=>
   array(
 	'name'=>'name',
 	'source'=>'non-db',
-	'type'=>'varchar'
+	'type'=>'varchar',
+	'db_concat_fields'=> array(0=>'document_name'),
 	),
 
 'filename' =>
@@ -96,7 +98,8 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
      'vname' => 'LBL_FILE_UPLOAD',
      'type' => 'file',
      'source' => 'non-db',
-     'noChange' => true,
+    //'noChange' => true,
+    // jwhitcraft BUG44657 - Take this out as it was causing the remove button not to show up on custom modules
   ),
 
 'active_date' =>
@@ -154,7 +157,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
     'source' => 'non-db',
     'Comment' => 'Document status for Meta-Data framework',
   ),
- ),
+ )
 );
 
 ?>

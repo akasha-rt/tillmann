@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -112,23 +115,18 @@ class Campaign extends SugarBean {
 		return $this->name;
 	}
 
-        function create_export_query(&$order_by, &$where, $relate_link_join='')
+        function create_export_query($order_by, $where, $relate_link_join='')
         {
-        	$custom_join = $this->custom_fields->getJOIN(true, true,$where);
-			if($custom_join)
-				$custom_join['join'] .= $relate_link_join;
+            $custom_join = $this->getCustomJoin(true, true, $where);
+            $custom_join['join'] .= $relate_link_join;
             $query = "SELECT
             campaigns.*,
             users.user_name as assigned_user_name ";
-        	if($custom_join){
-				$query .=  $custom_join['select'];
-			}
+            $query .=  $custom_join['select'];
 	        $query .= " FROM campaigns ";
 			$query .= "LEFT JOIN users
                       ON campaigns.assigned_user_id=users.id";
-        	if($custom_join){
-				$query .=  $custom_join['join'];
-			}
+            $query .=  $custom_join['join'];
 
 		$where_auto = " campaigns.deleted=0";
 
@@ -235,6 +233,11 @@ class Campaign extends SugarBean {
 
 		$this->unformat_all_fields();
 
+		// Bug53301
+		if($this->campaign_type != 'NewsLetter') {
+		    $this->frequency = '';
+		}
+		
 		return parent::save($check_notify);
 
 	}
@@ -244,6 +247,9 @@ class Campaign extends SugarBean {
         $query = "update contacts set campaign_id = null where campaign_id = '{$id}' ";
         $this->db->query($query);
         $query = "update accounts set campaign_id = null where campaign_id = '{$id}' ";
+        $this->db->query($query);
+        // bug49632 - delete campaign logs for the campaign as well
+        $query = "update campaign_log set deleted = 1 where campaign_id = '{$id}' ";
         $this->db->query($query);
 		return parent::mark_deleted($id);
 	}
@@ -258,6 +264,17 @@ class Campaign extends SugarBean {
 
 		return $xtpl;
 	}
+
+    function track_log_leads()
+    {
+        $this->load_relationship('log_entries');
+        $query_array = $this->log_entries->getQuery(true);
+
+        $query_array['select'] = 'SELECT campaign_log.* ';
+        $query_array['where']  = $query_array['where']. " AND activity_type = 'lead' AND archived = 0 AND target_id IS NOT NULL";
+
+        return implode(' ', $query_array);
+    }
 
 	function track_log_entries($type=array()) {
         //get arguments being passed in
@@ -399,6 +416,20 @@ class Campaign extends SugarBean {
 
 		//If distinct parameter not found, default to SugarBean's function
     	return parent::create_list_count_query($query);
+    }
+
+    /**
+     * Returns count of deleted leads,
+     * which were created through generated lead form
+     *
+     * @return integer
+     */
+    function getDeletedCampaignLogLeadsCount()
+    {
+        $query = "SELECT COUNT(*) AS count FROM campaign_log WHERE campaign_id = '" . $this->getFieldValue('id') . "' AND target_id IS NULL AND activity_type = 'lead'";
+        $result = $this->db->fetchOne($query);
+
+        return (int)$result['count'];
     }
 }
 ?>

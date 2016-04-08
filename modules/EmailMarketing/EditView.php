@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -116,11 +116,13 @@ $xtpl->assign("ID", $focus->id);
 $xtpl->assign("NAME", $focus->name);
 $xtpl->assign("FROM_NAME", $focus->from_name);
 $xtpl->assign("FROM_ADDR", $focus->from_addr);
+$xtpl->assign("REPLY_NAME", $focus->reply_to_name);
+$xtpl->assign("REPLY_ADDR", $focus->reply_to_addr);
 $xtpl->assign("DATE_START", $focus->date_start);
 $xtpl->assign("TIME_START", $time_start);
 $xtpl->assign("TIME_FORMAT", '('. $timedate->get_user_time_format().')');
 
-$email_templates_arr = get_bean_select_array(true, 'EmailTemplate','name','','name');
+$email_templates_arr = get_bean_select_array(true, 'EmailTemplate','name',"(type IS NULL OR type='' OR type='campaign')",'name');
 if($focus->template_id) {
 	$xtpl->assign("TEMPLATE_ID", $focus->template_id);
 	$xtpl->assign("EMAIL_TEMPLATE_OPTIONS", get_select_options_with_id($email_templates_arr, $focus->template_id));
@@ -204,6 +206,14 @@ if (empty($focus->inbound_email_id)) {
 }
 
 $xtpl->assign("STATUS_OPTIONS", get_select_options_with_id($app_list_strings['email_marketing_status_dom'], $focus->status));
+
+//pass in info to populate from/reply address info
+require_once('modules/Campaigns/utils.php');
+$json = getJSONobj();
+$IEStoredOptions = get_campaign_mailboxes_with_stored_options();
+$IEStoredOptionsJSON = (!empty($IEStoredOptions)) ? $json->encode($IEStoredOptions, false) : 'new Object()';
+$xtpl->assign("IEStoredOptions", $IEStoredOptionsJSON);
+
 
 $xtpl->parse("main");
 $xtpl->out("main");

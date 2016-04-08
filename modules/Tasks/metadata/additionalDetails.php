@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -45,11 +45,23 @@ function additionalDetailsTask($fields) {
 	}
 		
 	$overlib_string = '';
+    if(!empty($fields['NAME'])) {
+           	$overlib_string .= '<b>'. $mod_strings['LBL_SUBJECT'] . '</b> ' . $fields['NAME'];
+           	$overlib_string .= '<br>';
+       }
+
     if(!empty($fields['DATE_START'])) $overlib_string .= '<b>'. $mod_strings['LBL_START_DATE_AND_TIME'] . '</b> ' . $fields['DATE_START'] .  '<br>';
 	if(!empty($fields['DATE_DUE'])) $overlib_string .= '<b>'. $mod_strings['LBL_DUE_DATE_AND_TIME'] . '</b> ' . $fields['DATE_DUE'] .  '<br>';
 	if(!empty($fields['PRIORITY'])) $overlib_string .= '<b>'. $mod_strings['LBL_PRIORITY'] . '</b> ' . 
 $app_list_strings['task_priority_dom'][$fields['PRIORITY']] . '<br>';
-	if(!empty($fields['STATUS'])) $overlib_string .= '<b>'. $mod_strings['LBL_STATUS'] . '</b> ' . $app_list_strings['task_status_dom'][$fields['STATUS']] . '<br>';
+    if (!empty($fields['PARENT_ID']))
+    {
+            $overlib_string .= "<b>". $mod_strings['LBL_RELATED_TO'] . "</b> ".
+                    "<a href='index.php?module=".$fields['PARENT_TYPE']."&action=DetailView&record=".$fields['PARENT_ID']."'>".
+                    $fields['PARENT_NAME'] . "</a>";
+            $overlib_string .= '<br>';
+    }
+    if(!empty($fields['STATUS'])) $overlib_string .= '<b>'. $mod_strings['LBL_STATUS'] . '</b> ' . $app_list_strings['task_status_dom'][$fields['STATUS']] . '<br>';
 		
 	if(!empty($fields['DESCRIPTION'])) { 
 		$overlib_string .= '<b>'. $mod_strings['LBL_DESCRIPTION'] . '</b> ' . substr($fields['DESCRIPTION'], 0, 300);
@@ -58,12 +70,6 @@ $app_list_strings['task_priority_dom'][$fields['PRIORITY']] . '<br>';
 	
 		$editLink = "index.php?action=EditView&module=Tasks&record={$fields['ID']}"; 
 	$viewLink = "index.php?action=DetailView&module=Tasks&record={$fields['ID']}";	
-
-	$return_module = empty($_REQUEST['module']) ? 'Tasks' : $_REQUEST['module'];
-	$return_action = empty($_REQUEST['action']) ? 'ListView' : $_REQUEST['action'];
-	
-	$editLink .= "&return_module=$return_module&return_action=$return_action";
-	$viewLink .= "&return_module=$return_module&return_action=$return_action";
 	
 	return array('fieldToAddTo' => 'NAME', 
 				 'string' => $overlib_string, 

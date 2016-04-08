@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -58,14 +58,16 @@ class MyOpportunitiesDashlet extends DashletGeneric {
     }
     
     //4.5.0g fix for upgrade issue where user_preferences table still refer to column as 'amount'
+
+    //Bug fix for dashlet issue with amount_us and amount fields.
     function process($lvsParams = array()) {
-     	if(!empty($this->displayColumns)) {
-     	if(array_search('amount', $this->displayColumns)) {
-     		$this->displayColumns[array_search('amount', $this->displayColumns)] = 'amount_usdollar';
-     	}
-     	}
+//     	if(!empty($this->displayColumns)) {
+//     	if(array_search('amount', $this->displayColumns)) {
+//     		$this->displayColumns[array_search('amount', $this->displayColumns)] = 'amount_usdollar';
+//     	}
+//     	}
      	parent::process($lvsParams);
-    }    
+    }
     
 }
 

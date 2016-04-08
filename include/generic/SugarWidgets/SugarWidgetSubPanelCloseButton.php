@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -38,17 +38,19 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 
 
-require_once('include/generic/SugarWidgets/SugarWidgetField.php');
+
 //TODO Rename this to close button field
 class SugarWidgetSubPanelCloseButton extends SugarWidgetField
 {
 	function displayList(&$layout_def)
 	{
 		global $app_strings;
+        global $subpanel_item_count;
 		$return_module = $_REQUEST['module'];
 		$return_id = $_REQUEST['record'];
 		$module_name = $layout_def['module'];
 		$record_id = $layout_def['fields']['ID'];
+        $unique_id = $layout_def['subpanel_id']."_close_".$subpanel_item_count; //bug 51512
 
 		// calls and meetings are held.
 		$new_status = 'Held';
@@ -60,8 +62,12 @@ class SugarWidgetSubPanelCloseButton extends SugarWidgetField
 				break;
 		}
         
-		$html = "<a onclick='SUGAR.util.closeActivityPanel.show(\"$module_name\",\"$record_id\",\"$new_status\",\"subpanel\",\"{$layout_def['subpanel_id']}\");' >".SugarThemeRegistry::current()->getImage("close_inline","border='0'",null,null,'.gif',translate('LBL_LIST_CLOSE',$module_name))."</a>";
-		return $html;
+		if ($layout_def['EditView']) {
+		    $html = "<a id=\"$unique_id\" onclick='SUGAR.util.closeActivityPanel.show(\"$module_name\",\"$record_id\",\"$new_status\",\"subpanel\",\"{$layout_def['subpanel_id']}\");' >".$app_strings['LNK_CLOSE']."</a>";
+		    return $html;
+		} else {
+		    return '';
+		}
 
 	}
 }

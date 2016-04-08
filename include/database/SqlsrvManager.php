@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -124,6 +127,7 @@ class SqlsrvManager extends MssqlManager
             'relate'   => 'nvarchar',
             'multienum'=> 'nvarchar(max)',
             'html'     => 'nvarchar(max)',
+            'longhtml' => 'nvarchar(max)',
             'datetime' => 'datetime',
             'datetimecombo' => 'datetime',
             'time'     => 'datetime',
@@ -181,7 +185,7 @@ class SqlsrvManager extends MssqlManager
                     if(isset($GLOBALS['app_strings']['ERR_NO_DB'])) {
                         sugar_die($GLOBALS['app_strings']['ERR_NO_DB']);
                     } else {
-                        sugar_die("Could not connect to the database. Please refer to sugarcrm.log for details.");
+                        sugar_die("Could not connect to the database. Please refer to suitecrm.log for details.");
                     }
             } else {
                 return false;
@@ -296,7 +300,7 @@ class SqlsrvManager extends MssqlManager
      * @param  array  $fielddef2
      * @return bool   true if they match, false if they don't
      */
-    public function compareVarDefs($fielddef1,$fielddef2)
+    public function compareVarDefs($fielddef1,$fielddef2, $ignoreName = false)
     {
         if((isset($fielddef2['dbType']) && $fielddef2['dbType'] == 'id') || preg_match('/(_id$|^id$)/', $fielddef2['name'])){
             if(isset($fielddef1['type']) && isset($fielddef2['type'])){
@@ -410,40 +414,6 @@ class SqlsrvManager extends MssqlManager
     }
 
     /**
-     * @see DBManager::get_indices()
-     */
-    public function get_indices($tableName)
-    {
-        //find all unique indexes and primary keys.
-        $query = <<<EOSQL
-SELECT sys.tables.object_id, sys.tables.name as table_name, sys.columns.name as column_name,
-        sys.indexes.name as index_name, sys.indexes.is_unique, sys.indexes.is_primary_key
-    FROM sys.tables, sys.indexes, sys.index_columns, sys.columns
-    WHERE (sys.tables.object_id = sys.indexes.object_id
-            AND sys.tables.object_id = sys.index_columns.object_id
-            AND sys.tables.object_id = sys.columns.object_id
-            AND sys.indexes.index_id = sys.index_columns.index_id
-            AND sys.index_columns.column_id = sys.columns.column_id)
-        AND sys.tables.name = '$tableName'
-EOSQL;
-        $result = $this->query($query);
-
-        $indices = array();
-        while (($row=$this->fetchByAssoc($result)) != null) {
-            $index_type = 'index';
-            if ($row['is_primary_key'] == '1')
-                $index_type = 'primary';
-            elseif ($row['is_unique'] == 1 )
-                $index_type = 'unique';
-            $name = strtolower($row['index_name']);
-            $indices[$name]['name']     = $name;
-            $indices[$name]['type']     = $index_type;
-            $indices[$name]['fields'][] = strtolower($row['column_name']);
-        }
-        return $indices;
-    }
-
-    /**
      * protected function to return true if the given tablename has any clustered indexes defined.
      *
      * @param  string $tableName
@@ -508,6 +478,15 @@ EOSQL;
         return $sql;
     }
 
+    /**
+     * Truncate table
+     * @param  $name
+     * @return string
+     */
+    public function truncateTableSQL($name)
+    {
+        return "TRUNCATE TABLE $name";
+    }
 
 	/**
 	 * (non-PHPdoc)

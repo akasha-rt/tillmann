@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -161,8 +161,6 @@ $dictionary['emails_beans'] = array('table' => 'emails_beans',
 			'join_table'		=> 'emails_beans',
 			'join_key_lhs'		=> 'email_id',
 			'join_key_rhs'		=> 'bean_id',
-            'relationship_role_column' => 'bean_module',
-            'relationship_role_column_value' => 'Contacts',
 		),
 		'emails_leads_rel' => array(
 			'lhs_module'		=> 'Emails',
@@ -342,7 +340,7 @@ $dictionary['emails_text'] = array(
 		'description_html' => array (
 			'name'			=> 'description_html',
 			'vname'			=> 'LBL_HTML_BODY',
-			'type'			=> 'longtext',
+			'type'			=> 'longhtml',
             'reportable'	=> false,
 			'comment'		=> 'Email body in HTML format',
 		),

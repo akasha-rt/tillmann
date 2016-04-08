@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -40,7 +40,7 @@
 <script type="text/javascript">
 	{literal}
 	SUGAR.util.doWhen(
-		"((SUGAR && SUGAR.mySugar && SUGAR.mySugar.sugarCharts)   || SUGAR.loadChart  || document.getElementById('showHideChartButton') != null) && typeof(loadSugarChart) != undefined",
+		"((SUGAR && SUGAR.mySugar && SUGAR.mySugar.sugarCharts)   || (SUGAR.loadChart && typeof loadSugarChart == 'function')  || document.getElementById('showHideChartButton') != null) && typeof(loadSugarChart) != undefined",
 		function(){
 			{/literal}
 			var css = new Array();
@@ -55,9 +55,17 @@
 				chartConfig["scroll"] = true;
 			{/if}
 			loadCustomChartForReports = function(){ldelim}
-				loadSugarChart('{$chartId}','{$filename}',css,chartConfig,1);
+				loadSugarChart('{$chartId}','{$filename}',css,chartConfig);
 			{rdelim};
-			loadCustomChartForReports();
+			// bug51857: fixed issue on report running in a loop when clicking on hide chart then run report in IE8 only
+			// When hide chart button is clicked, the value of element showHideChartButton is set to $showchart.
+			// Don't need to call the loadCustomChartForReports() function when hiding the chart.
+			{if !isset($showchart)}
+				loadCustomChartForReports();
+			{else}
+			     if($('#showHideChartButton').attr('value') != '{$showchart}')
+			        loadCustomChartForReports();
+			{/if}
 			{literal}
 		}
 	);

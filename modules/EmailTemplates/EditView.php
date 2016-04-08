@@ -1,49 +1,5 @@
 <?php
-
-if (!defined('sugarEntry') || !sugarEntry)
-    die('Not A Valid Entry Point');
-/* * *******************************************************************************
- * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Affero General Public License version 3 as published by the
- * Free Software Foundation with the addition of the following permission added
- * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
- * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
- * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU Affero General Public License along with
- * this program; if not, see http://www.gnu.org/licenses or write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
- * 
- * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
- * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
- * The interactive user interfaces in modified source and object code versions
- * of this program must display Appropriate Legal Notices, as required under
- * Section 5 of the GNU Affero General Public License version 3.
- * 
- * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
- * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
- * ****************************************************************************** */
-
-/* * *******************************************************************************
-
- * Description: TODO:  To be written.
- * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
- * All Rights Reserved.
- * Contributor(s): ______________________________________..
- * ****************************************************************************** */
+if (!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 require_once('modules/Campaigns/utils.php');
 
@@ -69,31 +25,29 @@ if (isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 }
 
 
-
 //setting default flag value so due date and time not required
-if (!isset($focus->id))
-    $focus->date_due_flag = 1;
+if (!isset($focus->id)) $focus->date_due_flag = 1;
 
 //needed when creating a new case with default values passed in
 if (isset($_REQUEST['contact_name']) && is_null($focus->contact_name)) {
-    $focus->contact_name = $_REQUEST['contact_name'];
+    $focus->contact_name = htmlspecialchars($_REQUEST['contact_name'], ENT_QUOTES);
 }
 if (isset($_REQUEST['contact_id']) && is_null($focus->contact_id)) {
-    $focus->contact_id = $_REQUEST['contact_id'];
+    $focus->contact_id = htmlspecialchars($_REQUEST['contact_id'], ENT_QUOTES);
 }
 if (isset($_REQUEST['parent_name']) && is_null($focus->parent_name)) {
-    $focus->parent_name = $_REQUEST['parent_name'];
+    $focus->parent_name = htmlspecialchars($_REQUEST['parent_name'], ENT_QUOTES);
 }
 if (isset($_REQUEST['parent_id']) && is_null($focus->parent_id)) {
-    $focus->parent_id = $_REQUEST['parent_id'];
+    $focus->parent_id = htmlspecialchars($_REQUEST['parent_id'], ENT_QUOTES);
 }
 if (isset($_REQUEST['parent_type'])) {
-    $focus->parent_type = $_REQUEST['parent_type'];
+    $focus->parent_type = htmlspecialchars($_REQUEST['parent_type'], ENT_QUOTES);
 } elseif (!isset($focus->parent_type)) {
     $focus->parent_type = $app_list_strings['record_type_default_key'];
 }
 if (isset($_REQUEST['filename']) && $_REQUEST['isDuplicate'] != 'true') {
-    $focus->filename = $_REQUEST['filename'];
+    $focus->filename = htmlspecialchars($_REQUEST['filename'], ENT_QUOTES);
 }
 
 if ($has_campaign || $inboundEmail) {
@@ -120,9 +74,9 @@ if (!$focus->ACLAccess('EditView')) {
 $GLOBALS['log']->info("EmailTemplate detail view");
 
 if ($has_campaign || $inboundEmail) {
-    $xtpl = new XTemplate('modules/EmailTemplates/EditView.html');
+    $xtpl = new XTemplate ('modules/EmailTemplates/EditView.html');
 } else {
-    $xtpl = new XTemplate('modules/EmailTemplates/EditViewMain.html');
+    $xtpl = new XTemplate ('modules/EmailTemplates/EditViewMain.html');
 } // else
 $xtpl->assign("MOD", $mod_strings);
 $xtpl->assign("APP", $app_strings);
@@ -131,14 +85,12 @@ $xtpl->assign("LBL_ACCOUNT", $app_list_strings['moduleList']['Accounts']);
 $xtpl->parse("main.variable_option");
 
 $returnAction = 'index';
-if (isset($_REQUEST['return_module']))
-    $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
+if (isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
 if (isset($_REQUEST['return_action'])) {
     $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
     $returnAction = $_REQUEST['return_action'];
 }
-if (isset($_REQUEST['return_id']))
-    $xtpl->assign("RETURN_ID", $_REQUEST['return_id']);
+if (isset($_REQUEST['return_id'])) $xtpl->assign("RETURN_ID", $_REQUEST['return_id']);
 // handle Create $module then Cancel
 if (empty($_REQUEST['return_id'])) {
     $xtpl->assign("RETURN_ACTION", 'index');
@@ -152,7 +104,7 @@ if ($has_campaign || $inboundEmail) {
     if (empty($_REQUEST['return_id'])) {
         $cancel_script = "this.form.action.value='index'; this.form.module.value='{$_REQUEST['return_module']}';this.form.name.value='';this.form.description.value=''";
     } else {
-        $cancel_script.="'{$_REQUEST['return_id']}'";
+        $cancel_script .= "'{$_REQUEST['return_id']}'";
     }
 }
 
@@ -174,7 +126,7 @@ $xtpl->assign("assign_user_select", SugarThemeRegistry::current()->getImage('id-
 $xtpl->assign("assign_user_clear", SugarThemeRegistry::current()->getImage('id-ff-clear', '', null, null, '.gif', $mod_strings['LBL_ID_FF_CLEAR']));
 //Assign qsd script
 require_once('include/QuickSearchDefaults.php');
-$qsd = new QuickSearchDefaults();
+$qsd = QuickSearchDefaults::getQuickSearchDefaults();
 $sqs_objects = array('EditView_assigned_user_name' => $qsd->getQSUser());
 $quicksearch_js = '<script type="text/javascript" language="javascript">sqs_objects = ' . $json->encode($sqs_objects) . '; enableQS();</script>';
 
@@ -190,24 +142,24 @@ $jsLang = getVersionedScript("cache/jsLanguage/{$GLOBALS['current_language']}.js
 $xtpl->assign("JSLANG", $jsLang);
 
 $xtpl->assign("ID", $focus->id);
-if (isset($focus->name))
-    $xtpl->assign("NAME", $focus->name); else
-    $xtpl->assign("NAME", "");
+if (isset($focus->name)) $xtpl->assign("NAME", $focus->name); else $xtpl->assign("NAME", "");
 
 //Bug45632
-if (isset($focus->assigned_user_id))
-    $xtpl->assign("ASSIGNED_USER_ID", $focus->assigned_user_id); else
-    $xtpl->assign("ASSIGNED_USER_ID", "");
+/* BEGIN - SECURITY GROUPS */
+/**
+ * if(isset($focus->assigned_user_id)) $xtpl->assign("ASSIGNED_USER_ID", $focus->assigned_user_id); else $xtpl->assign("ASSIGNED_USER_ID", "");
+ */
+if (isset($focus->assigned_user_id)) $xtpl->assign("ASSIGNED_USER_ID", $focus->assigned_user_id);
+else if (empty($focus->id) && empty($focus->assigned_user_id)) {
+    global $current_user;
+    $xtpl->assign("ASSIGNED_USER_ID", $current_user->id);
+    $xtpl->assign("ASSIGNED_USER_NAME", get_assigned_user_name($current_user->id));
+} else $xtpl->assign("ASSIGNED_USER_ID", "");
+/* END - SECURITY GROUPS */
 //Bug45632
 
-$xtpl->assign("DEPARTMENT", get_select_options_with_id($app_list_strings['department_list'], $focus->department));
-
-if (isset($focus->description))
-    $xtpl->assign("DESCRIPTION", $focus->description); else
-    $xtpl->assign("DESCRIPTION", "");
-if (isset($focus->subject))
-    $xtpl->assign("SUBJECT", $focus->subject); else
-    $xtpl->assign("SUBJECT", "");
+if (isset($focus->description)) $xtpl->assign("DESCRIPTION", $focus->description); else $xtpl->assign("DESCRIPTION", "");
+if (isset($focus->subject)) $xtpl->assign("SUBJECT", $focus->subject); else $xtpl->assign("SUBJECT", "");
 if ($focus->published == 'on') {
     $xtpl->assign("PUBLISHED", "CHECKED");
 }
@@ -219,9 +171,9 @@ if (isset($focus->text_only) && $focus->text_only) {
     $xtpl->assign("TEXTONLY_VALUE", "0");
 }
 
+require_once("modules/EmailTemplates/templateFields.php");
 
-
-$xtpl->assign("FIELD_DEFS_JS", $focus->generateFieldDefsJS());
+$xtpl->assign("FIELD_DEFS_JS", generateFieldDefsJS2());
 $xtpl->assign("LBL_CONTACT", $app_list_strings['moduleList']['Contacts']);
 
 global $current_user;
@@ -232,9 +184,10 @@ if (is_admin($current_user) && $_REQUEST['module'] != 'DynamicLayout' && !empty(
     }
 
     $xtpl->assign("ADMIN_EDIT", "<a href='index.php?action=index&module=DynamicLayout&from_action=" . $_REQUEST['action'] . "&from_module=" . $_REQUEST['module'] . "&record=" . $record . "'>" . SugarThemeRegistry::current()->getImage("EditLayout", "border='0' align='bottom'", null, null, '.gif', $mod_strings['LBL_EDIT_LAYOUT']) . "</a>");
+
 }
 if (isset($focus->parent_type) && $focus->parent_type != "") {
-    $change_parent_button = "<input title='" . $app_strings['LBL_SELECT_BUTTON_TITLE'] . "' accessKey='" . $app_strings['LBL_SELECT_BUTTON_KEY'] . "'
+    $change_parent_button = "<input title='" . $app_strings['LBL_SELECT_BUTTON_TITLE'] . "'
 tabindex='3' type='button' class='button' value='" . $app_strings['LBL_SELECT_BUTTON_LABEL'] . "' name='button' LANGUAGE=javascript onclick='return
 window.open(\"index.php?module=\"+ document.EditView.parent_type.value +
 \"&action=Popup&html=Popup_picker&form=TasksEditView\",\"test\",\"width=600,height=400,resizable=1,scrollbars=1\");'>";
@@ -248,12 +201,8 @@ $xtpl->assign("DESCRIPTION", $focus->description);
 $xtpl->assign("TYPE_OPTIONS", get_select_options_with_id($app_list_strings['record_type_display'], $focus->parent_type));
 //$xtpl->assign("DEFAULT_MODULE","Accounts");
 
-if (isset($focus->body))
-    $xtpl->assign("BODY", $focus->body); else
-    $xtpl->assign("BODY", "");
-if (isset($focus->body_html))
-    $xtpl->assign("BODY_HTML", $focus->body_html); else
-    $xtpl->assign("BODY_HTML", "");
+if (isset($focus->body)) $xtpl->assign("BODY", $focus->body); else $xtpl->assign("BODY", "");
+if (isset($focus->body_html)) $xtpl->assign("BODY_HTML", $focus->body_html); else $xtpl->assign("BODY_HTML", "");
 
 
 if (true) {
@@ -262,7 +211,7 @@ if (true) {
         $tiny = new SugarTinyMCE();
         $tiny->defaultConfig['cleanup_on_startup'] = true;
         $tiny->defaultConfig['height'] = 600;
-        $tiny->defaultConfig['plugins'].=",fullpage";
+        $tiny->defaultConfig['plugins'] .= ",fullpage";
         $tinyHtml = $tiny->getInstance();
         $xtpl->assign("tiny", $tinyHtml);
     }
@@ -290,30 +239,30 @@ if (true) {
         }
     }
 
+    // create option of "Contact/Lead/Task" from corresponding module
+    // translations
+    $lblContactAndOthers = implode('/', array(
+        isset($app_list_strings['moduleListSingular']['Contacts']) ? $app_list_strings['moduleListSingular']['Contacts'] : 'Contact',
+        isset($app_list_strings['moduleListSingular']['Leads']) ? $app_list_strings['moduleListSingular']['Leads'] : 'Lead',
+        isset($app_list_strings['moduleListSingular']['Prospects']) ? $app_list_strings['moduleListSingular']['Prospects'] : 'Target',
+    ));
+
     // The insert variable drodown should be conditionally displayed.
     // If it's campaign then hide the Account.
     if ($has_campaign) {
         $dropdown = "<option value='Contacts'>
-						" . $mod_strings['LBL_CONTACT_AND_OTHERS'] . "
+						" . $lblContactAndOthers . "
 			       </option>";
         $xtpl->assign("DROPDOWN", $dropdown);
         $xtpl->assign("DEFAULT_MODULE", 'Contacts');
         //$xtpl->assign("CAMPAIGN_POPUP_JS", '<script type="text/javascript" src="include/javascript/sugar_3.js"></script>');
     } else {
-        $dropdown = "<option value='Accounts'>
-						" . $mod_strings['LBL_ACCOUNT'] . "
-		  	       </option>
-			       <option value='Contacts'>
-						" . $mod_strings['LBL_CONTACT_AND_OTHERS'] . "
-			       </option>
-			       <option value='Users'>
-						" . $mod_strings['LBL_USERS'] . "
-			       </option>";
-        $xtpl->assign("DROPDOWN", $dropdown);
+        $xtpl->assign("DROPDOWN", genDropDownJS2());
         $xtpl->assign("DEFAULT_MODULE", 'Accounts');
     }
     ////	END CAMPAIGNS
     ///////////////////////////////////////
+
     ///////////////////////////////////////
     ////    ATTACHMENTS
     $attachments = '';
@@ -349,6 +298,24 @@ if (true) {
 
     ////    END ATTACHMENTS
     ///////////////////////////////////////
+    $templateType = !empty($focus->type) ? $focus->type : '';
+    if ($has_campaign) {
+        if (empty($_REQUEST['record'])) {
+            // new record, default to campaign
+            $xtpl->assign("TYPEDROPDOWN", get_select_options_with_id($app_list_strings['emailTemplates_type_list_campaigns'], 'campaign'));
+        } else {
+            $xtpl->assign("TYPEDROPDOWN", get_select_options_with_id($app_list_strings['emailTemplates_type_list_campaigns'], $templateType));
+        }
+    } else {
+        // if the type is workflow, we will show it
+        // otherwise we don't allow user to select workflow type because workflow type email template
+        // should be created from within workflow module because it requires more fields (such as base module, etc)
+        if ($templateType == 'workflow') {
+            $xtpl->assign("TYPEDROPDOWN", get_select_options_with_id($app_list_strings['emailTemplates_type_list'], $templateType));
+        } else {
+            $xtpl->assign("TYPEDROPDOWN", get_select_options_with_id($app_list_strings['emailTemplates_type_list_no_workflow'], $templateType));
+        }
+    }
     // done and parse
     $xtpl->parse("main.textarea");
 }

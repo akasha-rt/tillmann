@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -43,7 +43,6 @@
 
 require_once('include/EditView/EditView2.php');
  class ViewEdit extends SugarView{
-     
  	var $ev;
  	var $type ='edit';
  	var $useForSubpanel = false;  //boolean variable to determine whether view can be used for subpanel creates
@@ -54,17 +53,29 @@ require_once('include/EditView/EditView2.php');
  		parent::SugarView();
  	}
 
- 	function preDisplay(){
- 		$metadataFile = $this->getMetaDataFile();
- 		$this->ev = new EditView();
- 		$this->ev->ss =& $this->ss;
- 		$this->ev->setup($this->module, $this->bean, $metadataFile, 'include/EditView/EditView.tpl');
-
- 	}
+    /**
+     * @see SugarView::preDisplay()
+     */
+    public function preDisplay()
+    {
+        $metadataFile = $this->getMetaDataFile();
+        $this->ev = $this->getEditView();
+        $this->ev->ss =& $this->ss;
+        $this->ev->setup($this->module, $this->bean, $metadataFile, get_custom_file_if_exists('include/EditView/EditView.tpl'));
+    }
 
  	function display(){
 		$this->ev->process();
 		echo $this->ev->display($this->showTitle);
  	}
- }
-?>
+
+    /**
+     * Get EditView object
+     * @return EditView
+     */
+    protected function getEditView()
+    {
+        return new EditView();
+    }
+}
+

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,24 +35,8 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * "Powered by SugarCRM".
  ********************************************************************************/
 
-require_once('include/generic/SugarWidgets/SugarWidgetFieldint.php');
 
-class SugarWidgetFieldDecimal extends SugarWidgetFieldInt
+
+class SugarWidgetFieldDecimal extends SugarWidgetFieldFloat
 {
- function displayListPlain($layout_def)
- {
- 	
-     //Bug40995
-	if($layout_def['precision']!='')
-	 {
-		return format_number(parent::displayListPlain($layout_def), $layout_def['precision'], $layout_def['precision']);
-	 }
-	 //Bug40995
-	 else
-	 {
-		return format_number(parent::displayListPlain($layout_def), 2, 2);
-	 }
- }
 }
-
-?>

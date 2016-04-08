@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -65,7 +65,7 @@ require_once('modules/ModuleBuilder/parsers/ModuleBuilderParser.php');
         {
             foreach ( $temp as $item )
             {
-                $dropdown[ remove_xss(from_html($item [ 0 ])) ] = remove_xss(from_html($item [ 1 ])) ;
+                $dropdown[ SugarCleaner::stripTags(from_html($item [ 0 ]), false) ] = SugarCleaner::stripTags(from_html($item [ 1 ]), false) ;
             }
         }
 		if(array_key_exists($emptyMarker, $dropdown)){
@@ -81,7 +81,7 @@ require_once('modules/ModuleBuilder/parsers/ModuleBuilderParser.php');
 
 		if($type != 'studio'){
 			$mb = new ModuleBuilder();
-			$module =& $mb->getPackageModule($params['view_package'], $params['view_module']);
+			$module = $mb->getPackageModule($params['view_package'], $params['view_module']);
 			$this->synchMBDropDown($dropdown_name, $dropdown, $selected_lang, $module);
 			//Can't use synch on selected lang as we want to overwrite values, not just keys
 			$module->mblanguage->appListStrings[$selected_lang.'.lang.php'][$dropdown_name] = $dropdown;

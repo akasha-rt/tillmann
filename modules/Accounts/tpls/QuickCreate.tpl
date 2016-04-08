@@ -1,8 +1,7 @@
 {*
-
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,56 +34,60 @@
  * "Powered by SugarCRM".
  ********************************************************************************/
 
-
-
-
 *}
-
-
-<form name="accountsQuickCreate" id="accountsQuickCreate" method="POST" action="index.php">
-<input type="hidden" name="module" value="Accounts">
-<input type="hidden" name="email_id" value="{$REQUEST.email_id}">
-<input type="hidden" name="case_id" value="{$REQUEST.acase_id}">
-<input type="hidden" name="bug_id" value="{$REQUEST.bug_id}">
-<input type="hidden" name="parent_id" value="{$REQUEST.parent_id}">
-<input type="hidden" name="opportunity_id" value="{$REQUEST.opportunity_id}">
-<input type="hidden" name="return_action" value="{$REQUEST.return_action}">
-<input type="hidden" name="return_module" value="{$REQUEST.return_module}">
-<input type="hidden" name="return_id" value="{$REQUEST.return_id}">
-<input type="hidden" name="action" value='Save'>
-<input type="hidden" name="is_ajax_call" value='1'>
-<input type="hidden" name="to_pdf" value='1'>
-<input type="hidden" name="duplicate_parent_id" value="{$REQUEST.duplicate_parent_id}">
-<input id='assigned_user_id' name='assigned_user_id' type="hidden" value="{$ASSIGNED_USER_ID}" />
+<form action="index.php" method="POST" name="{$form_name}" id="{$form_id}" {$enctype}>
 <table width="100%" cellpadding="0" cellspacing="0" border="0">
-	<tr>
-	<td align="left" style="padding-bottom: 2px;">
-		<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="button" type="submit" name="button" {$saveOnclick|default:"onclick=\"return check_form('AccountsQuickCreate');\""} value="  {$APP.LBL_SAVE_BUTTON_LABEL}  " >
-		<input title="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="button" type="submit" name="button" {$cancelOnclick|default:"onclick=\"this.form.action.value='$RETURN_ACTION'; this.form.module.value='$RETURN_MODULE'; this.form.record.value='$RETURN_ID'\""} value="  {$APP.LBL_CANCEL_BUTTON_LABEL}  ">
-		<input title="{$APP.LBL_FULL_FORM_BUTTON_TITLE}" accessKey="{$APP.LBL_FULL_FORM_BUTTON_KEY}" class="button" type="submit" name="button" onclick="this.form.to_pdf.value='0';this.form.action.value='EditView'; this.form.module.value='Accounts';" value="  {$APP.LBL_FULL_FORM_BUTTON_LABEL}  "></td>
-	<td align="right" nowrap><span class="required">{$APP.LBL_REQUIRED_SYMBOL}</span> {$APP.NTC_REQUIRED}</td>
-	</tr>
-</table>
-<table width="100%" border="0" cellspacing="0" cellpadding="0" class="edit view">
 <tr>
 <td>
-	<table width="100%" border="0" cellspacing="0" cellpadding="0">
-	<tr>
-	<th align="left" scope="row" colspan="4"><h4><slot>{$MOD.LBL_ACCOUNT_INFORMATION}</slot></h4></th>
-	</tr>
-	<tr>
-	<td  scope="row"><slot>{$MOD.LBL_ACCOUNT_NAME} <span class="required">{$APP.LBL_REQUIRED_SYMBOL}</span></slot></td>
-	<td  nowrap><slot><input name='name' tabindex='1' size='35' maxlength='150' type="text" value=""></slot></td>
-	<td  scope="row"><slot>{$MOD.LBL_PHONE}</slot></td>
-	<td ><slot><input name='phone_office' type="text" tabindex='2' size='20' maxlength='25' value=''></slot></td>
-	</tr><tr>
-	<td scope="row"><slot>{$MOD.LBL_WEBSITE}</slot></td>
-	<td ><slot><input name='website' type="text" tabindex='1' size='28' maxlength='255' value=""></slot></td>
-	<td scope="row"><slot>{$MOD.LBL_EMAIL}</slot></td>
-	<td ><slot><input name='email1' type="text" tabindex='2' size='35' maxlength='100' value=''></slot></td>
-	</tr>
-	</table>
-	</form>
-<script>
-	{$additionalScripts}
-</script>
+<input type="hidden" name="module" value="{$module}">
+{if isset($smarty.request.isDuplicate) && $smarty.request.isDuplicate eq "true"}
+<input type="hidden" name="record" value="">
+{else}
+<input type="hidden" name="record" value="{$fields.id.value}">
+{/if}
+<input type="hidden" name="isDuplicate" value="false">
+<input type="hidden" name="action">
+<input type="hidden" name="return_module" value="{$smarty.request.return_module}">
+<input type="hidden" name="return_action" value="{$smarty.request.return_action}">
+<input type="hidden" name="return_id" value="{$smarty.request.return_id}">
+<input type="hidden" name="contact_role">
+{if !empty($smarty.request.return_module)}
+<input type="hidden" name="relate_to" value="{if $smarty.request.return_relationship}{$smarty.request.return_relationship}{elseif empty($isDCForm)}{$smarty.request.return_module}{/if}">
+<input type="hidden" name="relate_id" value="{$smarty.request.return_id}">
+{/if}
+<input type="hidden" name="offset" value="{$offset}">
+{{if isset($form.hidden)}}
+{{foreach from=$form.hidden item=field}}
+{{$field}}   
+{{/foreach}}
+{{/if}}
+
+{* -- Begin QuickCreate Specific -- *}
+{if $smarty.request.action != 'SubpanelEdits'}
+<input type="hidden" name="primary_address_street" value="{$smarty.request.primary_address_street}">
+<input type="hidden" name="primary_address_city" value="{$smarty.request.primary_address_city}">
+<input type="hidden" name="primary_address_state" value="{$smarty.request.primary_address_state}">
+<input type="hidden" name="primary_address_country" value="{$smarty.request.primary_address_country}">
+<input type="hidden" name="primary_address_postalcode" value="{$smarty.request.primary_address_postalcode}">
+{/if}
+<input type="hidden" name="is_ajax_call" value="1">
+<input type="hidden" name="to_pdf" value="1">
+{* -- End QuickCreate Specific -- *}
+
+{{if empty($form.button_location) || $form.button_location == 'top'}}
+{{if !empty($form) && !empty($form.buttons)}}
+   {{foreach from=$form.buttons key=val item=button}}
+      {{sugar_button module="$module" id="$button" view="$view"}}
+   {{/foreach}}
+{{else}}
+{{sugar_button module="$module" id="SAVE" view="$view"}}
+{{sugar_button module="$module" id="CANCEL" view="$view"}}
+{{/if}}
+{{if empty($form.hideAudit) || !$form.hideAudit}}
+{{sugar_button module="$module" id="Audit" view="$view"}}
+{{/if}}
+{{/if}}
+</td>
+<td align='right'>{{$ADMIN_EDIT}}</td>
+</tr>
+</table>

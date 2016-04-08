@@ -2,8 +2,11 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
@@ -30,13 +33,15 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * 
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
-
+if (!is_admin($GLOBALS['current_user'])) {
+    sugar_die($GLOBALS['app_strings']['ERR_NOT_ADMIN']);
+}
 
 require_once('include/utils/db_utils.php');
 require_once('include/utils/zip_utils.php');
@@ -77,12 +82,14 @@ $script_files = array(
 );
 
 
+
 function extractFile( $zip_file, $file_in_zip ){
     global $base_tmp_upgrade_dir;
 	if(empty($base_tmp_upgrade_dir)){
     	$base_tmp_upgrade_dir   = sugar_cached("upgrades/temp");
     }
     $my_zip_dir = mk_temp_dir( $base_tmp_upgrade_dir );
+    register_shutdown_function('rmdir_recursive', $my_zip_dir);
     unzip_file( $zip_file, $file_in_zip, $my_zip_dir );
     return( "$my_zip_dir/$file_in_zip" );
 }
@@ -242,4 +249,3 @@ function getDiffFiles($unzip_dir, $install_file, $is_install = true, $previous_v
 	}//fi
 	return $modified_files;
 }
-?>

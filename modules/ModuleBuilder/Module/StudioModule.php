@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -49,7 +52,9 @@ class StudioModule
 
     function __construct ($module)
     {
-	   	$this->sources = array (	'editviewdefs.php' => array ( 'name' => translate ('LBL_EDITVIEW') , 'type' => MB_EDITVIEW , 'image' => 'EditView' ) ,
+	   	//Sources can be used to override the file name mapping for a specific view or the parser for a view.
+        //The
+        $this->sources = array (	'editviewdefs.php' => array ( 'name' => translate ('LBL_EDITVIEW') , 'type' => MB_EDITVIEW , 'image' => 'EditView' ) ,
         							'detailviewdefs.php' => array ( 'name' => translate('LBL_DETAILVIEW') , 'type' => MB_DETAILVIEW , 'image' => 'DetailView' ) ,
         							'listviewdefs.php' => array ( 'name' => translate('LBL_LISTVIEW') , 'type' => MB_LISTVIEW , 'image' => 'ListView' ) ) ;
 
@@ -57,18 +62,20 @@ class StudioModule
         $this->name = isset ( $moduleNames [ strtolower ( $module ) ] ) ? $moduleNames [ strtolower ( $module ) ] : strtolower ( $module ) ;
         $this->module = $module ;
         $this->seed = BeanFactory::getBean($this->module);
-        $this->fields = $this->seed->field_defs ;
+        if($this->seed) {
+            $this->fields = $this->seed->field_defs;
+        }
         //$GLOBALS['log']->debug ( get_class($this)."->__construct($module): ".print_r($this->fields,true) ) ;
     }
 
      /*
-     * Gets the name of this module. Some modules have naming inconsistencies such as Bug Tracker and Bugs which causes warnings in Relationships
+     * Gets the name of this module. Some modules have naming inconsistencies such as Bugs and Bugs which causes warnings in Relationships
      * Added to resolve bug #20257
      */
     function getModuleName()
     {
     	$modules_with_odd_names = array(
-    	'Bug Tracker'=>'Bugs'
+    	'Bugs'=>'Bugs'
     	);
     	if ( isset ( $modules_with_odd_names [ $this->name ] ) )
     		return ( $modules_with_odd_names [ $this->name ] ) ;
@@ -156,7 +163,8 @@ class StudioModule
         	$nodes [ $source ] [ 'name' ] = translate ( $source ) ;
         	if ( isset ( $def [ 'children' ] ) )
         	{
-        		$childNodes = $this->$def [ 'children' ] () ;
+                $defChildren = $def [ 'children' ];
+        		$childNodes = $this->$defChildren () ;
         		if ( !empty ( $childNodes ) )
         		{
         			$nodes [ $source ] [ 'type' ] = 'Folder' ;
@@ -174,7 +182,8 @@ class StudioModule
         $views = array () ;
         foreach ( $this->sources as $file => $def )
         {
-            if (file_exists ( "modules/{$this->module}/metadata/$file" ))
+            if (file_exists ( "modules/{$this->module}/metadata/$file" )
+                || file_exists ( "custom/modules/{$this->module}/metadata/$file" ))
             {
                 $views [ str_replace ( '.php', '' , $file) ] = $def ;
             }
@@ -198,7 +207,8 @@ class StudioModule
         $layouts = array ( ) ;
         foreach ( $views as $def )
         {
-            $layouts [ $def['name'] ] = array ( 'name' => $def['name'] , 'action' => "module=ModuleBuilder&action=editLayout&view={$def['type']}&view_module={$this->module}" , 'imageTitle' => $def['image'] , 'help' => "viewBtn{$def['type']}" , 'size' => '48' ) ;
+            $view = !empty($def['view']) ? $def['view'] : $def['type'];
+            $layouts [ $def['name'] ] = array ( 'name' => $def['name'] , 'action' => "module=ModuleBuilder&action=editLayout&view={$view}&view_module={$this->module}" , 'imageTitle' => $def['image'] , 'help' => "viewBtn{$def['type']}" , 'size' => '48' ) ;
         }
 
         if($this->isValidDashletModule($this->module)){
@@ -291,13 +301,18 @@ class StudioModule
 
             $GLOBALS [ 'log' ]->debug ( "StudioModule->getSubpanels(): getting subpanels for " . $this->module ) ;
 
+            // counter to add a unique key to assoc array below
+            $ct=0;
             foreach ( SubPanel::getModuleSubpanels ( $this->module ) as $name => $label )
             {
                 if ($name == 'users')
                     continue ;
                 $subname = sugar_ucfirst ( (! empty ( $label )) ? translate ( $label, $this->module ) : $name ) ;
                 $action = "module=ModuleBuilder&action=editLayout&view=ListView&view_module={$this->module}&subpanel={$name}&subpanelLabel=" . urlencode($subname);
-                $nodes [ $subname ] = array ( 
+
+                //  bug47452 - adding a unique number to the $nodes[ key ] so if you have 2+ panels
+                //  with the same subname they will not cancel each other out
+                $nodes [ $subname . $ct++ ] = array (
                 	'name' => $name , 
                 	'label' => $subname , 
                 	'action' =>  $action,
@@ -386,6 +401,7 @@ class StudioModule
         $sources = $this->getViewMetadataSources();
         $sources[] = array('type'  => MB_BASICSEARCH);
         $sources[] = array('type'  => MB_ADVANCEDSEARCH);
+        $sources[] = array('type'  => MB_POPUPSEARCH);        
         
         $GLOBALS [ 'log' ]->debug ( print_r( $sources,true) ) ;
         foreach ( $sources as $name => $defs )
@@ -423,7 +439,18 @@ class StudioModule
 		
 		return $sources;
 	}
-	
+
+    public function getViewType($view)
+    {
+        foreach($this->sources as $file => $def)
+        {
+            if (!empty($def['view']) && $def['view'] == $view && !empty($def['type']))
+            {
+                return $def['type'];
+            }
+        }
+        return $view;
+    }
 	
 	
 }

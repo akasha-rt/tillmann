@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -58,6 +58,7 @@ $mod_strings = array (
   'LBL_LIST_TYPE_NO' => 'Type',
   'LBL_LIST_END_DATE' => 'End Date',
   'LBL_DATE_ENTERED' => 'Date Created',
+  'LBL_MARKETING_ID' => 'Marketing Id',
   'LBL_DATE_MODIFIED' => 'Date Modified',
   'LBL_MODIFIED' => 'Modified by',
   'LBL_CREATED' => 'Created by',
@@ -78,7 +79,7 @@ $mod_strings = array (
   'LBL_PROSPECT_LISTS_SUBPANEL_TITLE' => 'Target Lists',
   'LBL_CONTACTS_SUBPANEL_TITLE' => 'Contacts',
   'LBL_LEADS_SUBPANEL_TITLE' => 'Leads',
-  'LBL_PROSPECTS_SUBPANEL_TITLE'=>'Targets',	
+  'LBL_PROSPECTS_SUBPANEL_TITLE'=>'Targets',
   'LBL_ACCOUNTS_SUBPANEL_TITLE' => 'Accounts',
   'LBL_COPY_PREFIX' =>'Copy of',
   'LBL_USERS_SUBPANEL_TITLE' =>'Users',

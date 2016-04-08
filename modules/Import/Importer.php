@@ -3,37 +3,40 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -47,37 +50,37 @@ class Importer
     /**
      * @var ImportFieldSanitizer
      */
-    private $ifs;
+    protected $ifs;
 
     /**
      * @var Currency
      */
-    private $defaultUserCurrency;
+    protected $defaultUserCurrency;
 
     /**
      * @var importColumns
      */
-    private $importColumns;
+    protected $importColumns;
 
     /**
      * @var importSource
      */
-    private $importSource;
+    protected $importSource;
 
     /**
      * @var $isUpdateOnly
      */
-    private $isUpdateOnly;
+    protected $isUpdateOnly;
 
     /**
      * @var  $bean
      */
-    private $bean;
+    protected $bean;
 
     /**
      * @var sugarToExternalSourceFieldMap
      */
-    private $sugarToExternalSourceFieldMap = array();
+    protected $sugarToExternalSourceFieldMap = array();
 
 
     public function __construct($importSource, $bean)
@@ -131,7 +134,7 @@ class Importer
 
     protected function importRow($row)
     {
-        global $sugar_config, $mod_strings;
+        global $sugar_config, $mod_strings, $current_user;
 
         $focus = clone $this->bean;
         $focus->unPopulateDefaultValues();
@@ -140,7 +143,6 @@ class Importer
         $this->ifs->createdBeans = array();
         $this->importSource->resetRowErrorCounter();
         $do_save = true;
-        $allColumnArray = $this->importColumns;
 
         for ( $fieldNum = 0; $fieldNum < $_REQUEST['columncount']; $fieldNum++ )
         {
@@ -206,17 +208,41 @@ class Importer
             }
 
             // Handle the special case "Sync to Outlook"
-            if ( $focus->object_name == "Contacts" && $field == 'sync_contact' )
+            if ( $focus->object_name == "Contact" && $field == 'sync_contact' )
             {
-                $bad_names = array();
-                $returnValue = $this->ifs->synctooutlook($rowValue,$fieldDef,$bad_names);
-                // try the default value on fail
-                if ( !$returnValue && !empty($defaultRowValue) )
-                    $returnValue = $this->ifs->synctooutlook($defaultRowValue, $fieldDef, $bad_names);
-                if ( !$returnValue )
+                /**
+                 * Bug #41194 : if true used as value of sync_contact - add curent user to list to sync
+                 */
+                if ( true == $rowValue || 'true' == strtolower($rowValue)) {
+                    $focus->sync_contact = $focus->id;
+                } elseif (false == $rowValue || 'false' == strtolower($rowValue)) {
+                    $focus->sync_contact = '';
+                } else {
+                    $bad_names = array();
+                    $returnValue = $this->ifs->synctooutlook($rowValue,$fieldDef,$bad_names);
+                    // try the default value on fail
+                    if ( !$returnValue && !empty($defaultRowValue) )
+                        $returnValue = $this->ifs->synctooutlook($defaultRowValue, $fieldDef, $bad_names);
+                    if ( !$returnValue )
+                    {
+                        $this->importSource->writeError($mod_strings['LBL_ERROR_SYNC_USERS'], $fieldTranslated, $bad_names);
+                        $do_save = 0;
+                    } else {
+                        $focus->sync_contact = $returnValue;
+                    }
+                }
+            }
+
+            // Handle email field, if it's a semi-colon separated export
+            if ($field == 'email_addresses_non_primary' && !empty($rowValue))
+            {
+                if (strpos($rowValue, ';') !== false)
                 {
-                    $this->importSource->writeError($mod_strings['LBL_ERROR_SYNC_USERS'], $fieldTranslated, explode(",",$bad_names));
-                    $do_save = 0;
+                    $rowValue = explode(';', $rowValue);
+                }
+                else
+                {
+                    $rowValue = array($rowValue);
                 }
             }
 
@@ -262,11 +288,31 @@ class Importer
             // If the field is empty then there is no need to check the data
             if( !empty($rowValue) )
             {
-                //Start
-                $rowValue = $this->sanitizeFieldValueByType($rowValue, $fieldDef, $defaultRowValue, $focus, $fieldTranslated);
-                if($rowValue === FALSE)
-                    continue;
+                // If it's an array of non-primary e-mails, check each mail
+                if ($field == "email_addresses_non_primary" && is_array($rowValue))
+                {
+                    foreach ($rowValue as $tempRow)
+                    {
+                        $tempRow = $this->sanitizeFieldValueByType($tempRow, $fieldDef, $defaultRowValue, $focus, $fieldTranslated);
+                        if ($tempRow === FALSE)
+                        {
+                            $rowValue = false;
+                            $do_save = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    $rowValue = $this->sanitizeFieldValueByType($rowValue, $fieldDef, $defaultRowValue, $focus, $fieldTranslated);
+                }
 
+                if ($rowValue === false)
+                {
+					/* BUG 51213 - jeff @ neposystems.com */
+                    $do_save = false;
+                    continue;
+				}
             }
 
             // if the parent type is in singular form, get the real module name for parent_type
@@ -274,34 +320,10 @@ class Importer
                 $rowValue = get_module_from_singular($rowValue);
             }
 
-            /* Change By Bc:- Update Import record if email same. */
-            if (!in_array('id', $allColumnArray)
-                && $field == 'email1'
-                && $this->isUpdateOnly
-                && $_REQUEST['import_module'] == 'Contacts') {
-                $result = $focus->db->fetchByAssoc
-                ( $focus->db->query
-                    (
-                        "SELECT
-                                    contacts.id
-                                  FROM contacts
-                                    LEFT JOIN email_addr_bean_rel
-                                      ON email_addr_bean_rel.bean_id = contacts.id
-                                        AND email_addr_bean_rel.deleted = 0
-                                    LEFT JOIN email_addresses
-                                      ON email_addresses.id = email_addr_bean_rel.email_address_id
-                                        AND email_addresses.deleted = 0
-                                  WHERE email_addresses.email_address = '{$rowValue}'
-                                      AND contacts.deleted = 0"
-                    )
-                );
-                $focus->id = $result['id'];
-            }
-
             $focus->$field = $rowValue;
             unset($defaultRowValue);
         }
-        /* End */
+
         // Now try to validate flex relate fields
         if ( isset($focus->field_defs['parent_name']) && isset($focus->parent_name) && ($focus->field_defs['parent_name']['type'] == 'parent') )
         {
@@ -521,11 +543,16 @@ class Importer
         */
         if ( ( !empty($focus->new_with_id) && !empty($focus->date_modified) ) ||
              ( empty($focus->new_with_id) && $timedate->to_db($focus->date_modified) != $timedate->to_db($timedate->to_display_date_time($focus->fetched_row['date_modified'])) )
-        )
+        ) 
             $focus->update_date_modified = false;
 
+        // Bug 53636 - Allow update of "Date Created"
+        if (!empty($focus->date_entered)) {
+        	$focus->update_date_entered = true;
+        }
+            
         $focus->optimistic_lock = false;
-        if ( $focus->object_name == "Contacts" && isset($focus->sync_contact) )
+        if ( $focus->object_name == "Contact" && isset($focus->sync_contact) )
         {
             //copy the potential sync list to another varible
             $list_of_users=$focus->sync_contact;
@@ -535,13 +562,37 @@ class Importer
         else if($focus->object_name == "User" && !empty($current_user) && $focus->is_admin && !is_admin($current_user) && is_admin_for_module($current_user, 'Users')) {
             sugar_die($GLOBALS['mod_strings']['ERR_IMPORT_SYSTEM_ADMININSTRATOR']);
         }
+        //bug# 46411 importing Calls will not populate Leads or Contacts Subpanel
+        if (!empty($focus->parent_type) && !empty($focus->parent_id))
+        {
+            foreach ($focus->relationship_fields as $key => $val)
+            {
+                if ($val == strtolower($focus->parent_type))
+                {
+                    $focus->$key = $focus->parent_id;
+                }
+            }
+        }					
         //bug# 40260 setting it true as the module in focus is involved in an import
         $focus->in_import=true;
         // call any logic needed for the module preSave
         $focus->beforeImportSave();
 
+        // Bug51192: check if there are any changes in the imported data
+        $hasDataChanges = false;
+        $dataChanges=$focus->db->getAuditDataChanges($focus);
+        
+        if(!empty($dataChanges)) {
+            foreach($dataChanges as $field=>$fieldData) {
+                if($fieldData['data_type'] != 'date' || strtotime($fieldData['before']) != strtotime($fieldData['after'])) {
+                    $hasDataChanges = true;
+                    break;
+                }
+            }
+        }
+        
         // if modified_user_id is set, set the flag to false so SugarBEan will not reset it
-        if (isset($focus->modified_user_id) && $focus->modified_user_id) {
+        if (isset($focus->modified_user_id) && $focus->modified_user_id && !$hasDataChanges) {
             $focus->update_modified_by = false;
         }
         // if created_by is set, set the flag to false so SugarBEan will not reset it
@@ -549,13 +600,17 @@ class Importer
             $focus->set_created_by = false;
         }
 
+        if ( $focus->object_name == "Contact" && isset($list_of_users) )
+            $focus->process_sync_to_outlook($list_of_users);
+
         $focus->save(false);
+
+        //now that save is done, let's make sure that parent and related id's were saved as relationships
+        //this takes place before the afterImportSave()
+        $this->checkRelatedIDsAfterSave($focus);
 
         // call any logic needed for the module postSave
         $focus->afterImportSave();
-
-        if ( $focus->object_name == "Contacts" && isset($list_of_users) )
-            $focus->process_sync_to_outlook($list_of_users);
 
         // Add ID to User's Last Import records
         if ( $newRecord )
@@ -567,7 +622,7 @@ class Importer
     {
         global $current_user;
 
-        $firstrow    = unserialize(base64_decode($_REQUEST['firstrow']));
+        $firstrow    = sugar_unserialize(base64_decode($_REQUEST['firstrow']));
         $mappingValsArr = $this->importColumns;
         $mapping_file = new ImportMap();
         if ( isset($_REQUEST['has_header']) && $_REQUEST['has_header'] == 'on')
@@ -589,7 +644,7 @@ class Importer
         //merge with mappingVals array
         if(!empty($advMapping) && is_array($advMapping))
         {
-            $mappingValsArr = array_merge($mappingValsArr,$advMapping);
+            $mappingValsArr = $advMapping + $mappingValsArr;
         }
 
         //set mapping
@@ -871,4 +926,60 @@ class Importer
             exit(1);
         }
     }
+
+
+    /**
+	 * upon bean save, the relationships are saved by SugarBean->save_relationship_changes() method, but those values depend on
+     * the request object and is not reliable during import.  This function makes sure any defined related or parent id's are processed
+	 * and their relationship saved.
+	 */
+    public function checkRelatedIDsAfterSave($focus)
+    {
+        if(empty($focus)){
+            return false;
+        }
+
+        //check relationship fields first
+        if(!empty($focus->parent_id) && !empty($focus->parent_type)){
+            $relParentName = strtolower($focus->parent_type);
+            $relParentID = strtolower($focus->parent_id);
+        }
+        if(!empty($focus->related_id) && !empty($focus->related_type)){
+            $relName = strtolower($focus->related_type);
+            $relID = strtolower($focus->related_id);
+        }
+
+        //now refresh the bean and process for parent relationship
+        $focus->retrieve($focus->id);
+        if(!empty($relParentName) && !empty($relParentID)){
+
+            //grab the relationship and any available ids
+            if(!empty($focus->$relParentName)){
+                $rel_ids=array();
+                $focus->load_relationship($relParentName);
+                $rel_ids = $focus->$relParentName->get();
+
+                //if the current parent_id is not part of the stored rels, then add it
+                if(!in_array($relParentID, $rel_ids)){
+                    $focus->$relParentName->add($relParentID);
+                }
+            }
+        }
+
+        //now lets process any related fields
+        if(!empty($relName) && !empty($relID)){
+            if(!empty($focus->$relName)){
+                $rel_ids=array();
+                $focus->load_relationship($relName);
+                $rel_ids = $focus->$relName->get();
+
+                //if the related_id is not part of the stored rels, then add it
+                if(!in_array($relID, $rel_ids)){
+                    $focus->$relName->add($relID);
+                }
+            }
+        }
+    }
+
+
 }

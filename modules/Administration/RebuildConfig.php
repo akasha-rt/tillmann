@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -61,7 +61,10 @@ else {
 // only do the rebuild if config file checks out and user has posted back
 if( !empty($_POST['perform_rebuild']) && $config_file_ready ){
 
-    if ( rebuildConfigFile($sugar_config, $sugar_version) ) {
+    // retrieve configuration from file so that contents of config_override.php
+    // is not merged (bug #54403)
+    $clean_config = loadCleanConfig();
+    if ( rebuildConfigFile($clean_config, $sugar_version) ) {
     	$config_check = $mod_strings['MSG_CONFIG_FILE_REBUILD_SUCCESS'];
         $disable_config_rebuild = 'disabled="disabled"';
     }

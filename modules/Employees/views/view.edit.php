@@ -3,7 +3,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -47,7 +47,7 @@ class EmployeesViewEdit extends ViewEdit {
        	if(is_admin($GLOBALS['current_user'])) {
             $json = getJSONobj();
             require_once('include/QuickSearchDefaults.php');
-            $qsd = new QuickSearchDefaults();
+            $qsd = QuickSearchDefaults::getQuickSearchDefaults();
             $sqs_objects = array('EditView_reports_to_name' => $qsd->getQSUser());
             $sqs_objects['EditView_reports_to_name']['populate_list'] = array('reports_to_name', 'reports_to_id');
             $quicksearch_js = '<script type="text/javascript" language="javascript">sqs_objects = ' . $json->encode($sqs_objects) . '; enableQS();</script>';

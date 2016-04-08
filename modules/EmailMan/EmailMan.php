@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -78,7 +81,7 @@ class EmailMan extends SugarBean{
 
 	var $new_schema = true;
 
-    function create_new_list_query($order_by, $where,$filter=array(),$params=array(), $show_deleted = 0,$join_type='', $return_array = false,$parentbean=null, $singleSelect = false) {
+    function create_new_list_query($order_by, $where,$filter=array(),$params=array(), $show_deleted = 0,$join_type='', $return_array = false,$parentbean=null, $singleSelect = false, $ifListForExport = false) {
 		$query = array('select' => '', 'from' => '', 'where' => '', 'order_by' => '');
 
 
@@ -100,7 +103,7 @@ class EmailMan extends SugarBean{
 					LEFT JOIN accounts ON accounts.id = $this->table_name.related_id and $this->table_name.related_type ='Accounts'
 					LEFT JOIN prospects ON prospects.id = $this->table_name.related_id and $this->table_name.related_type ='Prospects'
 					LEFT JOIN prospect_lists ON prospect_lists.id = $this->table_name.list_id
-                    LEFT JOIN email_addr_bean_rel ON email_addr_bean_rel.bean_id = $this->table_name.related_id and $this->table_name.related_type = email_addr_bean_rel.bean_module and email_addr_bean_rel.deleted=0
+                    LEFT JOIN email_addr_bean_rel ON email_addr_bean_rel.bean_id = $this->table_name.related_id and $this->table_name.related_type = email_addr_bean_rel.bean_module and email_addr_bean_rel.primary_address = 1 and email_addr_bean_rel.deleted=0
 					LEFT JOIN campaigns ON campaigns.id = $this->table_name.campaign_id
 					LEFT JOIN email_marketing ON email_marketing.id = $this->table_name.marketing_id ";
 
@@ -112,13 +115,13 @@ class EmailMan extends SugarBean{
 			$query['where'] = "WHERE ".$where_auto;
 
     	if(isset($params['group_by'])) {
-			$query['order_by'] .= " GROUP BY {$params['group_by']}";
+            $query['group_by'] .= " GROUP BY {$params['group_by']}";
 		}
 
-		if($order_by != "")
-		{
-			$query['order_by'] = ' ORDER BY ' . $this->process_order_by($order_by, null);
-		}
+        $order_by = $this->process_order_by($order_by);
+        if (!empty($order_by)) {
+            $query['order_by'] = ' ORDER BY ' . $order_by;
+        }
 
 		if ($return_array) {
 			return $query;
@@ -152,7 +155,7 @@ class EmailMan extends SugarBean{
 					LEFT JOIN accounts ON accounts.id = $this->table_name.related_id and $this->table_name.related_type ='Accounts'
 					LEFT JOIN prospects ON prospects.id = $this->table_name.related_id and $this->table_name.related_type ='Prospects'
 					LEFT JOIN prospect_lists ON prospect_lists.id = $this->table_name.list_id
-                    LEFT JOIN email_addr_bean_rel ON email_addr_bean_rel.bean_id = $this->table_name.related_id and $this->table_name.related_type = email_addr_bean_rel.bean_module and email_addr_bean_rel.deleted=0
+                    LEFT JOIN email_addr_bean_rel ON email_addr_bean_rel.bean_id = $this->table_name.related_id and $this->table_name.related_type = email_addr_bean_rel.bean_module and email_addr_bean_rel.primary_address = 1 and email_addr_bean_rel.deleted=0
 					LEFT JOIN campaigns ON campaigns.id = $this->table_name.campaign_id
 					LEFT JOIN email_marketing ON email_marketing.id = $this->table_name.marketing_id ";
 
@@ -171,11 +174,10 @@ class EmailMan extends SugarBean{
 		else
 			$query .= "WHERE ".$where_auto;
 
-
-		if($order_by != "")
-		{
-			$query .= ' ORDER BY ' . $this->process_order_by($order_by, null);
-		}
+        $order_by = $this->process_order_by($order_by);
+        if (!empty($order_by)) {
+            $query .= ' ORDER BY ' . $order_by;
+        }
 
 		return $query;
 
@@ -200,7 +202,7 @@ class EmailMan extends SugarBean{
 					LEFT JOIN accounts ON accounts.id = $this->table_name.related_id and $this->table_name.related_type ='Accounts'
 					LEFT JOIN prospects ON prospects.id = $this->table_name.related_id and $this->table_name.related_type ='Prospects'
 					LEFT JOIN prospect_lists ON prospect_lists.id = $this->table_name.list_id
-                    LEFT JOIN email_addr_bean_rel ON email_addr_bean_rel.bean_id = $this->table_name.related_id and $this->table_name.related_type = email_addr_bean_rel.bean_module and email_addr_bean_rel.deleted=0
+                    LEFT JOIN email_addr_bean_rel ON email_addr_bean_rel.bean_id = $this->table_name.related_id and $this->table_name.related_type = email_addr_bean_rel.bean_module and email_addr_bean_rel.primary_address = 1 and email_addr_bean_rel.deleted=0
 					LEFT JOIN campaigns ON campaigns.id = $this->table_name.campaign_id
 					LEFT JOIN email_marketing ON email_marketing.id = $this->table_name.marketing_id ";
 
@@ -211,10 +213,11 @@ class EmailMan extends SugarBean{
 		else
 			$query .= "where ".$where_auto;
 
-		if($order_by != "")
-		{
-			$query .= ' ORDER BY ' . $this->process_order_by($order_by, null);
-		}
+        $order_by = $this->process_order_by($order_by);
+        if (!empty($order_by)) {
+            $query .= ' ORDER BY ' . $order_by;
+        }
+
 		return $query;
 	}
 
@@ -264,6 +267,7 @@ class EmailMan extends SugarBean{
 		global $timedate;
 
 		$this->send_attempts++;
+		$this->id = (int)$this->id;
 		if($delete || $this->send_attempts > 5){
 
 			//create new campaign log record.
@@ -289,7 +293,7 @@ class EmailMan extends SugarBean{
 			$this->db->query($query);
 		}else{
 			//try to send the email again a day later.
-			$query = 'UPDATE ' . $this->table_name . " SET in_queue='1', send_attempts='$this->send_attempts', in_queue_date=". $this->db->now() ." WHERE id = '$this->id'";
+			$query = 'UPDATE ' . $this->table_name . " SET in_queue='1', send_attempts='$this->send_attempts', in_queue_date=". $this->db->now() ." WHERE id = $this->id";
 			$this->db->query($query);
 		}
 	}
@@ -308,9 +312,10 @@ class EmailMan extends SugarBean{
      * @param string from_address Email address of the sender, usually email address of the configured inbox.
      * @param string sender_id If of the user sending the campaign.
      * @param array  macro_nv array of name value pair, one row for each replacable macro in email template text.
+     * @param string from_address_name The from address eg markeing <marketing@sugar.net>
      * @return
      */
-    function create_ref_email($marketing_id,$subject,$body_text,$body_html,$campagin_name,$from_address,$sender_id,$notes,$macro_nv,$newmessage) {
+    function create_ref_email($marketing_id,$subject,$body_text,$body_html,$campagin_name,$from_address,$sender_id,$notes,$macro_nv,$newmessage,$from_address_name) {
 
        global $mod_Strings, $timedate;
        $upd_ref_email=false;
@@ -343,6 +348,7 @@ class EmailMan extends SugarBean{
                 $this->ref_email->description_html = $body_html;
                 $this->ref_email->description = $body_text;
                 $this->ref_email->from_addr = $from_address;
+                $this->ref_email->from_addr_name = $from_address_name;
                 $this->ref_email->assigned_user_id = $sender_id;
                 if ($this->test) {
                     $this->ref_email->parent_type = 'test';
@@ -419,8 +425,11 @@ class EmailMan extends SugarBean{
                     break;
             }
 
+            //serialize data to be passed into Link2->add() function
+            $campaignData = serialize($macro_nv);
+
             //required for one email per campaign per marketing message.
-            $this->ref_email->$rel_name->add($this->related_id,array('campaign_data'=>serialize($macro_nv)));
+            $this->ref_email->$rel_name->add($this->related_id,array('campaign_data'=>$this->db->quote($campaignData)));
        }
        return $this->ref_email->id;
     }
@@ -586,7 +595,10 @@ class EmailMan extends SugarBean{
 
 		}
 
-		$module = new $class();
+        //prepare variables for 'set_as_sent' function
+        $this->target_tracker_key = create_guid();
+
+        $module = new $class();
 		$module->retrieve($this->related_id);
 		$module->emailAddress->handleLegacyRetrieve($module);
 
@@ -634,7 +646,7 @@ class EmailMan extends SugarBean{
 			}
 
 			//test for duplicate email address by marketing id.
-            $dup_query="select id from campaign_log where more_information='".$module->email1."' and marketing_id='".$this->marketing_id."'";
+            $dup_query="select id from campaign_log where more_information='".$this->db->quote($module->email1)."' and marketing_id='".$this->marketing_id."'";
 			$dup=$this->db->query($dup_query);
 			$dup_row=$this->db->fetchByAssoc($dup);
 			if (!empty($dup_row)) {
@@ -643,7 +655,6 @@ class EmailMan extends SugarBean{
 				return true;
 			}
 
-			$this->target_tracker_key=create_guid();
 
 			//fetch email marketing.
 			if (empty($this->current_emailmarketing) or !isset($this->current_emailmarketing)) {
@@ -732,14 +743,16 @@ class EmailMan extends SugarBean{
 			$mail->ClearReplyTos();
 			$mail->Sender	= $this->mailbox_from_addr;
 			$mail->From     = $this->mailbox_from_addr;
-			$mail->FromName = $this->current_emailmarketing->from_name;
+			$mail->FromName = $locale->translateCharsetMIME(trim($this->current_emailmarketing->from_name), 'UTF-8', $OBCharset);
 			$mail->ClearCustomHeaders();
             $mail->AddCustomHeader('X-CampTrackID:'.$this->target_tracker_key);
             //CL - Bug 25256 Check if we have a reply_to_name/reply_to_addr value from the email marketing table.  If so use email marketing entry; otherwise current mailbox (inbound email) entry
 			$replyToName = empty($this->current_emailmarketing->reply_to_name) ? $this->current_mailbox->get_stored_options('reply_to_name',$mail->FromName,null) : $this->current_emailmarketing->reply_to_name;
 			$replyToAddr = empty($this->current_emailmarketing->reply_to_addr) ? $this->current_mailbox->get_stored_options('reply_to_addr',$mail->From,null) : $this->current_emailmarketing->reply_to_addr;
 
-			$mail->AddReplyTo($replyToAddr,$locale->translateCharsetMIME(trim($replyToName), 'UTF-8', $OBCharset));
+            if (!empty($replyToAddr)) {
+                $mail->AddReplyTo($replyToAddr,$locale->translateCharsetMIME(trim($replyToName), 'UTF-8', $OBCharset));
+            }
 
 			//parse and replace bean variables.
             $macro_nv=array();
@@ -793,7 +806,7 @@ class EmailMan extends SugarBean{
                 //will be removed for the next release.
                 if(!isset($btracker)) $btracker=false;
                 if ($btracker) {
-                    $mail->Body .= "<br><br><a href='". $tracker_url ."'>" . $tracker_text . "</a><br><br>";
+                    $mail->Body .= "<br /><br /><a href='". $tracker_url ."'>" . $tracker_text . "</a><br /><br />";
                 } else {
                     if (!empty($tracker_url)) {
                         $mail->Body = str_replace('TRACKER_URL_START', "<a href='" . $tracker_url ."'>", $mail->Body);
@@ -806,10 +819,10 @@ class EmailMan extends SugarBean{
 
                 //do not add the default remove me link if the campaign has a trackerurl of the opotout link
                 if ($this->has_optout_links==false) {
-                    $mail->Body .= "<br><font size='2'>{$mod_strings['TXT_REMOVE_ME']}<a href='". $this->tracking_url . "index.php?entryPoint=removeme&identifier={$this->target_tracker_key}'>{$mod_strings['TXT_REMOVE_ME_CLICK']}</a></font>";
+                    $mail->Body .= "<br /><span style='font-size:0.8em'>{$mod_strings['TXT_REMOVE_ME']} <a href='". $this->tracking_url . "index.php?entryPoint=removeme&identifier={$this->target_tracker_key}'>{$mod_strings['TXT_REMOVE_ME_CLICK']}</a></span>";
                 }
                 // cn: bug 11979 - adding single quote to comform with HTML email RFC
-                $mail->Body .= "<br><IMG HEIGHT='1' WIDTH='1' src='{$this->tracking_url}index.php?entryPoint=image&identifier={$this->target_tracker_key}'>";
+                $mail->Body .= "<br /><img alt='' height='1' width='1' src='{$this->tracking_url}index.php?entryPoint=image&identifier={$this->target_tracker_key}' />";
 
                 $mail->AltBody = $template_data['body'];
                 if ($btracker) {
@@ -835,6 +848,9 @@ class EmailMan extends SugarBean{
                     $email_id=$this->create_indiv_email($module,$mail);
                 } else {
                     //find/create reference email record. all campaign targets reveiving this message will be linked with this message.
+                    $decodedFromName = mb_decode_mimeheader($this->current_emailmarketing->from_name);
+                    $fromAddressName= "{$decodedFromName} <{$this->mailbox_from_addr}>";
+
                     $email_id=$this->create_ref_email($this->marketing_id,
                                             $this->current_emailtemplate->subject,
                                             $this->current_emailtemplate->body,
@@ -844,7 +860,8 @@ class EmailMan extends SugarBean{
                                             $this->user_id,
                                             $this->notes_array,
                                             $macro_nv,
-                                            $this->newmessage
+                                            $this->newmessage,
+                                            $fromAddressName
                      );
                     $this->newmessage = false;
                 }
@@ -930,18 +947,15 @@ class EmailMan extends SugarBean{
 
      }
 
-    function create_export_query(&$order_by, &$where) {
-        $custom_join = $this->custom_fields->getJOIN(true, true,$where);
+    function create_export_query($order_by, $where)
+    {
+        $custom_join = $this->getCustomJoin(true, true, $where);
         $query = "SELECT emailman.*";
-        if($custom_join){
-            $query .= $custom_join['select'];
-        }
+        $query .= $custom_join['select'];
 
         $query .= " FROM emailman ";
 
-        if($custom_join){
-            $query .= $custom_join['join'];
-        }
+        $query .= $custom_join['join'];
 
         $where_auto = "( emailman.deleted IS NULL OR emailman.deleted=0 )";
 
@@ -950,12 +964,20 @@ class EmailMan extends SugarBean{
         else
             $query .= "where ".$where_auto;
 
-        if(!empty($order_by))
-        {
-            $query .=  ' ORDER BY '. $this->process_order_by($order_by, null);
+        $order_by = $this->process_order_by($order_by);
+        if (!empty($order_by)) {
+            $query .= ' ORDER BY ' . $order_by;
         }
 
         return $query;
     }
+
+    /**
+     * Actuall deletes the emailman record
+     * @param int $id
+     */
+    public function mark_deleted($id)
+	{
+	    $this->db->query("DELETE FROM {$this->table_name} WHERE id=".intval($id));
+	}
 }
-?>

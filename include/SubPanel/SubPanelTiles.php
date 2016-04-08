@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -79,7 +82,8 @@ class SubPanelTiles
         if(isset($_REQUEST['subpanelTabs']))
             $_SESSION['subpanelTabs'] = $_REQUEST['subpanelTabs'];
 
-        require_once 'include/tabConfig.php' ; // include/tabConfig.php in turn includes the customized file at custom/include/tabConfig.php...
+        // include/tabConfig.php in turn includes the customized file at custom/include/tabConfig.php
+        require 'include/tabConfig.php';
 
         $subpanelTabsPref = $current_user->getPreference('subpanel_tabs');
         if(!isset($subpanelTabsPref)) $subpanelTabsPref = $GLOBALS['sugar_config']['default_subpanel_tabs'];
@@ -137,12 +141,18 @@ class SubPanelTiles
 
         if(!empty($selectedGroup))
         {
-	        return SubPanelTilesTabs::getTabs($tabs, $showTabs, $selectedGroup);
+            // Bug #44344 : Custom relationships under same module only show once in subpanel tabs
+            // use object property instead new object to have ability run unit test (can override subpanel_definitions)
+            $objSubPanelTilesTabs = new SubPanelTilesTabs($this->focus);
+            $tabs = $objSubPanelTilesTabs->getTabs($tabs, $showTabs, $selectedGroup);
+            unset($objSubPanelTilesTabs);
+            return $tabs;
 	    }
         else
         {
             // see if user current user has custom subpanel layout
-            $tabs = SubPanelTilesTabs::applyUserCustomLayoutToTabs($tabs);
+			$objSubPanelTilesTabs = new SubPanelTilesTabs($this->focus);
+            $tabs = $objSubPanelTilesTabs->applyUserCustomLayoutToTabs($tabs);
 
             /* Check if the preference is set now,
              * because there's no point in executing this code if
@@ -195,7 +205,7 @@ if(document.DetailView != null &&
 		$default_div_display = 'inline';
 		if(!empty($sugar_config['hide_subpanels_on_login'])){
 			if(!isset($_SESSION['visited_details'][$this->focus->module_dir])){
-				setcookie($this->focus->module_dir . '_divs', '');
+				setcookie($this->focus->module_dir . '_divs', '',0,null,null,false,true);
 				unset($_COOKIE[$this->focus->module_dir . '_divs']);
 				$_SESSION['visited_details'][$this->focus->module_dir] = true;
 
@@ -257,6 +267,10 @@ if(document.DetailView != null &&
 	        $rel->load_relationship_meta();
         }
 
+        // this array will store names of sub-panels that can contain items
+        // of each module
+        $module_sub_panels = array();
+
         foreach ($tabs as $tab)
 		{
 			//load meta definition of the sub-panel.
@@ -286,14 +300,39 @@ if(document.DetailView != null &&
 				}
 			}
 
+            if ($thisPanel->isCollection()) {
+                // collect names of sub-panels that may contain items of each module
+                $collection_list = $thisPanel->get_inst_prop_value('collection_list');
+                if (is_array($collection_list)) {
+                    foreach ($collection_list as $data) {
+                        if (!empty($data['module'])) {
+                            $module_sub_panels[$data['module']][$tab] = true;
+                        }
+                    }
+                }
+            } else {
+                $module = $thisPanel->get_module_name();
+                if (!empty($module)) {
+                    $module_sub_panels[$module][$tab] = true;
+                }
+            }
+
 			echo '<li class="noBullet" id="whole_subpanel_' . $tab . '">';
 
 			$display= 'none';
 			$div_display = $default_div_display;
 			$cookie_name =   $tab . '_v';
 
+			if (isset($thisPanel->_instance_properties['collapsed']) && $thisPanel->_instance_properties['collapsed'])
+			{
+				$div_display = 'none';
+			}
+				
 			if(isset($div_cookies[$cookie_name])){
-				$div_display = 	$div_cookies[$cookie_name];
+				//If defaultSubPanelExpandCollapse is set, ignore the cookie that remembers whether the panel is expanded or collapsed.
+				//To be used with the above 'collapsed' metadata setting so they will always be set the same when the page is loaded.
+				if(!isset($sugar_config['defaultSubPanelExpandCollapse']) || $sugar_config['defaultSubPanelExpandCollapse'] == false)
+					$div_display = 	$div_cookies[$cookie_name];
 			}
 			if(!empty($sugar_config['hide_subpanels'])){
 				$div_display = 'none';
@@ -315,7 +354,7 @@ if(document.DetailView != null &&
 
 			if (empty($this->show_tabs))
 			{
-				$show_icon_html = SugarThemeRegistry::current()->getImage( 'advanced_search', 'border="0 align="absmiddle""',null,null,'.gif',translate('LBL_SHOW'));
+				$show_icon_html = SugarThemeRegistry::current()->getImage( 'advanced_search', 'border="0" align="absmiddle"',null,null,'.gif',translate('LBL_SHOW'));
 				$hide_icon_html = SugarThemeRegistry::current()->getImage( 'basic_search', 'border="0" align="absmiddle"',null,null,'.gif',translate('LBL_HIDE'));
 
  		 		$max_min = "<a name=\"$tab\"> </a><span id=\"show_link_".$tab."\" style=\"display: $opp_display\"><a href='#' class='utilsLink' onclick=\"current_child_field = '".$tab."';showSubPanel('".$tab."',null,null,'".$layout_def_key."');document.getElementById('show_link_".$tab."').style.display='none';document.getElementById('hide_link_".$tab."').style.display='';return false;\">"
@@ -406,6 +445,14 @@ EOQ;
 EOQ;
         }
 
+        $module_sub_panels = array_map('array_keys', $module_sub_panels);
+        $module_sub_panels = json_encode($module_sub_panels);
+        echo <<<EOQ
+<script>
+var ModuleSubPanels = $module_sub_panels;
+</script>
+EOQ;
+
 		$ob_contents = ob_get_contents();
 		ob_end_clean();
 		return $ob_contents;
@@ -424,11 +471,15 @@ EOQ;
 	function get_buttons($thisPanel,$panel_query=null)
 	{
 		$subpanel_def = $thisPanel->get_buttons();
-		$layout_manager = $this->getLayoutManager();
-		$widget_contents = '<span><table cellpadding="0" cellspacing="0"><tr>';
+        $layout_manager = $this->getLayoutManager();
+
+        //for action button at the top of each subpanel
+        // bug#51275: smarty widget to help provide the action menu functionality as it is currently sprinkled throughout the app with html
+        $buttons = array();
+        $widget_contents = '';
 		foreach($subpanel_def as $widget_data)
 		{
-			$widget_data['query']=urlencode($panel_query);
+
 			$widget_data['action'] = $_REQUEST['action'];
 			$widget_data['module'] =  $thisPanel->get_inst_prop_value('module');
 			$widget_data['focus'] = $this->focus;
@@ -437,18 +488,23 @@ EOQ;
 
 			if(empty($widget_data['widget_class']))
 			{
-				$widget_contents .= "widget_class not defined for top subpanel buttons";
+				$buttons[] = "widget_class not defined for top subpanel buttons";
 			}
 			else
 			{
-				$widget_contents .= $layout_manager->widgetDisplay($widget_data);
+                $button = $layout_manager->widgetDisplay($widget_data);
+                if ($button) {
+                    $buttons[] = $button;
+                }
 			}
 
-			$widget_contents .= '</td>';
-		}
-
-		$widget_contents .= '</tr></table></span>';
-		return $widget_contents;
+        }
+        require_once('include/Smarty/plugins/function.sugar_action_menu.php');
+        $widget_contents = smarty_function_sugar_action_menu(array(
+            'buttons' => $buttons,
+            'class' => 'clickMenu fancymenu',
+        ), $this->xTemplate);
+        return $widget_contents;
 	}
 }
 ?>

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -187,6 +187,7 @@ class SugarMerge {
 		    //Create a log entry of the custom file before it is merged
 		    if($logHistory && $save)
 		          $this->createHistoryLog($module, "{$custom_path}{$file}",$file);
+            $this->mergeMapping[$file]->sugarMerge = $this;
 		    return $this->mergeMapping[$file]->merge($module, "{$path}{$file}", "{$new_path}{$file}", "{$custom_path}{$file}", $save);
 		}
 		return false;

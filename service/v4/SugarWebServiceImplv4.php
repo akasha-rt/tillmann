@@ -2,7 +2,7 @@
 if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -73,7 +73,7 @@ class SugarWebServiceImplv4 extends SugarWebServiceImplv3_1 {
         //rrs
         $system_config = new Administration();
         $system_config->retrieveSettings('system');
-        $authController = new AuthenticationController((!empty($sugar_config['authenticationClass'])? $sugar_config['authenticationClass'] : 'SugarAuthenticate'));
+        $authController = new AuthenticationController();
         //rrs
         if(!empty($user_auth['encryption']) && $user_auth['encryption'] === 'PLAIN' && $authController->authController->userAuthenticateClass != "LDAPAuthenticateUser")
         {
@@ -285,6 +285,9 @@ class SugarWebServiceImplv4 extends SugarWebServiceImplv3_1 {
         if($offset == '' || $offset == -1){
             $offset = 0;
         } // if
+        if($deleted){
+            $deleted = -1;
+        }
         if($using_cp){
             $response = $seed->retrieveTargetList($query, $select_fields, $offset,-1,-1,$deleted);
         }else
@@ -387,7 +390,7 @@ class SugarWebServiceImplv4 extends SugarWebServiceImplv3_1 {
 
 	/**
      * Given a list of modules to search and a search string, return the id, module_name, along with the fields
-     * We will support Accounts, Bug Tracker, Cases, Contacts, Leads, Opportunities, Project, ProjectTask, Quotes
+     * We will support Accounts, Bugs, Cases, Contacts, Leads, Opportunities, Project, ProjectTask, Quotes
      *
      * @param string $session			- Session ID returned by a previous call to login.
      * @param string $search_string 	- string to search
@@ -600,6 +603,9 @@ class SugarWebServiceImplv4 extends SugarWebServiceImplv3_1 {
 
 
 
+    /**
+     * Get OAuth reqtest token
+     */
     public function oauth_request_token()
     {
         $GLOBALS['log']->info('Begin: SugarWebServiceImpl->oauth_request_token');
@@ -618,6 +624,9 @@ class SugarWebServiceImplv4 extends SugarWebServiceImplv3_1 {
         return $result;
     }
 
+    /**
+     * Get OAuth access token
+     */
     public function oauth_access_token()
     {
         $GLOBALS['log']->info('Begin: SugarWebServiceImpl->oauth_access_token');
@@ -636,7 +645,7 @@ class SugarWebServiceImplv4 extends SugarWebServiceImplv3_1 {
         return $result;
     }
 
-    public function oauth_access($session)
+    public function oauth_access($session='')
     {
         $GLOBALS['log']->info('Begin: SugarWebServiceImpl->oauth_access');
         $error = new SoapError();
@@ -652,6 +661,77 @@ class SugarWebServiceImplv4 extends SugarWebServiceImplv3_1 {
         return $result;
     }
 
+
+    /**
+     * Get next job from the queue
+     * @param string $session
+     * @param string $clientid
+     */
+    public function job_queue_next($session, $clientid)
+    {
+        $GLOBALS['log']->info('Begin: SugarWebServiceImpl->job_queue_next');
+        $error = new SoapError();
+        if (! self::$helperObject->checkSessionAndModuleAccess($session, 'invalid_session', '', 'read', 'no_access',  $error)) {
+            $GLOBALS['log']->info('End: SugarWebServiceImpl->job_queue_next denied.');
+            return;
+        }
+        require_once 'include/SugarQueue/SugarJobQueue.php';
+        $queue = new SugarJobQueue();
+        $job = $queue->nextJob($clientid);
+        if(!empty($job)) {
+            $jobid = $job->id;
+        } else {
+            $jobid = null;
+        }
+        $GLOBALS['log']->info('End: SugarWebServiceImpl->job_queue_next');
+        return array("results" => $jobid);
+    }
+
+    /**
+     * Run cleanup and schedule
+     * @param string $session
+     * @param string $clientid
+     */
+    public function job_queue_cycle($session, $clientid)
+    {
+        $GLOBALS['log']->info('Begin: SugarWebServiceImpl->job_queue_cycle');
+        $error = new SoapError();
+        if (! self::$helperObject->checkSessionAndModuleAccess($session, 'invalid_session', '', 'read', 'no_access',  $error)) {
+            $GLOBALS['log']->info('End: SugarWebServiceImpl->job_queue_cycle denied.');
+            return;
+        }
+        require_once 'include/SugarQueue/SugarJobQueue.php';
+        $queue = new SugarJobQueue();
+        $queue->cleanup();
+        $queue->runSchedulers();
+        $GLOBALS['log']->info('End: SugarWebServiceImpl->job_queue_cycle');
+        return array("results" => "ok");
+    }
+
+    /**
+     * Run job from queue
+     * @param string $session
+     * @param string $jobid
+     * @param string $clientid
+     */
+    public function job_queue_run($session, $jobid, $clientid)
+    {
+        $GLOBALS['log']->info('Begin: SugarWebServiceImpl->job_queue_run');
+        $error = new SoapError();
+        if (! self::$helperObject->checkSessionAndModuleAccess($session, 'invalid_session', '', 'read', 'no_access',  $error)) {
+            $GLOBALS['log']->info('End: SugarWebServiceImpl->job_queue_run denied.');
+            return;
+        }
+        $GLOBALS['log']->debug('Starting job $jobid execution as $clientid');
+        require_once 'modules/SchedulersJobs/SchedulersJob.php';
+        $result = SchedulersJob::runJobId($jobid, $clientid);
+        $GLOBALS['log']->info('End: SugarWebServiceImpl->job_queue_run');
+        if($result === true) {
+            return array("results" => true);
+        } else {
+            return array("results" => false, "message" => $result);
+        }
+    }
 }
 
 SugarWebServiceImplv4::$helperObject = new SugarWebServiceUtilv4();

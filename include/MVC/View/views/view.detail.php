@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -72,7 +72,7 @@ class ViewDetail extends SugarView
  	    $metadataFile = $this->getMetaDataFile();
  	    $this->dv = new DetailView2();
  	    $this->dv->ss =&  $this->ss;
- 	    $this->dv->setup($this->module, $this->bean, $metadataFile, 'include/DetailView/DetailView.tpl'); 		
+ 	    $this->dv->setup($this->module, $this->bean, $metadataFile, get_custom_file_if_exists('include/DetailView/DetailView.tpl'));
     } 	
  	
     /**

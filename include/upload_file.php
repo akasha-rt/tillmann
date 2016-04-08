@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -49,6 +52,7 @@ class UploadFile
 {
 	var $field_name;
 	var $stored_file_name;
+	var $uploaded_file_name;
 	var $original_file_name;
 	var $temp_file_location;
 	var $use_soap = false;
@@ -122,7 +126,7 @@ class UploadFile
 	    }
 	    return "index.php?entryPoint=download&type=$type&id={$document->id}";
 	}
-
+	
 	/**
 	 * Try renaming a file to bean_id name
 	 * @param string $filename
@@ -224,9 +228,20 @@ class UploadFile
 		    return false;
 		}
 
+        //check to see if there are any errors from upload
 		if($_FILES[$this->field_name]['error'] != UPLOAD_ERR_OK) {
 		    if($_FILES[$this->field_name]['error'] != UPLOAD_ERR_NO_FILE) {
-                $GLOBALS['log']->error('File upload error: '.self::$filesError[$_FILES[$this->field_name]['error']]);
+                if($_FILES[$this->field_name]['error'] == UPLOAD_ERR_INI_SIZE) {
+                    //log the error, the string produced will read something like:
+                    //ERROR: There was an error during upload. Error code: 1 - UPLOAD_ERR_INI_SIZE - The uploaded file exceeds the upload_max_filesize directive in php.ini. upload_maxsize is 16
+                    $errMess = string_format($GLOBALS['app_strings']['UPLOAD_ERROR_TEXT_SIZEINFO'],array($_FILES['filename_file']['error'], self::$filesError[$_FILES['filename_file']['error']],$sugar_config['upload_maxsize']));
+                    $GLOBALS['log']->fatal($errMess);
+                }else{
+                    //log the error, the string produced will read something like:
+                    //ERROR: There was an error during upload. Error code: 3 - UPLOAD_ERR_PARTIAL - The uploaded file was only partially uploaded.
+                    $errMess = string_format($GLOBALS['app_strings']['UPLOAD_ERROR_TEXT'],array($_FILES['filename_file']['error'], self::$filesError[$_FILES['filename_file']['error']]));
+                    $GLOBALS['log']->fatal($errMess);
+                }
 		    }
 		    return false;
 		}
@@ -246,6 +261,7 @@ class UploadFile
 		$this->mime_type = $this->getMime($_FILES[$this->field_name]);
 		$this->stored_file_name = $this->create_stored_filename();
 		$this->temp_file_location = $_FILES[$this->field_name]['tmp_name'];
+		$this->uploaded_file_name = $_FILES[$this->field_name]['name'];
 
 		return true;
 	}
@@ -277,21 +293,29 @@ class UploadFile
 	function getMime($_FILES_element)
 	{
 		$filename = $_FILES_element['name'];
+        $filetype = isset($_FILES_element['type']) ? $_FILES_element['type'] : null;
         $file_ext = pathinfo($filename, PATHINFO_EXTENSION);
 
-        //If no file extension is available and the mime is octet-stream try to determine the mime type.
-        $recheckMime = empty($file_ext) && ($_FILES_element['type']  == 'application/octet-stream');
+        $is_image = strpos($filetype, 'image/') === 0;
+        // if it's an image, or no file extension is available and the mime is octet-stream
+        // try to determine the mime type
+        $recheckMime = $is_image || (empty($file_ext) && $filetype == 'application/octet-stream');
 
-		if( $_FILES_element['type'] && !$recheckMime) {
-			$mime = $_FILES_element['type'];
+        $mime = 'application/octet-stream';
+        if ($filetype && !$recheckMime) {
+            $mime = $filetype;
 		} elseif( function_exists( 'mime_content_type' ) ) {
 			$mime = mime_content_type( $_FILES_element['tmp_name'] );
-		} elseif( function_exists( 'ext2mime' ) ) {
-			$mime = ext2mime( $_FILES_element['name'] );
-		} else {
-			$mime = ' application/octet-stream';
-		}
-		return $mime;
+        } elseif ($is_image) {
+            $info = getimagesize($_FILES_element['tmp_name']);
+            if ($info) {
+                $mime = $info['mime'];
+            }
+        } elseif (function_exists('ext2mime')) {
+            $mime = ext2mime($filename);
+        }
+
+        return $mime;
 	}
 
 	/**
@@ -302,6 +326,40 @@ class UploadFile
 	{
 		return $this->stored_file_name;
 	}
+	
+	function get_temp_file_location()
+	{
+	    return $this->temp_file_location;
+	}
+	
+	function get_uploaded_file_name()
+	{
+	    return $this->uploaded_file_name;
+	}
+	
+	function get_mime_type()
+	{
+	    return $this->mime_type;
+	}
+	
+	/**
+	 * Returns the contents of the uploaded file
+	 */
+	public function get_file_contents() {
+	    
+	    // Need to call
+	    if ( !isset($this->temp_file_location) ) {
+	        $this->confirm_upload();
+	    }
+	    
+	    if (($data = @file_get_contents($this->temp_file_location)) === false) {
+	        return false;
+        }
+           
+        return $data;
+	}
+
+	
 
 	/**
 	 * creates a file's name for preparation for saving
@@ -497,6 +555,74 @@ class UploadStream
     protected static $upload_dir;
 
     /**
+     * Method checks Suhosin restrictions to use streams in php
+     *
+     * @static
+     * @return bool is allowed stream or not
+     */
+    public static function getSuhosinStatus()
+    {
+        // looks like suhosin patch doesn't block protocols, only suhosin extension (tested on FreeBSD)
+        // if suhosin is not installed it is okay for us
+        if (extension_loaded('suhosin') == false)
+        {
+            return true;
+        }
+        $configuration = ini_get_all('suhosin', false);
+
+        // suhosin simulation is okay for us
+        if ($configuration['suhosin.simulation'] == true)
+        {
+            return true;
+        }
+
+        // checking that UploadStream::STREAM_NAME is allowed by white list
+        $streams = $configuration['suhosin.executor.include.whitelist'];
+        if ($streams != '')
+        {
+            $streams = explode(',', $streams);
+            foreach($streams as $stream)
+            {
+                $stream = explode('://', $stream, 2);
+                if (count($stream) == 1)
+                {
+                    if ($stream[0] == UploadStream::STREAM_NAME)
+                    {
+                        return true;
+                    }
+                }
+                elseif ($stream[1] == '' && $stream[0] == UploadStream::STREAM_NAME)
+                {
+                    return true;
+                }
+            }
+
+            $GLOBALS['log']->fatal('Stream ' . UploadStream::STREAM_NAME . ' is not listed in suhosin.executor.include.whitelist and blocked because of it');
+            return false;
+        }
+
+        // checking that UploadStream::STREAM_NAME is not blocked by black list
+        $streams = $configuration['suhosin.executor.include.blacklist'];
+        if ($streams != '')
+        {
+            $streams = explode(',', $streams);
+            foreach($streams as $stream)
+            {
+                $stream = explode('://', $stream, 2);
+                if ($stream[0] == UploadStream::STREAM_NAME)
+                {
+                    $GLOBALS['log']->fatal('Stream ' . UploadStream::STREAM_NAME . 'is listed in suhosin.executor.include.blacklist and blocked because of it');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        $GLOBALS['log']->fatal('Suhosin blocks all streams, please define ' . UploadStream::STREAM_NAME . ' stream in suhosin.executor.include.whitelist');
+        return false;
+    }
+
+    /**
      * Get upload directory
      * @return string
      */
@@ -526,7 +652,7 @@ class UploadStream
     /**
      * Register the stream
      */
-    public function register()
+    public static function register()
     {
         stream_register_wrapper(self::STREAM_NAME, __CLASS__);
     }
@@ -541,7 +667,6 @@ class UploadStream
     	$path = substr($path, strlen(self::STREAM_NAME)+3); // cut off upload://
     	$path = str_replace("\\", "/", $path); // canonicalize path
     	if($path == ".." || substr($path, 0, 3) == "../" || substr($path, -3, 3) == "/.." || strstr($path, "/../")) {
-    		$GLOBALS['log']->fatal("Invalid uploaded file name supplied: $path");
     		return null;
     	}
         return self::getDir()."/".$path;

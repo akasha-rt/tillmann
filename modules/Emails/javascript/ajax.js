@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -398,6 +398,7 @@ var AjaxObject = {
 		document.getElementById('email_attachment').value = '';
 		
 		var ret = YAHOO.lang.JSON.parse(o.responseText);
+		ret.name = escape(ret.name);
 		var idx = SUGAR.email2.composeLayout.currentInstanceId;
 		var overall = document.getElementById('addedFiles' + idx);
 		var index = overall.childNodes.length;
@@ -676,7 +677,7 @@ AjaxObject.detailView = {
 		var ret = YAHOO.lang.JSON.parse(o.responseText);
 
 		if(!SED.quickCreateDialog) {
-			SED.quickCreateDialog = new YAHOO.widget.Dialog("quickCreate", {
+			SED.quickCreateDialog = new YAHOO.widget.Dialog("quickCreateForEmail", {
 				modal:true,
 				visible:true,
             	fixedcenter:true,
@@ -725,19 +726,31 @@ AjaxObject.detailView = {
 		var editForm = document.getElementById('form_EmailQCView_' + ret.module);
 		if (editForm) {
 		  editForm.module.value = 'Emails';
-		  var count = SUGAR.EmailAddressWidget.count[ret.module] ? SUGAR.EmailAddressWidget.count[ret.module] : 0;
-		  var tableId = YAHOO.util.Dom.getElementsByClassName('emailaddresses', 'table', editForm)[0].id;
+		  var count = 0;
+          if (SUGAR.EmailAddressWidget.count[ret.module]) {
+              count = SUGAR.EmailAddressWidget.count[ret.module] - 1;
+          }
+          var tableId = YAHOO.util.Dom.getElementsByClassName('emailaddresses', 'table', editForm)[0];
+          tableId = tableId ? tableId.id : tableId;
 		  var instId = ret.module + count;
 		  SED.quickCreateEmailsToAdd = ret.emailAddress;
 		  SED.quickCreateEmailCallback = function(instId, tableId) {
-			  var eaw = SUGAR.EmailAddressWidget.instances[instId];
-			  if (typeof(eaw) == "undefined")
-				  window.setTimeout("SUGAR.email2.detailView.quickCreateEmailCallback('"
-					  	+ instId + "','" + tableId + "');", 100);
-			  eaw.prefillEmailAddresses(tableId, SUGAR.email2.detailView.quickCreateEmailsToAdd);
+              //try to fill up the email address if and only if emailwidget is existed in the form
+              if(tableId) {
+                  var eaw = SUGAR.EmailAddressWidget.instances[instId];
+                  if (eaw) {
+                      eaw.prefillEmailAddresses(tableId, SUGAR.email2.detailView.quickCreateEmailsToAdd);
+                  } else {
+                      window.setTimeout(function() {
+                          SUGAR.email2.detailView.quickCreateEmailCallback(instId, tableId);
+                      }, 100);
+
+                  }
+              }
 		  }
-		  window.setTimeout("SUGAR.email2.detailView.quickCreateEmailCallback('"
-				  	+ instId + "','" + tableId + "');", 100);
+		  window.setTimeout(function() {
+              SUGAR.email2.detailView.quickCreateEmailCallback(instId, tableId);
+            }, 100);
 		}
 	},
 
@@ -745,30 +758,11 @@ AjaxObject.detailView = {
 	    SUGAR.hideMessageBox();
 		SUGAR.email2.detailView.quickCreateDialog.hide();
 		validate['EditView'] = [ ];
-            //Dhaval
-            var ret = YAHOO.lang.JSON.parse(o.responseText);
-            if(ret.id == 0 ){
-                    ajaxStatus.showStatus('Contact already exists');
-                     window.setTimeout("ajaxStatus.hideStatus();", 2000);
-                }//Reena
-                if(ret.module == 'Contacts'){
-                    window.location = "index.php?module=Contacts&action=DetailView&record="+ret.beanId;
-                }//End - Reena
-            //End - Dhaval
 	},
 
 	saveQuickCreateFormAndReply : function(o) {
         SUGAR.hideMessageBox();
         var ret = YAHOO.lang.JSON.parse(o.responseText);
-        //Dhaval
-        if(ret.id == 0 ){
-                    ajaxStatus.showStatus('Contact already exists');
-                     window.setTimeout("ajaxStatus.hideStatus();", 2000);
-                     SUGAR.email2.detailView.quickCreateDialog.hide();
-                     validate['EditView'] = [ ];
-                     return ;
-                }
-        //End - Dhaval        
         SUGAR.email2.detailView.quickCreateDialog.hide();
         var qcd = SUGAR.email2.detailView.quickCreateDialog;
         var type = (qcd.qcmodule == 'Cases') ? 'replyCase' : 'reply';
@@ -783,17 +777,10 @@ AjaxObject.detailView = {
     },
 
 	saveQuickCreateFormAndAddToAddressBook : function(o) {
-	   
-           SUGAR.hideMessageBox();
+	   SUGAR.hideMessageBox();
 		SUGAR.email2.detailView.quickCreateDialog.hide();
 		SUGAR.email2.complexLayout.findPanel('contactsTab').show();
 		validate['EditView'] = [ ];
-                //Dhaval
-                var ret = YAHOO.lang.JSON.parse(o.responseText);
-                if(ret.id == 0 ){
-                    ajaxStatus.showStatus('Contact already exists');
-                     window.setTimeout("ajaxStatus.hideStatus();", 2000);}
-                 //End - Dhaval
 	},
 
 	handleAssignmentDialogAssignAction : function() {
@@ -1398,9 +1385,7 @@ var callbackAssignmentAction = {
 		SE.listView.refreshGrid();
 		SUGAR.hideMessageBox();
 		if(o.responseText != '') {
-	       //Prevent error msg - Niranjan
-               //SUGAR.showMessageBox('Assignment action result', o.responseText, 'alert');
-               //End
+	       SUGAR.showMessageBox('Assignment action result', o.responseText, 'alert');
 	    } // if
 	} ,
 	failure	: AjaxObject.handleFailure,
@@ -1412,9 +1397,7 @@ var callbackMoveEmails = {
 	    SE.listView.refreshGrid();
 		SUGAR.hideMessageBox();
 		if(o.responseText != '') {
-	       //Prevent error msg - Niranjan
-               //SUGAR.showMessageBox(app_strings.LBL_EMAIL_ERROR_DESC, o.responseText, 'alert');
-               //End
+	       SUGAR.showMessageBox(app_strings.LBL_EMAIL_ERROR_DESC, o.responseText, 'alert');
 	    } // if
 	} ,
 	failure	: AjaxObject.handleFailure,
@@ -1527,10 +1510,9 @@ var callbackReplyForward = {
 
             html = "&nbsp;";
             //add hr tag if this is not a reply draft or forward draft
-            //To remove hr from the body part when pressed reply
-           /* if(!isReOrFwDraft){
+            if(!isReOrFwDraft){
                 html += "<div><hr></div>";
-            }*/
+            }
             html +=  a.description;
 
 			t.setContent(html);//

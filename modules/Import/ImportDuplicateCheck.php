@@ -3,7 +3,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -103,7 +103,7 @@ class ImportDuplicateCheck
      */
     public function getDuplicateCheckIndexes()
     {
-        $super_language_pack = sugarArrayMerge(
+        $super_language_pack = sugarLangArrayMerge(
             return_module_language($GLOBALS['current_language'], $this->_focus->module_dir),
             $GLOBALS['app_strings']
             );
@@ -182,6 +182,18 @@ class ImportDuplicateCheck
      */
     public function isADuplicateRecord( $indexlist )
     {
+        // Bug #51264 : Importing updates to rows prevented by duplicates check
+        if ( !empty($this->_focus) && ($this->_focus instanceof SugarBean) && !empty($this->_focus->id) )
+        {
+            $_focus = clone $this->_focus;
+            $_focus->id = null;
+            $_focus->retrieve($this->_focus->id);
+            if ( !empty($_focus->id) )
+            {
+                return false;
+            }
+            unset($_focus);
+        }
 
         //lets strip the indexes of the name field in the value and leave only the index name
         $origIndexList = $indexlist;
@@ -242,7 +254,7 @@ class ImportDuplicateCheck
             // Adds a hook so you can define a method in the bean to handle dupe checking
             elseif ( isset($index['dupeCheckFunction']) ) {
                 $functionName = substr_replace($index['dupeCheckFunction'],'',0,9);
-                if ( method_exists($this->_focus,$functionName) )
+                if ( method_exists($this->_focus,$functionName) && $this->_focus->$functionName($index) === true)
                     return $this->_focus->$functionName($index);
             }
             else {

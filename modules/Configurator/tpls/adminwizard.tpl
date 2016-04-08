@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -44,7 +44,6 @@
 {$SUGAR_JS}
 {$SUGAR_CSS}
 {$CSS}
-{overlib_includes}
 </head>
 {literal}
 <script type='text/javascript'>
@@ -121,7 +120,7 @@ function disableReturnSubmission(e) {
                 </td>
             </tr>
             <tr>
-                <td scope="row" width='12%' nowrap>{$MOD.NEW_LOGO}&nbsp;{sugar_help text=$MOD.NEW_LOGO_HELP}
+                <td scope="row" width='12%' nowrap>{$MOD.NEW_LOGO}&nbsp;{sugar_help text=$MOD.NEW_LOGO_HELP_NO_SPACE}
                 </td>
                 <td  width='35%'>
                     <div id="container_upload"></div>
@@ -131,7 +130,7 @@ function disableReturnSubmission(e) {
             <tr>
                 <td scope="row" width='12%' nowrap>{$MOD.CURRENT_LOGO}&nbsp;{sugar_help text=$MOD.CURRENT_LOGO_HELP}</td>
                 <td width='35%' >
-                    <img id="company_logo_image" alt='{$MOD.LBL_LOGO}' src='{$company_logo}' height="40" width="212" />
+                    <img id="company_logo_image" alt='{$MOD.LBL_LOGO}' src='{$company_logo}' />
                 </td>
             </tr>
             </table>
@@ -277,7 +276,7 @@ function disableReturnSubmission(e) {
                         <span id="other" class="yui-button yui-radio-button{if $mail_smtptype == 'other' || empty($mail_smtptype)} yui-button-checked{/if}">
                             <span class="first-child">
                                 <button type="button" name="mail_smtptype" value="other">
-                                    &nbsp;&nbsp;&nbsp;&nbsp;{$APP.LBL_TABGROUP_OTHER}&nbsp;&nbsp;&nbsp;&nbsp;
+                                    &nbsp;&nbsp;&nbsp;&nbsp;{$APP.LBL_SMTPTYPE_OTHER}&nbsp;&nbsp;&nbsp;&nbsp;
                                 </button>
                             </span>
                         </span>
@@ -321,12 +320,12 @@ function disableReturnSubmission(e) {
                                 <td width="20%" scope="row">
                                     <span id="notify_allow_default_outbound_label">
                                     {$MOD.LBL_ALLOW_DEFAULT_SELECTION}&nbsp;
-                                    <img border="0" onmouseout="return nd();" onmouseover="return overlib('{$MOD.LBL_ALLOW_DEFAULT_SELECTION_HELP}', FGCLASS, 'olFgClass', CGCLASS, 'olCgClass', BGCLASS, 'olBgClass', TEXTFONTCLASS, 'olFontClass', CAPTIONFONTCLASS, 'olCapFontClass', CLOSEFONTCLASS, 'olCloseFontClass', WIDTH, -1, NOFOLLOW, 'ol_nofollow')" src="index.php?entryPoint=getImage&themeName={$THEME}&imageName=helpInline.gif">
+                                   {sugar_help text=$MOD.LBL_ALLOW_DEFAULT_SELECTION_HELP }
                                     </span>
                                 </td>
                                 <td width="30%">
                                      <slot>
-                                     <input type='hidden' name='notify_allow_default_outbound' value='0'>
+                                     <input type="hidden" name="notify_allow_default_outbound" id="notify_allow_default_outbound_hidden_input" value="0">
                                      <input id='notify_allow_default_outbound' name='notify_allow_default_outbound' value="2" tabindex='1' class="checkbox" type="checkbox" {$notify_allow_default_outbound_on}>
                                      </slot>
                                 </td>                
@@ -482,7 +481,8 @@ var SugarWizard = new function()
         case 'system':
             document.getElementById('upload_panel').style.display="inline";
             document.getElementById('upload_panel').style.position="absolute";
-            YAHOO.util.Dom.setXY('upload_panel', YAHOO.util.Dom.getXY('container_upload'));
+            YAHOO.util.Dom.setX('upload_panel', YAHOO.util.Dom.getX('container_upload'));
+            YAHOO.util.Dom.setY('upload_panel', YAHOO.util.Dom.getY('container_upload')-10);
             break;
         case 'smtp':
             if ( !SUGAR.smtpButtonGroup ) {
@@ -509,7 +509,7 @@ function adjustEmailSettings(){
         user = document.getElementById('mail_smtpuser'),
         pass = document.getElementById('mail_smtppass'),
         port = document.getElementById('mail_smtpport');
-    if( !server.value || !user.value || !pass.value || !port.value)
+    if( !server.value || !port.value)
     {
             server.value = ""; 
             user.value = ""; 
@@ -528,7 +528,7 @@ function adjustEmailSettings(){
             addToValidate("AdminWizard", 'mail_smtpuser', 'email', false, 
               SUGAR.language.get('Configurator','LBL_GMAIL_SMTPUSER'));
         }
-        else if (server.value == "plus.smtp.mail.yahoo.com" && !isValidEmail(user.value)) {
+        else if (server.value == "smtp.mail.yahoo.com" && !isValidEmail(user.value)) {
             addToValidate("AdminWizard", 'mail_smtpuser', 'email', false, 
               SUGAR.language.get('Configurator','LBL_YAHOOMAIL_SMTPUSER'));
         }
@@ -559,7 +559,7 @@ function changeEmailScreenDisplay(smtptype)
     
     switch (smtptype) {
     case "yahoomail":
-        document.getElementById("mail_smtpserver").value = 'plus.smtp.mail.yahoo.com';
+        document.getElementById("mail_smtpserver").value = 'smtp.mail.yahoo.com';
         document.getElementById("mail_smtpport").value = '465';
         document.getElementById("mail_smtpauth_req").checked = true;
         var ssl = document.getElementById("mail_smtpssl");
@@ -575,18 +575,20 @@ function changeEmailScreenDisplay(smtptype)
         document.getElementById("mail_smtpuser_label").innerHTML = '{/literal}{$MOD.LBL_YAHOOMAIL_SMTPUSER}{literal}';
         break;
     case "gmail":
-        document.getElementById("mail_smtpserver").value = 'smtp.gmail.com';
-        document.getElementById("mail_smtpport").value = '587';
-        document.getElementById("mail_smtpauth_req").checked = true;
-        var ssl = document.getElementById("mail_smtpssl");
-        for(var j=0;j<ssl.options.length;j++) {
-            if(ssl.options[j].text == 'TLS') {
-                ssl.options[j].selected = true;
-                break;
+        if(document.getElementById("mail_smtpserver").value == "" || document.getElementById("mail_smtpserver").value == 'smtp.mail.yahoo.com') {
+            document.getElementById("mail_smtpserver").value = 'smtp.gmail.com';
+            document.getElementById("mail_smtpport").value = '587';
+            document.getElementById("mail_smtpauth_req").checked = true;
+            var ssl = document.getElementById("mail_smtpssl");
+            for(var j=0;j<ssl.options.length;j++) {
+                if(ssl.options[j].text == 'TLS') {
+                    ssl.options[j].selected = true;
+                    break;
+                }
             }
         }
-        document.getElementById("mailsettings1").style.display = 'none';
-        document.getElementById("mailsettings2").style.display = 'none';
+        //document.getElementById("mailsettings1").style.display = 'none';
+        //document.getElementById("mailsettings2").style.display = 'none';
         document.getElementById("mail_smtppass_label").innerHTML = '{/literal}{$MOD.LBL_GMAIL_SMTPPASS}{literal}';
         document.getElementById("mail_smtpuser_label").innerHTML = '{/literal}{$MOD.LBL_GMAIL_SMTPUSER}{literal}';
         break;

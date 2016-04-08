@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,7 +35,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * "Powered by SugarCRM".
  ********************************************************************************/
 
-require_once('include/generic/SugarWidgets/SugarWidgetFielddatetime.php');
+
 
 class SugarWidgetFieldDate extends SugarWidgetFieldDateTime
 {
@@ -106,4 +106,18 @@ class SugarWidgetFieldDate extends SugarWidgetFieldDateTime
         return $this->queryFilterOn($layout_def);
 	}
 
+    protected function queryMonth($layout_def, $month)
+    {
+        $end = clone($month);
+        $end->setDate($month->year, $month->month, $month->days_in_month);
+        $beginDate = $month->asDbDate();
+        $endDate = $end->asDbDate();
+        return $this->get_start_end_date_filter($layout_def, $beginDate, $endDate);
+    }
+
+    protected function now()
+    {
+        global $timedate;
+        return $timedate->tzGMT($timedate->getNow(), $this->getAssignedUser());
+    }
 }

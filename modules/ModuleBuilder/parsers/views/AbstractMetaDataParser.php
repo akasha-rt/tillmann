@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -128,6 +128,28 @@ abstract class AbstractMetaDataParser
         }
         return $newAry;
 	}
+
+    /**
+     * Used to determine if a field property is true or false given that it could be
+     * the boolean value or a string value such use 'false' or '0'
+     * @static
+     * @param $val
+     * @return bool
+     */
+    protected static function isTrue($val)
+    {
+        if (is_string($val))
+        {
+            $str = strtolower($val);
+            return ($str != '0' && $str != 'false' && $str != "");
+        }
+        //For non-string types, juse use PHP's normal boolean conversion
+        else{
+            return ($val == true);
+        }
+
+        return true;
+    }
 
 }
 ?>

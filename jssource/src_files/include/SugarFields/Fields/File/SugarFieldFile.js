@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -43,7 +43,7 @@ if ( typeof(SUGAR.field.file) == 'undefined' ) {
         deleteAttachment: function(elemBaseName,docTypeName,elem) {
             ajaxStatus.showStatus(SUGAR.language.get("app_strings", "LBL_REMOVING_ATTACHMENT"));
             elem.form.deleteAttachment.value=1;
-            elem.form.action.value="EditView";
+            elem.form.action.value="deleteattachment";
 
             var callback =  SUGAR.field.file.deleteAttachmentCallbackGen(elemBaseName,docTypeName);
             var success = function(data) {

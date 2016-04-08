@@ -3244,11 +3244,13 @@ var Canvas;
       styles.width = width + "px";
       styles.height = height + "px";
       //small ExCanvas fix
-      //if(!supportsCanvas) {
-        //this.translateToCenter(size);
-      //} else {
-        this.translateToCenter();
-      //}
+      if (!supportsCanvas) {
+        // for some unknown reason _resize() method is not being called in some
+        // IE browser instances, so call it manually
+        // in obfuscated version of flashcanvas.js the method is renamed to I()
+        this.getCtx().I(width, height);
+      }
+      this.translateToCenter();
       this.translateOffsetX =
         this.translateOffsetY = 0;
       this.scaleOffsetX = 
@@ -9467,8 +9469,194 @@ $jit.ST.Plot = new Class({
           }
         }), animating);
         if(scale >= 0) node.drawn = true;
-    },   
-   
+    },
+
+    /**
+     * Return array with correct positions for each element
+     *
+     * @param {Array} dimArray
+     * @param {Number} fontHeight
+     * @return {Array}
+     */
+    positions: function(dimArray, fontHeight)
+    {
+        var group = [];
+        var isLastElem = false;
+        var i;
+        var newArray = [];
+        var position = 0;
+        var currentState;
+
+
+        for (i = 0; i < dimArray.length; i++)
+        {
+            currentState = {type: 'element', position: position, height: dimArray[i], font: fontHeight, filament: true};
+            if (dimArray[i] <= fontHeight)
+            {
+                if (isLastElem)
+                {
+                    group = [];
+                }
+                group.push(currentState);
+                isLastElem = false;
+            }
+            else
+            {
+                group.push(currentState);
+                newArray.push({type: 'group', val:group, groupHeight: 0, groupPosition: group[0].position});
+                group = [];
+                isLastElem = true;
+            }
+            position += dimArray[i];
+        }
+        if (group.length > 0)
+        {
+            newArray.push({type: 'group', val: group, groupHeight: 0, groupPosition: group[0].position});
+            group = [];
+        }
+        var figureHeight = position;
+
+        for (i = 0; i < newArray.length; i++)
+        {
+            newArray[i] = this.pipelineGetHeight(newArray[i]);
+        }
+
+        newArray = this.pipelineMoveBlocks(newArray, figureHeight, fontHeight);
+
+        var ret = [];
+        for (i = 0; i < newArray.length; i++)
+        {
+            group = newArray[i].val;
+            for (var k = 0; k < group.length; k++)
+            {
+                ret.push(group[k]);
+            }
+        }
+        return ret;
+    },
+
+    /**
+     * Return recalculation group height(groupHeight) and positions of elements
+     *
+     * @param {Array} group
+     * @return {Array}
+     */
+    pipelineGetHeight: function(group)
+    {
+        var position = 0;
+        var between = 3;
+        var count = group.val.length;
+        var fontHeight = group.val[0].font;
+        var positionStart = group.val[0].position;
+
+        if (count == 1)
+        {
+            group.groupHeight = group.val[0].font;
+            group.val[0].filament = false;
+            return group;
+        }
+
+        if (count == 2)
+        {
+            group.groupHeight = fontHeight * 2 + between;
+            group.val[1].position = positionStart + fontHeight + between;
+            group.val[0].filament = false;
+            group.val[1].filament = false;
+            return group;
+        }
+
+        var even = true;
+        for (var i = 0; i < group.val.length; i++)
+        {
+            group.val[i].position = positionStart + position;
+            even = i % 2;
+            position += between;
+            if (even)
+            {
+                group.val[i].filament = false;
+                position += fontHeight;
+            }
+            else
+            {
+                group.val[i].filament = true;
+            }
+        }
+        group.groupHeight = (group.val[group.val.length - 1].position - group.val[0].position) + fontHeight + between;
+        return group;
+    },
+
+    /**
+     * Return array with new group and elements positions relation figure layout border
+     *
+     * @param {Array} block
+     * @param {Number} figureheight
+     * @param {Number} fontHeight
+     * @return {Array}
+     */
+    pipelineMoveBlocks: function(block, figureheight, fontHeight)
+    {
+        var offset;
+        var rebuild;
+        if (block.length < 2)
+        {
+            return block;
+        }
+
+        var lastValue = block[block.length - 1];
+        var prelastValue;
+        if ((lastValue.groupPosition + lastValue.groupHeight) > figureheight)
+        {
+            offset = (figureheight - lastValue.groupHeight) - lastValue.groupPosition;
+            lastValue.groupPosition += offset;
+            for (var li = 0; li < lastValue.val.length; li++)
+            {
+                lastValue.val[li].position += offset;
+            }
+            prelastValue = block[block.length - 2];
+            if (prelastValue.groupPosition + fontHeight > lastValue.groupPosition)
+            {
+                block[block.length - 2] = this.pipelineMergeGroup(lastValue, prelastValue);
+                block.pop();
+                rebuild = true;
+            }
+            if (block.length < 3)
+            {
+                return block;
+            }
+        }
+        for (var i = 1; i < block.length; i++)
+        {
+            if ( (block[i - 1].groupPosition + block[i - 1].groupHeight) > block[i].groupPosition)
+            {
+                block[i - 1] = this.pipelineMergeGroup(block[i], block[i - 1]);
+                block.splice(i, 1);
+                rebuild = true;
+            }
+        }
+        if (rebuild)
+        {
+            block = this.pipelineMoveBlocks(block, figureheight, fontHeight);
+        }
+        return block;
+    },
+
+    /**
+     * Merge two groups
+     * 
+     * @param {Array} lastValue
+     * @param {Array} prelastValue
+     * @return {Array}
+     */
+    pipelineMergeGroup: function(lastValue, prelastValue)
+    {
+        var newGroup;
+        newGroup = prelastValue;
+        newGroup.val = newGroup.val.concat(lastValue.val);
+        newGroup = this.pipelineGetHeight(newGroup);
+        newGroup.groupPosition = prelastValue.groupPosition;
+        return newGroup;
+    },
+
     /*
         Method: getAlignedPos
         
@@ -10392,20 +10580,12 @@ $jit.LineChart = new Class({
   	ctx.fillRect(-size.width/2,-size.height/2,size.width,size.height);
   	ctx.clearRect(-size.width/2,-size.height/2,size.width,size.height);
  },
-  resizeGraph: function(json,orgWindowWidth,orgContainerDivWidth,cols) {
+  resizeGraph: function(json,width) {
   	var canvas = this.canvas,
   	size = canvas.getSize(),
-    	config = this.config,
-        orgHeight = size.height,
-        margin = config.Margin,
-        st = this.st,
-        horz = config.orientation == 'horizontal';
-        
+            orgHeight = size.height;
 
-	var newWindowWidth = document.body.offsetWidth;
-	var diff = newWindowWidth - orgWindowWidth;	
-	var newWidth = orgContainerDivWidth + (diff/cols);
-  	canvas.resize(newWidth,orgHeight);
+        canvas.resize(width,orgHeight);
   	if(typeof FlashCanvas == "undefined") {
 		canvas.clear();
   	} else {
@@ -12772,15 +12952,7 @@ $jit.BarChart = new Class({
 	label = config.Label,
 	shadow = config.shadow;
 	horz = config.orientation == 'horizontal',
-	maxValue = this.getMaxValue(),
-	maxTickValue = Math.ceil(maxValue*.1)*10;
-	if(maxTickValue == maxValue) {
-		var length = maxTickValue.toString().length;
-		maxTickValue = maxTickValue + parseInt(pad(1,length));
-	}
 	grouped = config.type.split(':')[0] == 'grouped',
-	labelValue = 0,
-	labelIncrement = maxTickValue/ticks.segments,
 	ctx = canvas.getCtx();
 	ctx.strokeStyle = ticks.color;
     ctx.font = label.style + ' ' + label.size + 'px ' + label.family;
@@ -12798,23 +12970,68 @@ $jit.BarChart = new Class({
 		grid = size.width-(margin.left + margin.right + (grouped && config.Label ? config.labelOffset + label.size : 0)),
 		segmentLength = grid/ticks.segments;
 		ctx.fillStyle = ticks.color;
-		ctx.fillRect(axis,
-		 (size.height/2)-margin.bottom-config.labelOffset-label.size - (subtitle.text? subtitle.size+subtitle.offset:0) + (shadow.enable ? shadow.size : 0),
-		 size.width - margin.left - margin.right - (grouped && config.Label ? config.labelOffset + label.size : 0),
-		 1);
-		while(axis<=grid) {
-			ctx.fillStyle = ticks.color;
-			lineHeight = size.height-margin.bottom-margin.top-config.labelOffset-label.size-(title.text? title.size+title.offset:0)-(subtitle.text? subtitle.size+subtitle.offset:0);
-			ctx.fillRect(Math.round(axis), -(size.height/2)+margin.top+(title.text? title.size+title.offset:0) - (shadow.enable ? shadow.size : 0), 1, lineHeight + (shadow.enable ? shadow.size * 2: 0));
-			ctx.fillStyle = label.color;
-			
-			if(label.type == 'Native' && config.showLabels) {            
-           	 ctx.fillText(labelValue, Math.round(axis), -(size.height/2)+margin.top+(title.text? title.size+title.offset:0)+config.labelOffset+lineHeight+label.size);
-			}
-			axis += segmentLength;
-			labelValue += labelIncrement;
-		}
-	
+
+        // Main horizontal line
+        var xTop = axis;
+        var yTop = size.height / 2 - margin.bottom - config.labelOffset - label.size - (subtitle.text ? subtitle.size + subtitle.offset : 0) + (shadow.enable ? shadow.size : 0);
+        var xLength = size.width - margin.left - margin.right - (grouped && config.Label ? config.labelOffset + label.size : 0);
+        var yLength = 1;
+		ctx.fillRect(xTop, yTop, xLength, yLength);
+
+        maxTickValue = config.Ticks.maxValue;
+        var humanNumber = config.Ticks.humanNumber;
+        var segments = config.Ticks.segments;
+        var tempHumanNumber = humanNumber;
+        var humanNumberPow = 0;
+        // Tries to find pow of humanNumber if it is less than 1. For 0.001 humanNumberPos will be 3. it means 0.001*10^3 = 1.
+        // humanNumberPow is required for work with number less than 1.
+        while (tempHumanNumber % 1 != 0)
+        {
+            tempHumanNumber = tempHumanNumber * 10;
+            humanNumberPow ++;
+        }
+
+        // Tries convert length of line to steps in pixels. 4 steps, 160 length - 40 pixels per step
+        var pixelsPerStep = xLength / maxTickValue;
+        var lineHeight = size.height - margin.bottom - margin.top - config.labelOffset - label.size - (title.text ? title.size+title.offset : 0) - (subtitle.text ? subtitle.size + subtitle.offset : 0);
+        for (var i = 0; i <= segments; i++)
+        {
+            var iX = Math.round(xTop + i * pixelsPerStep * humanNumber);
+            ctx.save();
+            ctx.translate(iX, yTop + yLength + margin.top);
+            ctx.rotate(0 * Math.PI / 2 * 3);
+            ctx.fillStyle = label.color;
+            // Float numbers fix (0.45 can be displayed as 0.44466666)
+            var labelText = humanNumber * Math.pow(10, humanNumberPow) * i;
+            labelText = labelText * Math.pow(10, -humanNumberPow);
+            if (config.showLabels)
+            {
+                // Filling Text through canvas or html elements
+                if (label.type == 'Native')
+                {
+                    ctx.fillText(labelText, 0, 0); // For coords see ctx.translate above
+                }
+                else
+                {
+                    //html labels on y axis
+                    labelDiv = document.createElement('div');
+                    labelDiv.innerHTML = labelText;
+                    labelDiv.style.top = Math.round(size.height - margin.bottom - config.labelOffset) + "px";
+                    labelDiv.style.left = Math.round(margin.left - labelDim / 2 + i * pixelsPerStep * humanNumber) + "px";
+                    labelDiv.style.width = labelDim + "px";
+                    labelDiv.style.height = labelDim + "px";
+                    labelDiv.style.textAlign = "center";
+                    labelDiv.style.verticalAlign = "middle";
+                    labelDiv.style.position = "absolute";
+                    labelDiv.style.background = '1px solid red';
+                    container.appendChild(labelDiv);
+                }
+            }
+            ctx.restore();
+            ctx.fillStyle = ticks.color;
+            // Drawing line
+            ctx.fillRect(Math.round(axis) + i * pixelsPerStep * humanNumber, -size.height / 2 + margin.top + (title.text ? title.size + title.offset : 0) - (shadow.enable ? shadow.size : 0), 1, lineHeight + (shadow.enable ? shadow.size * 2: 0));
+        }
 	} else {
 	
 		var axis = (size.height/2)-(margin.bottom+config.labelOffset+label.size+(subtitle.text? subtitle.size+subtitle.offset:0)),
@@ -12822,39 +13039,67 @@ $jit.BarChart = new Class({
 		grid = -size.height+(margin.bottom+config.labelOffset+label.size+margin.top+(title.text? title.size+title.offset:0)+(subtitle.text? subtitle.size+subtitle.offset:0)),
 		segmentLength = grid/ticks.segments;
 		ctx.fillStyle = ticks.color;
-		ctx.fillRect(-(size.width/2)+margin.left+config.labelOffset+label.size-1, -(size.height/2)+margin.top+(title.text? title.size+title.offset:0),1,size.height-margin.top-margin.bottom-label.size-config.labelOffset-(title.text? title.size+title.offset:0)-(subtitle.text? subtitle.size+subtitle.offset:0));
 
-		while(axis>=grid) {
-			ctx.save();
-			ctx.translate(-(size.width/2)+margin.left, Math.round(axis));
-			ctx.rotate(0 * Math.PI / 180 );
-			ctx.fillStyle = label.color;
-			if(config.showLabels) {
-				if(label.type == 'Native') { 
-					ctx.fillText(labelValue, 0, 0);
-				} else {
-					//html labels on y axis
-					labelDiv = document.createElement('div');
-					labelDiv.innerHTML = labelValue;
-					labelDiv.className = "rotatedLabel";
+        // Main horizontal line
+        var xTop = -size.width / 2 + margin.left + config.labelOffset + label.size - 1;
+        var yTop = -size.height / 2 + margin.top + (title.text ? title.size + title.offset : 0);
+        var xLength = 1;
+        var yLength = size.height - margin.top - margin.bottom - label.size - config.labelOffset - (title.text ? title.size + title.offset : 0) - (subtitle.text ? subtitle.size + subtitle.offset : 0);
+		ctx.fillRect(xTop, yTop, xLength, yLength);
+
+        maxTickValue = config.Ticks.maxValue;
+        var humanNumber = config.Ticks.humanNumber;
+        var segments = config.Ticks.segments;
+        var tempHumanNumber = humanNumber;
+        var humanNumberPow = 0;
+        // Tries to find pow of humanNumber if it is less than 1. For 0.001 humanNumberPos will be 3. it means 0.001*10^3 = 1.
+        // humanNumberPow is required for work with number less than 1.
+        while (tempHumanNumber % 1 != 0)
+        {
+            tempHumanNumber = tempHumanNumber * 10;
+            humanNumberPow ++;
+        }
+
+        // Tries convert length of line to steps in pixels. 4 steps, 160 length - 40 pixels per step
+        var pixelsPerStep = yLength / maxTickValue;
+        for (var i = 0; i <= segments; i++)
+        {
+            var iY = Math.round(yTop + yLength - i * pixelsPerStep * humanNumber);
+            ctx.save();
+			ctx.translate(-size.width / 2 + margin.left, iY);
+            ctx.rotate(0 * Math.PI / 2 * 3);
+            ctx.fillStyle = label.color;
+            // Float numbers fix (0.45 can be displayed as 0.44466666)
+            var labelText = humanNumber * Math.pow(10, humanNumberPow) * i;
+            labelText = labelText * Math.pow(10, -humanNumberPow);
+            if (config.showLabels)
+            {
+                // Filling Text through canvas or html elements
+                if (label.type == 'Native')
+                {
+                    ctx.fillText(labelText, 0, 0); // For coords see ctx.translate above
+                }
+                else
+                {
+                    //html labels on y axis
+                    labelDiv = document.createElement('div');
+                    labelDiv.innerHTML = labelText;
+                    labelDiv.className = "rotatedLabel";
 //					labelDiv.class = "rotatedLabel";
-					labelDiv.style.top = (htmlOrigin - (labelDim/2)) + "px";
-					labelDiv.style.left = margin.left + "px";
-					labelDiv.style.width = labelDim + "px";
-					labelDiv.style.height = labelDim + "px";
-					labelDiv.style.textAlign = "center";
-					labelDiv.style.verticalAlign = "middle";
-					labelDiv.style.position = "absolute";
-					container.appendChild(labelDiv);
-				}
-			}
-			ctx.restore();
+                    labelDiv.style.top = Math.round(htmlOrigin - labelDim / 2 - i * pixelsPerStep * humanNumber) + "px";
+                    labelDiv.style.left = margin.left + "px";
+                    labelDiv.style.width = labelDim + "px";
+                    labelDiv.style.height = labelDim + "px";
+                    labelDiv.style.textAlign = "center";
+                    labelDiv.style.verticalAlign = "middle";
+                    labelDiv.style.position = "absolute";
+                    container.appendChild(labelDiv);
+                }
+            }
+            ctx.restore();
 			ctx.fillStyle = ticks.color;
-			ctx.fillRect(-(size.width/2)+margin.left+config.labelOffset+label.size, Math.round(axis), size.width-margin.right-margin.left-config.labelOffset-label.size,1 );
-			htmlOrigin += segmentLength;
-			axis += segmentLength;
-			labelValue += labelIncrement;
-		}
+			ctx.fillRect(-size.width / 2 + margin.left + config.labelOffset + label.size, iY, size.width - margin.right - margin.left - config.labelOffset - label.size, 1);
+        }
 	}
 	
 	
@@ -12880,7 +13125,7 @@ $jit.BarChart = new Class({
   	ctx.fillRect(-size.width/2,-size.height/2,size.width,size.height);
   	ctx.clearRect(-size.width/2,-size.height/2,size.width,size.height);
  },
-  resizeGraph: function(json,orgWindowWidth,orgContainerDivWidth,cols) {
+  resizeGraph: function(json,width) {
   	var canvas = this.canvas,
   	size = canvas.getSize(),
     	config = this.config,
@@ -12888,14 +13133,9 @@ $jit.BarChart = new Class({
         margin = config.Margin,
         st = this.st,
         grouped = config.type.split(':')[0] == 'grouped',
-        horz = config.orientation == 'horizontal',
-        	ctx = canvas.getCtx();
+        horz = config.orientation == 'horizontal';
         
-	var newWindowWidth = document.body.offsetWidth;
-	var diff = newWindowWidth - orgWindowWidth;	
-	var newWidth = orgContainerDivWidth + (diff/cols);
-	var scale = newWidth/orgContainerDivWidth;
-  	canvas.resize(newWidth,orgHeight);
+        canvas.resize(width,orgHeight);
   	if(typeof FlashCanvas == "undefined") {
 		canvas.clear();
   	} else {
@@ -12960,8 +13200,11 @@ $jit.BarChart = new Class({
       var titleArray = $.splat(values[i].titles);
       var barTotalValue = valArray.sum();
       var acum = 0;
+      if (typeof val.id == 'undefined') {
+        val.id = val.label;
+      }
       ch.push({
-        'id': prefix + val.label,
+        'id': prefix + val.id,
         'name': val.label,
         
         'data': {
@@ -13228,13 +13471,60 @@ $jit.BarChart = new Class({
         dim1 = horz? 'height':'width',
         dim2 = horz? 'width':'height',
         basic = config.type.split(':')[0] == 'basic';
-        
-        
-		var maxTickValue = Math.ceil(maxValue*.1)*10;
-		if(maxTickValue == maxValue) {
-			var length = maxTickValue.toString().length;
-			maxTickValue = maxTickValue + parseInt(pad(1,length));
-		}
+
+        // Bug #47147 Correct detection of maxTickValue and step size for asix labels
+        var iDirection = 10; // We need this var for convert value. 10^2 = 100
+        var zeroCount = 0; // Pow for iDirection for detection of size of human step.
+        var iNumber = maxValue; // This var will store two first digits from maxValue. For 1265848 it will be 12. For 0.0453 it will be 45.
+        // Tries to get two first digits from maxValue
+        if (iNumber >= 0)
+        {
+            // Tries to calculate zeroCount
+            // if iNumber = 100 we will get zeroCount = 2, iNumber = 0.1
+            while (iNumber >= 1)
+            {
+                zeroCount ++;
+                iNumber = iNumber / 10;
+            }
+            iNumber = Math.floor(iNumber * 100); // We need to increase iNumber by 100 to get two first digits. for 0.1 it will be 0.1*100 = 10
+        }
+        else
+        {
+            iDirection = 0.1; // if iNumber is less than 1 we should change iDirection. 0.1^2 = 0.01
+            // Tries to calculate zeroCount
+            // if iNumber = 0.01 we will get zeroCount = 2, iNumber = 1
+            while (iNumber < 1)
+            {
+                zeroCount ++;
+                iNumber = iNumber * 10;
+            }
+            iNumber = Math.floor(iNumber * 10); // We need to increase iNumber by 10 to get two first digits. for 1 it will be 1*10 = 10
+        }
+        var humanNumber = 0;
+        var iNumberTemp = iNumber + 1; // We need to add 1 for correct tick size detection. It means that tick always will be great than max value of chart.
+        // 5 is human step. And we try to detect max value of tick. if maxValue is 1234567 it means iNumber = 12, iNumberTemp = 13 and as result we will get iNumberTemp = 15.
+        while (iNumberTemp % 5 != 0)
+        {
+            iNumberTemp ++;
+        }
+        var isFound = false;
+        zeroCount --; // We need to reduce zeroCount because of increase by 10 or 100 in steps above. It means iNumber = 10, zeroCount = 2 - 1 = 1. 10 * 10^1 = 100. 100 is original value of iNumber
+        // Tries to find humanNumber. Our step is 5. ticks.segments is number of lines = 4 (for example)
+        // iNumberTemp = 15 (for example). 15 % 4 = 3. It means that we should add 5 to iNumberTemp till division will equal 0. 20 % 4 = 0. Our result is iNumberTemp = 20
+        while (isFound == false)
+        {
+            if (iNumberTemp % ticks.segments == 0)
+            {
+                humanNumber = iNumberTemp / ticks.segments;
+                isFound = true;
+                break;
+            }
+            iNumberTemp = iNumberTemp + 5;
+        }
+        // Getting real values
+        var maxTickValue = config.Ticks.maxValue = maxTickValue = iNumberTemp * Math.pow(iDirection, zeroCount - 1);
+        config.Ticks.humanNumber = humanNumber = humanNumber * Math.pow(iDirection, zeroCount - 1);
+        config.Ticks.segments = Math.floor(maxTickValue / humanNumber);
 
 		fixedDim = fixedDim > 40 ? 40 : fixedDim;
 
@@ -13335,7 +13625,7 @@ $jit.ST.Plot.NodeTypes.implement({
           ratio = .65;
 
       if (colorArray && dimArray && stringArray) {
-      	
+          var newDimArray = this.positions(dimArray, label.size);
       	
       	// horizontal lines
       	for (var i=0, l=dimArray.length, acum=0, valAcum=0; i<l; i++) {
@@ -13348,26 +13638,38 @@ $jit.ST.Plot.NodeTypes.implement({
        		 var valueLabel = String(valuelabelArray[i]);
        	     var mV = ctx.measureText(stringValue);
              var mVL = ctx.measureText(valueLabel);
+           var next_mVL = 0;
+           var next_mV = 0;
+           if ((i + 1) < l)
+           {
+               next_mV = ctx.measureText(stringArray[i + 1]);
+               next_mVL = ctx.measureText(String(valuelabelArray[i + 1]));
+           }
+           else
+           {
+               next_mV = mV;
+               next_mVL = mVL;
+           }
           	 var previousElementHeight = (i > 0) ? dimArray[i - 1] : 100;
 		 	 var labelOffsetHeight = (previousElementHeight < label.size && i > 0) ? ((dimArray[i] > label.size) ? (dimArray[i]/2) - (label.size/2) : label.size) : 0;
 		  	 var topWidth = minWidth + ((acum + dimArray[i]) * ratio);
-          	 var bottomWidth = minWidth + ((acum) * ratio);  
-         	 var bottomWidthLabel = minWidth + ((acum + labelOffsetHeight) * ratio);  
-		 	 var labelOffsetRight = (previousElementHeight < label.size && i > 0) ? ((i%2!=0 && dimArray[i] < label.size) ? mV.width + 20 : 0) : 0;
-		 	 var labelOffsetLeft = (previousElementHeight < label.size && i > 0) ? ((i%2!=0 && dimArray[i] < label.size) ? mVL.width + 20 : 0) : 0;
+          	 var bottomWidth = minWidth + ((acum) * ratio);
+           var bottomWidthLabel = minWidth + (newDimArray[i].position * ratio);
+           var labelOffsetRight = (newDimArray[i].filament) ? (next_mV.width + 25) : 0;
+           var labelOffsetLeft = (newDimArray[i].filament) ? (next_mVL.width + 25) : 0;
 //             ctx.fillRect((-bottomWidth/2) - mVL.width - config.labelOffset , y - acum, bottomWidth + mVL.width + mV.width + (config.labelOffset*2), 1);
 
 			//right lines
 			ctx.beginPath();
 			ctx.moveTo(bottomWidth/2,y - acum); //
-			ctx.lineTo(bottomWidthLabel/2 + (labelOffset-10),y - acum - labelOffsetHeight);  // top right
-			ctx.lineTo(bottomWidthLabel/2 + (labelOffset) + labelOffsetRight + mV.width,y - acum - labelOffsetHeight);  // bottom right
+           ctx.lineTo(bottomWidthLabel / 2 + (labelOffset - 10), y - newDimArray[i].position);  // top right
+           ctx.lineTo(bottomWidthLabel / 2 + (labelOffset) + labelOffsetRight + mV.width, y - newDimArray[i].position);  // bottom right
 			ctx.stroke();
 			//left lines
 			ctx.beginPath();
 			ctx.moveTo(-bottomWidth/2,y - acum); //
-			ctx.lineTo(-bottomWidthLabel/2 - (labelOffset-10),y - acum - labelOffsetHeight);  // top right
-			ctx.lineTo(-bottomWidthLabel/2 - (labelOffset) - labelOffsetLeft -mVL.width,y - acum - labelOffsetHeight);  // bottom right
+           ctx.lineTo( - bottomWidthLabel / 2 - (labelOffset - 10), y - newDimArray[i].position);  // top right
+           ctx.lineTo( - bottomWidthLabel / 2 - (labelOffset) - labelOffsetLeft - mVL.width, y - newDimArray[i].position);  // bottom right
 			ctx.stroke();
        }
 	}
@@ -13393,14 +13695,24 @@ $jit.ST.Plot.NodeTypes.implement({
 		  	  	  var mV = 10;
 	              var mVL = 10;	
 		  	  }
+            if ((i + 1) < l)
+            {
+                next_mV = ctx.measureText(stringArray[i + 1]);
+                next_mVL = ctx.measureText(String(valuelabelArray[i + 1]));
+            }
+            else
+            {
+                next_mV = mV;
+                next_mVL = mVL;
+            }
 		      var previousElementHeight = (i > 0) ? dimArray[i - 1] : 100;
 		      var labelOffsetHeight = (previousElementHeight < label.size && i > 0) ? ((dimArray[i] > label.size) ? (dimArray[i]/2) - (label.size/2) : label.size) : 0;
-		      var labelOffsetRight = (previousElementHeight < label.size && i > 0) ? ((i%2!=0 && dimArray[i] < label.size) ? mV.width + 20 : 0) : 0;
-		      var labelOffsetLeft = (previousElementHeight < label.size && i > 0) ? ((i%2!=0 && dimArray[i] < label.size) ? mVL.width + 20 : 0) : 0;
+            var labelOffsetRight = (newDimArray[i].filament) ? (next_mV.width + 20) : 0;
+            var labelOffsetLeft = (newDimArray[i].filament) ? (next_mVL.width + 20) : 0;
 		      
           var topWidth = minWidth + ((acum + dimArray[i]) * ratio);
           var bottomWidth = minWidth + ((acum) * ratio);
-          var bottomWidthLabel = minWidth + ((acum + labelOffsetHeight) * ratio);
+            var bottomWidthLabel = minWidth + (newDimArray[i].position * ratio);
           
 
           if(gradient) {
@@ -13451,9 +13763,9 @@ $jit.ST.Plot.NodeTypes.implement({
 
 		      
               ctx.textAlign = 'left';
-              ctx.fillText(stringArray[i],(bottomWidthLabel/2) + labelOffset + labelOffsetRight, y - acum - labelOffsetHeight - label.size/2);
+              ctx.fillText(stringArray[i], (bottomWidthLabel / 2) + labelOffset + labelOffsetRight, y - newDimArray[i].position - label.size / 2);
               ctx.textAlign = 'right';
-              ctx.fillText(valuelabelArray[i],(-bottomWidthLabel/2) - labelOffset - labelOffsetLeft, y - acum - labelOffsetHeight - label.size/2);
+              ctx.fillText(valuelabelArray[i], (- bottomWidthLabel / 2) - labelOffset - labelOffsetLeft, y - newDimArray[i].position - label.size / 2);
 	      }
           ctx.restore();
         }
@@ -13810,22 +14122,14 @@ $jit.FunnelChart = new Class({
   	ctx.fillRect(-size.width/2,-size.height/2,size.width,size.height);
   	ctx.clearRect(-size.width/2,-size.height/2,size.width,size.height);
   },
-   resizeGraph: function(json,orgWindowWidth,orgContainerDivWidth,cols) {
+   resizeGraph: function(json,width) {
   	var canvas = this.canvas,
   	size = canvas.getSize(),
     	config = this.config,
-        orgHeight = size.height,
-        margin = config.Margin,
-        st = this.st,
-        label = config.Label,
-        horz = config.orientation == 'horizontal',
-        ctx = canvas.getCtx();
+        orgHeight = size.height;
         
 
-	var newWindowWidth = document.body.offsetWidth;
-	var diff = newWindowWidth - orgWindowWidth;	
-	var newWidth = orgContainerDivWidth + (diff/cols);
-  	canvas.resize(newWidth,orgHeight);
+        canvas.resize(width,orgHeight);
 
   	if(typeof FlashCanvas == "undefined") {
 		canvas.clear();
@@ -15682,21 +15986,13 @@ $jit.PieChart = new Class({
   	ctx.fillRect(-size.width/2,-size.height/2,size.width,size.height);
   	ctx.clearRect(-size.width/2,-size.height/2,size.width,size.height);
   },
-  resizeGraph: function(json,orgWindowWidth,orgContainerDivWidth,cols) {
+  resizeGraph: function(json,width) {
   	var canvas = this.canvas,
   	size = canvas.getSize(),
     	config = this.config,
-        orgHeight = size.height,
-        margin = config.Margin,
-        st = this.st,
-        horz = config.orientation == 'horizontal';
+        orgHeight = size.height;
         
-
-	var newWindowWidth = document.body.offsetWidth;
-	var diff = newWindowWidth - orgWindowWidth;	
-	var newWidth = orgContainerDivWidth + (diff/cols);
-	var scale = newWidth/orgContainerDivWidth;
-  	canvas.resize(newWidth,orgHeight);
+        canvas.resize(width,orgHeight);
   	if(typeof FlashCanvas == "undefined") {
 		canvas.clear();
   	} else {
@@ -16583,20 +16879,12 @@ $jit.GaugeChart = new Class({
   	ctx.fillRect(-size.width/2,-size.height/2,size.width,size.height);
   	ctx.clearRect(-size.width/2,-size.height/2,size.width,size.height);
  },
-  resizeGraph: function(json,orgWindowWidth,orgContainerDivWidth,cols) {
+  resizeGraph: function(json,width) {
   	var canvas = this.canvas,
   	size = canvas.getSize(),
-    	config = this.config,
-        orgHeight = size.height,
-        margin = config.Margin,
-        st = this.st,
-        horz = config.orientation == 'horizontal';
+            orgHeight = size.height;
         
-
-	var newWindowWidth = document.body.offsetWidth;
-	var diff = newWindowWidth - orgWindowWidth;	
-	var newWidth = orgContainerDivWidth + (diff/cols);
-  	canvas.resize(newWidth,orgHeight);
+        canvas.resize(width,orgHeight);
   	if(typeof FlashCanvas == "undefined") {
 		canvas.clear();
   	} else {

@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -54,6 +57,7 @@ class SugarChart {
 	var $colors_list = array();
 	var $base_url = array();
 	var $url_params = array();
+	var $display_labels = array();
 
 	var $currency_symbol;
 	var $thousands_symbol;
@@ -63,7 +67,7 @@ class SugarChart {
 	var $image_export_type = "";
 
 	public function __construct() {
-		$this->db = &DBManagerFactory::getInstance();
+		$this->db = DBManagerFactory::getInstance();
 		$this->ss = new Sugar_Smarty();
 
 		$this->chart_yAxis['yMin'] = 0;
@@ -133,13 +137,15 @@ class SugarChart {
 		$this->data_set = $dataSet;
 	}
 
-	function setProperties($title, $subtitle, $type, $legend='on', $labels='value', $print='on'){
-		$this->chart_properties['title'] = $title;
-		$this->chart_properties['subtitle'] = $subtitle;
-		$this->chart_properties['type'] = $type;
-		$this->chart_properties['legend'] = $legend;
-		$this->chart_properties['labels'] = $labels;
-	}
+    function setProperties($title, $subtitle, $type, $legend='on', $labels='value', $print='on', $thousands = false)
+    {
+        $this->chart_properties['title'] = $title;
+        $this->chart_properties['subtitle'] = $subtitle;
+        $this->chart_properties['type'] = $type;
+        $this->chart_properties['legend'] = $legend;
+        $this->chart_properties['labels'] = $labels;
+        $this->chart_properties['thousands'] = $thousands;
+    }
 
 	function setDisplayProperty($property, $value){
 		$this->chart_properties[$property] = $value;
@@ -186,6 +192,7 @@ class SugarChart {
 
 		// grab the property and value from the chart_properties variable
 		foreach ($this->chart_properties as $key => $value){
+		    if(is_array($value)) continue;
 			$properties .= $this->tab("<$key>$value</$key>",2);
 		}
 
@@ -380,14 +387,30 @@ class SugarChart {
 	}
 
 
-	function convertCurrency($to_convert){
-		global $locale;
-		$decimals = '2';
-		$decimals = $locale->getPrecision();
-		$amount = ($this->div == 1) ? $to_convert : round($to_convert * $this->div,$decimals);
+    /**
+     * Convert the amount given to the User's currency.
+     *
+     * TODO make this use the Currency module to convert from dollars and make
+     * it deprecated.
+     *
+     * @param float $to_convert
+     *   The amount to be converted.
+     *
+     * @return float
+     *   The amount converted in the User's current currency.
+     *
+     * @see Currency::convertFromDollar()
+     * @see SugarChart::__construct()
+     */
+    function convertCurrency($to_convert)
+    {
+        global $locale;
 
-		return $amount;
-	}
+        $decimals = $locale->getPrecision();
+        $amount = round($to_convert * $this->div, $decimals);
+
+        return $amount;
+    }
 
 	function formatNumber($number, $decimals= null, $decimal_point= null, $thousands_sep= null){
 		global $locale;
@@ -412,12 +435,21 @@ class SugarChart {
 
 	function xmlDataForGroupByChart(){
 		$data = '';
+		$idcounter = 0;
 		foreach ($this->data_set as $key => $value){
 			$amount = $this->is_currency ? $this->convertCurrency($this->calculateGroupByTotal($value)) : $this->calculateGroupByTotal($value);
             $label = $this->is_currency ? ($this->currency_symbol . $this->formatNumber($amount)) : $amount;
 
 			$data .= $this->tab('<group>',2);
-			$data .= $this->tabValue('title',$key,3);
+			if (!empty($this->display_labels[$key]))
+			{
+				$data .= $this->tabValue('title', $this->display_labels[$key],3);
+				$data .= $this->tabValue('id', ++$idcounter,3);
+			}
+			else
+			{
+				$data .= $this->tabValue('title', $key,3);
+			}
 			$data .= $this->tabValue('value',$amount,3);
 			$data .= $this->tabValue('label',$label,3);
 			$data .= $this->tab('<link></link>',3);
@@ -448,7 +480,11 @@ class SugarChart {
 		$this->chart_yAxis['yMax'] = $this->chart_properties['gaugeTarget'];
 		$this->chart_yAxis['yStep'] = 1;
 		$data .= $this->processDataGroup(2, 'GaugePosition', $gaugePosition, $gaugePosition, '');
-		$data .= $this->processGauge($gaugePosition, $this->chart_properties['gaugeTarget']);
+		if (isset($this->chart_properties['gaugePhases']) && is_array($this->chart_properties['gaugePhases'])) {
+			$data .= $this->processGauge($gaugePosition, $this->chart_properties['gaugeTarget'], $this->chart_properties['gaugePhases']);
+		} else {
+			$data .= $this->processGauge($gaugePosition, $this->chart_properties['gaugeTarget']);
+		}
 
 		return $data;
 	}
@@ -535,10 +571,10 @@ class SugarChart {
 			$processed = array();
 
 			if (isset($drill_down) && $drill_down != ''){
-
-               /*
-                * We have to iterate users in order they are in super_set for every group.
-                * That is required for correct pileup user links to user colors in a chart.
+                /*
+                * Bug 44696 - Ivan D.
+                * We have to iterate users in order since they are in the super_set for every group.
+                * This is required to display the correct links for each user in a drill down chart.
                 */
                 foreach ($this->super_set as $superSetKey => $superSetValue)
                 {
@@ -588,13 +624,13 @@ class SugarChart {
                         {
                             $data .= $this->nullGroup($superSetValue, $url);
                         }
+
                     }
                     else
                     {
                         $data .= $this->nullGroup($superSetValue, $url);
                     }
                 }
-
 			}
 
 			$data .= $this->tab('</subgroups>',3);
@@ -603,6 +639,7 @@ class SugarChart {
 		return $data;
 	}
 
+
     /**
      * nullGroup
      * This function sets a null group by clause
@@ -610,7 +647,7 @@ class SugarChart {
      * @param $sugarSetValue Mixed value
      * @param $url String value of URL for the link
      */
-    public function nullGroup($superSetValue, $url) {
+    private function nullGroup($superSetValue, $url) {
         return $this->processDataGroup(4, $superSetValue, 'NULL', '', $url);
     }
 
@@ -620,19 +657,11 @@ class SugarChart {
      *
      * @param string $file_id - unique id to make part of the file name
      */
-    public static function getXMLFileName(
-         $file_id
-         )
+    public static function getXMLFileName($file_id)
     {
-        global $sugar_config, $current_user;
+        create_cache_directory("xml/".$GLOBALS['current_user']->getUserPrivGuid() . "_{$file_id}.xml");
 
-        $filename = sugar_cached("xml/"). $current_user->id . '_' . $file_id . '.xml';
-
-        if ( !is_dir(dirname($filename)) ) {
-            create_cache_directory("xml");
-        }
-
-        return $filename;
+        return sugar_cached("xml/"). $GLOBALS['current_user']->getUserPrivGuid() . "_" . $file_id . ".xml";
     }
 
     public function processXmlData(){
@@ -687,6 +716,13 @@ class SugarChart {
 		global $locale;
 
 		$xmlContents = chr(255).chr(254).$GLOBALS['locale']->translateCharset($xmlContents, 'UTF-8', 'UTF-16LE');
+
+        // Create dir if it doesn't exist
+        $dir = dirname($xmlFilename);
+        if (!sugar_is_dir($dir))
+        {
+            sugar_mkdir($dir, null, true);
+        }
 
 		// open file
 		if (!$fh = sugar_fopen($xmlFilename, 'w')) {
@@ -759,16 +795,17 @@ class SugarChart {
 		return $templateFile;
 	}
 
+
 	function getDashletScript($id,$xmlFile="") {
 
-	$xmlFile = (!$xmlFile) ? sugar_cached("xml/"). $current_user->id . '_' . $this->id . '.xml' : $xmlFile;
-	$chartStringsXML = sugar_cached("xml/").'chart_strings.' . $current_language .'.lang.xml';
+	$xmlFile = (!$xmlFile) ? $sugar_config['tmp_dir']. $current_user->id . '_' . $this->id . '.xml' : $xmlFile;
+	$chartStringsXML = $GLOBALS['sugar_config']['tmp_dir'].'chart_strings.' . $current_language .'.lang.xml';
 
 	$this->ss->assign('chartName', $id);
     $this->ss->assign('chartXMLFile', $xmlFile);
     $this->ss->assign('chartStyleCSS', SugarThemeRegistry::current()->getCSSURL('chart.css'));
     $this->ss->assign('chartColorsXML', SugarThemeRegistry::current()->getImageURL('sugarColors.xml'));
-    $this->ss->assign('chartLangFile', sugar_cached("xml/").'chart_strings.' . $GLOBALS['current_language'] .'.lang.xml');
+    $this->ss->assign('chartLangFile', $GLOBALS['sugar_config']['tmp_dir'].'chart_strings.' . $GLOBALS['current_language'] .'.lang.xml');
 
 		$templateFile = "";
 		return $templateFile;

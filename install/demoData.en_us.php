@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -21676,7 +21676,7 @@ $sugar_demodata['project_seed_data']['audit']['project_tasks'][] = array(
 $sugar_demodata['quotes_seed_data']['quotes'][0] = array(
 	'name' => 'Computers for [account name]',
 	'quote_stage' => 'Draft',
-	'date_quote_expected_closed' => '04/30/2012',
+	'date_quote_expected_closed' => '2012-04-30',
     'description' => '',
     'purcahse_order_num' => '6011842',
     'payment_terms' => 'Net 30',
@@ -21698,7 +21698,7 @@ $sugar_demodata['quotes_seed_data']['quotes'][0] = array(
 $sugar_demodata['quotes_seed_data']['quotes'][1] = array(
 	'name' => 'Mirrors for [account name]',
 	'quote_stage' => 'Negotiation',
-	'date_quote_expected_closed' => '04/30/2012',
+	'date_quote_expected_closed' => '2012-04-30',
     'description' => '',
  	'purcahse_order_num' => '3940021',
     'payment_terms' => 'Net 15',

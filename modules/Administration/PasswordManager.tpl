@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -37,7 +37,6 @@
 
 
 *}
-<script type='text/javascript' src="{sugar_getjspath file='include/javascript/overlibmws.js'}"></script>
 <form name="ConfigurePasswordSettings" method="POST" action="index.php" >
 <input type='hidden' name='action' value='PasswordManager'/>
 <input type='hidden' name='module' value='Administration'/>
@@ -357,6 +356,16 @@
 																			<td align="left"  valign='top'><input name="ldap_group_user_attr" size='20' type="text" value="{$settings.ldap_group_user_attr}"> </td>
 																			<td scope="row" valign='top' nowrap>{$MOD.LBL_LDAP_GROUP_ATTR} {sugar_help text=$MOD.LBL_LDAP_GROUP_ATTR_DESC}</td>
 																			<td align="left"  valign='top'><input name="ldap_group_attr" size='20' type="text" value="{$settings.ldap_group_attr}"> </td>
+																		</tr>
+																		<tr>
+																			<td scope="row" valign='top' nowrap>{$MOD.LBL_LDAP_GROUP_ATTR_REQ_DN} {sugar_help text=$MOD.LBL_LDAP_GROUP_ATTR_REQ_DN_DESC}</td>
+																			<td align="left" valign='top'>
+																			{if !empty($settings.ldap_group_attr_req_dn)}
+																				{assign var='ldap_group_attr_req_dn' value='CHECKED'}
+																			{else}
+																				{assign var='ldap_group_attr_req_dn' value='none'}
+																			{/if}
+																			<input name="ldap_group_attr_req_dn" class="checkbox" type="checkbox" {$ldap_group_attr_req_dn}> </td>
 																		</tr>
 																	</table>
 																 <br>

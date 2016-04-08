@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -84,6 +87,7 @@ class Employee extends Person {
 	var $messenger_type;
 	var $employee_status;
 	var $error_string;
+    public $person_id;
 
 	var $module_dir = "Employees";
 
@@ -126,7 +130,6 @@ class Employee extends Person {
 		$result =$this->db->query($query, true, "Error filling in additional detail fields") ;
 
 		$row = $this->db->fetchByAssoc($result);
-		$GLOBALS['log']->debug("additional detail query results: $row");
 
 		if($row != null)
 		{
@@ -161,28 +164,24 @@ class Employee extends Person {
 
 	function get_list_view_data(){
 
-        global $current_user;
-		$this->_create_proper_name_field(); // create proper NAME (by combining first + last)
-		$user_fields = $this->get_list_view_array();
+        $user_fields = parent::get_list_view_data();
+
 		// Copy over the reports_to_name
 		if ( isset($GLOBALS['app_list_strings']['messenger_type_dom'][$this->messenger_type]) )
             $user_fields['MESSENGER_TYPE'] = $GLOBALS['app_list_strings']['messenger_type_dom'][$this->messenger_type];
 		if ( isset($GLOBALS['app_list_strings']['employee_status_dom'][$this->employee_status]) )
             $user_fields['EMPLOYEE_STATUS'] = $GLOBALS['app_list_strings']['employee_status_dom'][$this->employee_status];
 		$user_fields['REPORTS_TO_NAME'] = $this->reports_to_name;
-		$user_fields['NAME'] = empty($this->name) ? '' : $this->name;
-		$user_fields['EMAIL1'] = $this->emailAddress->getPrimaryAddress($this,$this->id,'Users');
-		$this->email1 = $user_fields['EMAIL1'];
-        $user_fields['EMAIL1_LINK'] = $current_user->getEmailLink('email1', $this, '', '', 'ListView');
-		return $user_fields;
+
+        return $user_fields;
 	}
 
-	function list_view_parse_additional_sections(&$list_form, $xTemplateSection){
+	function list_view_parse_additional_sections(&$list_form/*, $xTemplateSection*/){
 		return $list_form;
 	}
 
 
-	function create_export_query($order_by, $where) {
+	function create_export_query($order_by, $where, $relate_link_join = '') {
 		include('modules/Employees/field_arrays.php');
 
 		$cols = '';
@@ -245,7 +244,7 @@ class Employee extends Person {
      * @param boolean $singleSelect Optional, default false.
      * @return String select query string, optionally an array value will be returned if $return_array= true.
      */
-    function create_new_list_query($order_by, $where, $filter=array(), $params=array(), $show_deleted=0, $join_type='', $return_array=false, $parentbean=null, $singleSelect=false)
+	function create_new_list_query($order_by, $where,$filter=array(),$params=array(), $show_deleted = 0,$join_type='', $return_array = false,$parentbean=null, $singleSelect = false, $ifListForExport = false)
     {
         //create the filter for portal only users, as they should not be showing up in query results
         if(empty($where)){
@@ -253,16 +252,33 @@ class Employee extends Person {
         }else{
             $where .= ' and users.portal_only = 0 ';
         }
-        if ($_REQUEST['action'] == 'Popup') {
-            if (empty($where)) {
-                $where = '  users.employee_status != "Terminated"';
-            } else {
-                $where .= ' and users.employee_status != "Terminated" ';
+
+        //return parent method, specifying for array to be returned
+        return parent::create_new_list_query($order_by, $where, $filter,$params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect, $ifListForExport);
+    }
+
+    /*
+     * Overwrite Sugar bean which returns the current objects custom fields.  Lets return User custom fields instead
+     */
+    function hasCustomFields()
+    {
+
+        //Check to see if there are custom user fields that we should report on, first check the custom_fields array
+        $userCustomfields = !empty($GLOBALS['dictionary']['Employee']['custom_fields']);
+        if(!$userCustomfields){
+            //custom Fields not set, so traverse employee fields to see if any custom fields exist
+            foreach ($GLOBALS['dictionary']['Employee']['fields'] as $k=>$v){
+                if(!empty($v['source']) && $v['source'] == 'custom_fields'){
+                    //custom field has been found, set flag to true and break
+                    $userCustomfields = true;
+                    break;
+                }
+
             }
         }
 
-        //return parent method, specifying for array to be returned
-        return parent::create_new_list_query($order_by, $where, $filter,$params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
+        //return result of search for custom fields
+        return $userCustomfields;
     }
 }
 

@@ -4,51 +4,48 @@ if (! defined ( 'sugarEntry' ) || ! sugarEntry)
 
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
-
-//Load the parent view class if it exists.  Check for custom file first
-loadParentView('edit');
 
 require_once ('modules/ModuleBuilder/parsers/ParserFactory.php') ;
 require_once ('modules/ModuleBuilder/MB/AjaxCompose.php') ;
 require_once 'modules/ModuleBuilder/parsers/constants.php' ;
 
-//require_once('include/Utils.php');
-
-
-class ViewLayoutView extends ViewEdit
+class ViewLayoutView extends SugarView
 {
     function ViewLayoutView ()
     {
@@ -60,11 +57,14 @@ class ViewLayoutView extends ViewEdit
         if ($this->fromModuleBuilder)
         {
             $this->package = $_REQUEST [ 'view_package' ] ;
+            $this->type = $this->editLayout;
         } else
         {
             global $app_list_strings ;
             $moduleNames = array_change_key_case ( $app_list_strings [ 'moduleList' ] ) ;
             $this->translatedEditModule = $moduleNames [ strtolower ( $this->editModule ) ] ;
+            $this->sm = StudioModuleFactory::getStudioModule($this->editModule);
+            $this->type = $this->sm->getViewType($this->editLayout);
         }
     }
 
@@ -91,6 +91,11 @@ class ViewLayoutView extends ViewEdit
 
         global $mod_strings ;
         $parser = ParserFactory::getParser($this->editLayout,$this->editModule,$this->package);
+
+        if(isset($this->view_object_map['new_parser'])) {
+            $parser = $this->view_object_map['new_parser'];
+        }
+
         $history = $parser->getHistory () ;
         $smarty = new Sugar_Smarty ( ) ;
         //Add in the module we are viewing to our current mod strings
@@ -120,6 +125,7 @@ class ViewLayoutView extends ViewEdit
         {
             $smarty->assign ( 'layouttitle', translate ( 'LBL_CURRENT_LAYOUT', 'ModuleBuilder' ) ) ;
 
+            //Check if we need to synch edit view to other layouts
             if($this->editLayout == MB_DETAILVIEW || $this->editLayout == MB_QUICKCREATE){
 		        $parser2 = ParserFactory::getParser(MB_EDITVIEW,$this->editModule,$this->package);
                 if($this->editLayout == MB_DETAILVIEW){
@@ -130,6 +136,7 @@ class ViewLayoutView extends ViewEdit
                     $parser->_viewdefs [ 'panels' ] = $editViewPanels;
                     $parser->_fielddefs = $parser2->_fielddefs;
                     $parser->setUseTabs($parser2->getUseTabs());
+                    $parser->setTabDefs($parser2->getTabDefs());
                 }
 		    }
 
@@ -224,6 +231,7 @@ class ViewLayoutView extends ViewEdit
         $smarty->assign ( 'maxColumns', $parser->getMaxColumns() ) ;
         $smarty->assign ( 'nextPanelId', $parser->getFirstNewPanelId() ) ;
         $smarty->assign ( 'displayAsTabs', $parser->getUseTabs() ) ;
+        $smarty->assign ( 'tabDefs', $parser->getTabDefs() ) ;
         $smarty->assign ( 'syncDetailEditViews', $parser->getSyncDetailEditViews() ) ;
         $smarty->assign ( 'fieldwidth', 150 ) ;
         $smarty->assign ( 'translate', $this->fromModuleBuilder ? false : true ) ;
@@ -245,11 +253,30 @@ class ViewLayoutView extends ViewEdit
 
 
         $ajax = new AjaxCompose ( ) ;
-        $viewType;
 
         $translatedViewType = '' ;
 		if ( isset ( $labels [ strtolower ( $this->editLayout ) ] ) )
 			$translatedViewType = translate ( $labels [ strtolower( $this->editLayout ) ] , 'ModuleBuilder' ) ;
+        else if (isset($this->sm))
+        {
+            foreach($this->sm->sources as $file => $def)
+            {
+                if (!empty($def['view']) && $def['view'] == $this->editLayout && !empty($def['name']))
+                {
+                    $translatedViewType = $def['name'];
+                }
+            }
+            if(empty($translatedViewType))
+            {
+                $label = "LBL_" . strtoupper($this->editLayout);
+                $translated = translate($label, $this->editModule);
+                if ($translated != $label)
+                    $translatedViewType =  $translated;
+            }
+        }
+
+
+
 
         if ($this->fromModuleBuilder)
         {

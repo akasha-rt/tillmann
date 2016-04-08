@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -101,35 +104,28 @@ class Task extends SugarBean {
 		return "$this->name";
 	}
 
-    function create_export_query(&$order_by, &$where, $relate_link_join='')
+    function create_export_query($order_by, $where, $relate_link_join='')
     {
-        $custom_join = $this->custom_fields->getJOIN(true, true,$where);
-		if($custom_join)
-				$custom_join['join'] .= $relate_link_join;
+        $custom_join = $this->getCustomJoin(true, true, $where);
+        $custom_join['join'] .= $relate_link_join;
                 $contact_required = stristr($where,"contacts");
                 if($contact_required)
                 {
                         $query = "SELECT tasks.*, contacts.first_name, contacts.last_name, users.user_name as assigned_user_name ";
-                        if($custom_join){
-   							$query .= $custom_join['select'];
- 						}
+                        $query .= $custom_join['select'];
                         $query .= " FROM contacts, tasks ";
                         $where_auto = "tasks.contact_id = contacts.id AND tasks.deleted=0 AND contacts.deleted=0";
                 }
                 else
                 {
                         $query = 'SELECT tasks.*, users.user_name as assigned_user_name ';
-                        if($custom_join){
-   							$query .= $custom_join['select'];
- 						}
+                        $query .= $custom_join['select'];
                         $query .= ' FROM tasks ';
                         $where_auto = "tasks.deleted=0";
                 }
 
 
-				if($custom_join){
-   					$query .= $custom_join['join'];
- 				}
+        $query .= $custom_join['join'];
 		$query .= "  LEFT JOIN users ON tasks.assigned_user_id=users.id ";
 
                 if($where != "")
@@ -137,10 +133,12 @@ class Task extends SugarBean {
                 else
                         $query .= "where ".$where_auto;
 
-                if($order_by != "")
-                        $query .=  " ORDER BY ". $this->process_order_by($order_by, null);
-                else
-                        $query .= " ORDER BY tasks.name";
+        $order_by = $this->process_order_by($order_by);
+        if (empty($order_by)) {
+            $order_by = 'tasks.name';
+        }
+        $query .= ' ORDER BY ' . $order_by;
+
                 return $query;
 
         }
@@ -263,18 +261,9 @@ class Task extends SugarBean {
             $task_fields['DATE_START']= "<font class='$taskClass'>$date_due</font>";
         }
     }
-    function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
-        if ($order_by == '' || empty($order_by)) {
-            $order_by = 'date_entered DESC';
-        }
-        $ret_array = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, true, $parentbean, $singleSelect);
-        $ret_array['select'] .= ', "" as follow_button_c ';
-        if (!$return_array)
-            return $ret_array['select'] . $ret_array['from'] . $ret_array['where'] . $ret_array['order_by'];
-        return $ret_array;
-    }
+
 	function get_list_view_data(){
-		global $action, $currentModule, $focus, $current_module_strings, $app_list_strings, $timedate,$current_user;
+		global $action, $currentModule, $focus, $current_module_strings, $app_list_strings, $timedate;
 
 		$override_date_for_subpanel = false;
 		if(!empty($_REQUEST['module']) && $_REQUEST['module'] !='Calendar' && $_REQUEST['module'] !='Tasks' && $_REQUEST['module'] !='Home'){
@@ -284,22 +273,17 @@ class Task extends SugarBean {
 
 		$today = $timedate->nowDb();
 		$task_fields = $this->get_list_view_array();
-                global $current_user,$db;
-                $follow_result = $db->query("SELECT id from followup where module_id='{$task_fields['ID']}' and deleted=0 and module_name='Task' and user_id='{$current_user->id}'");
-                $follow_row = $db->fetchByAssoc($follow_result);
-                if($follow_row)
-                    $task_fields['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow2.png" style="height:17px;width:20px;cursor:pointer;" id="'.$task_fields['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Task\');" title="Remove from Watch List" />';
-                else
-                    $task_fields['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow1.png" style="height:17px;width:20px;cursor:pointer;" id="'.$task_fields['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Task\');" title="Add to Watch List" />';
 		$dbtime = $timedate->to_db($task_fields['DATE_DUE']);
 		if($override_date_for_subpanel){
 			$dbtime = $timedate->to_db($task_fields['DATE_START']);
 		}
 
-        $task_fields['TIME_DUE'] = $timedate->to_display_time($dbtime);
-        $task_fields['DATE_DUE'] = $timedate->to_display_date($dbtime);
-
-        $this->formatStartAndDueDates($task_fields, $dbtime, $override_date_for_subpanel);
+        if(!empty($dbtime))
+        {
+            $task_fields['TIME_DUE'] = $timedate->to_display_time($dbtime);
+            $task_fields['DATE_DUE'] = $timedate->to_display_date($dbtime);
+            $this->formatStartAndDueDates($task_fields, $dbtime, $override_date_for_subpanel);
+        }
 
 		if (!empty($this->priority))
 			$task_fields['PRIORITY'] = $app_list_strings['task_priority_dom'][$this->priority];
@@ -307,44 +291,22 @@ class Task extends SugarBean {
 			$task_fields['PARENT_MODULE'] = $this->parent_type;
 		if ($this->status != "Completed" && $this->status != "Deferred" )
 		{
-			$setCompleteUrl = "<a onclick='SUGAR.util.closeActivityPanel.show(\"{$this->module_dir}\",\"{$this->id}\",\"Completed\",\"listview\",\"1\");'>";
+			$setCompleteUrl = "<a id='{$this->id}' onclick='SUGAR.util.closeActivityPanel.show(\"{$this->module_dir}\",\"{$this->id}\",\"Completed\",\"listview\",\"1\");'>";
 		    $task_fields['SET_COMPLETE'] = $setCompleteUrl . SugarThemeRegistry::current()->getImage("close_inline","title=".translate('LBL_LIST_CLOSE','Tasks')." border='0'",null,null,'.gif',translate('LBL_LIST_CLOSE','Tasks'))."</a>";
 		}
 
-
-        if(!empty($task_fields['DATE_DUE']))
+        // make sure we grab the localized version of the contact name, if a contact is provided
+        if (!empty($this->contact_id))
         {
-            $date_due = $task_fields['DATE_DUE'];
-            $dd = $timedate->to_db_date_time($this->date_due, $this->time_due);
-
-            if ($dd < $today){
-                $task_fields['DATE_DUE']= "<font class='overdueTask'>".$date_due."</font>";
-                if($override_date_for_subpanel){
-                    $task_fields['DATE_START']= "<font class='overdueTask'>".$date_due."</font>";
-                }
-            }else if( $dd == $today ){
-                $task_fields['DATE_DUE'] = "<font class='todaysTask'>".$date_due."</font>";
-                if($override_date_for_subpanel){
-                    $task_fields['DATE_START'] = "<font class='todaysTask'>".$date_due."</font>";
-                }
-            }else{
-                $task_fields['DATE_DUE'] = "<font class='futureTask'>".$date_due."</font>";
-                if($override_date_for_subpanel){
-                    $task_fields['DATE_START'] = "<font class='futureTask'>".$date_due."</font>";
-                }
+            $contact_temp = BeanFactory::getBean("Contacts", $this->contact_id);
+            if (!empty($contact_temp))
+            {
+                // Make first name, last name, salutation and title of Contacts respect field level ACLs
+                $contact_temp->_create_proper_name_field();
+                $this->contact_name = $contact_temp->full_name;
+                $this->contact_phone = $contact_temp->phone_work;
             }
         }
-
-		//make sure we grab the localized version of the contact name, if a contact is provided
-		if (!empty($this->contact_id)) {
-            // Bug# 46125 - make first name, last name, salutation and title of Contacts respect field level ACLs
-            $contact = new Contact();
-			$contact->retrieve($this->contact_id);
-			if(isset($contact->id)) {
-			    $this->contact_name = $contact->full_name;
-                $this->contact_phone = $contact->phone_work;
-			}
-		}
 
 		$task_fields['CONTACT_NAME']= $this->contact_name;
 		$task_fields['CONTACT_PHONE']= $this->contact_phone;
@@ -393,27 +355,63 @@ class Task extends SugarBean {
 	function listviewACLHelper(){
 		$array_assign = parent::listviewACLHelper();
 		$is_owner = false;
+		$in_group = false; //SECURITY GROUPS
 		if(!empty($this->parent_name)){
 			if(!empty($this->parent_name_owner)){
 				global $current_user;
 				$is_owner = $current_user->id == $this->parent_name_owner;
 			}
+			/* BEGIN - SECURITY GROUPS */
+			//parent_name_owner not being set for whatever reason so we need to figure this out
+			else if(!empty($this->parent_type) && !empty($this->parent_id)) {
+				global $current_user;
+                $parent_bean = BeanFactory::getBean($this->parent_type,$this->parent_id);
+                if($parent_bean !== false) {
+                	$is_owner = $current_user->id == $parent_bean->assigned_user_id;
+                }
+			}
+			require_once("modules/SecurityGroups/SecurityGroup.php");
+			$in_group = SecurityGroup::groupHasAccess($this->parent_type, $this->parent_id, 'view'); 
+        	/* END - SECURITY GROUPS */
 		}
 
+			/* BEGIN - SECURITY GROUPS */
+			/**
 			if(!ACLController::moduleSupportsACL($this->parent_type) || ACLController::checkAccess($this->parent_type, 'view', $is_owner)){
+			*/
+			if(!ACLController::moduleSupportsACL($this->parent_type) || ACLController::checkAccess($this->parent_type, 'view', $is_owner, 'module', $in_group)){
+        	/* END - SECURITY GROUPS */
 				$array_assign['PARENT'] = 'a';
 			}else{
 				$array_assign['PARENT'] = 'span';
 			}
 		$is_owner = false;
+		$in_group = false; //SECURITY GROUPS
 		if(!empty($this->contact_name)){
 			if(!empty($this->contact_name_owner)){
 				global $current_user;
 				$is_owner = $current_user->id == $this->contact_name_owner;
 			}
+			/* BEGIN - SECURITY GROUPS */
+			//contact_name_owner not being set for whatever reason so we need to figure this out
+			else {
+				global $current_user;
+                $parent_bean = BeanFactory::getBean('Contacts',$this->contact_id);
+                if($parent_bean !== false) {
+                	$is_owner = $current_user->id == $parent_bean->assigned_user_id;
+                }
+			}
+			require_once("modules/SecurityGroups/SecurityGroup.php");
+			$in_group = SecurityGroup::groupHasAccess('Contacts', $this->contact_id, 'view'); 
+        	/* END - SECURITY GROUPS */
 		}
 
+		/* BEGIN - SECURITY GROUPS */
+		/**
 		if( ACLController::checkAccess('Contacts', 'view', $is_owner)){
+		*/
+		if( ACLController::checkAccess('Contacts', 'view', $is_owner, 'module', $in_group)) {
+        /* END - SECURITY GROUPS */
 				$array_assign['CONTACT'] = 'a';
 		}else{
 				$array_assign['CONTACT'] = 'span';

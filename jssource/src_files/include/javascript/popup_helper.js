@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -116,32 +116,40 @@ function send_back(module, id)
 	var array_contents = Array();
 
 	// constructs the array of values associated to the bean that the user clicked
+    var fill_array_contents = function(the_key, the_name)
+    {
+        var the_value = '';
+        if (module != '' && id != '') {
+            if (associated_row_data['DOCUMENT_NAME'] && the_key.toUpperCase() == "NAME") {
+                the_value = associated_row_data['DOCUMENT_NAME'];
+            } else if ((the_key.toUpperCase() == 'USER_NAME' || the_key.toUpperCase() == 'LAST_NAME' || the_key.toUpperCase() == 'FIRST_NAME')
+                        && typeof(is_show_fullname) != 'undefined' && is_show_fullname && form_name != 'search_form') {
+                        //if it is from searchform, it will search by assigned_user_name like 'ABC%', then it will return nothing
+                the_value = associated_row_data['FULL_NAME'];
+            } else {
+                the_value = associated_row_data[the_key.toUpperCase()];
+            }
+        }
+
+        if (typeof(the_value) == 'string') {
+            the_value = the_value.replace(/\r\n|\n|\r/g, '\\n');
+        }
+
+        array_contents.push('"' + the_name + '":"' + the_value + '"');
+    }
+
 	for(var the_key in field_to_name_array)
 	{
 		if(the_key != 'toJSON')
 		{
-			var the_name = field_to_name_array[the_key];
-			var the_value = '';
-
-			if(module != '' && id != '')
-			{
-				if(associated_row_data['DOCUMENT_NAME'] && the_key.toUpperCase() == "NAME"){
-    				the_value = associated_row_data['DOCUMENT_NAME'];
-    				
-    			}  
-				else if((the_key.toUpperCase() == 'USER_NAME' || the_key.toUpperCase() == 'LAST_NAME' || the_key.toUpperCase() == 'FIRST_NAME') && typeof(is_show_fullname) != 'undefined' && is_show_fullname && form_name != 'search_form') {//if it is from searchform, it will search by assigned_user_name like 'ABC%', then it will return nothing
-                    the_value = associated_row_data['FULL_NAME'];
+            if (YAHOO.lang.isArray(field_to_name_array[the_key])) {
+                for (var i = 0; i < field_to_name_array[the_key].length; i++) {
+                    fill_array_contents(the_key, field_to_name_array[the_key][i]);
                 }
-                else {
-                    the_value = associated_row_data[the_key.toUpperCase()];
-               }
-			}
-			
-			if (typeof(the_value) == 'string') {
-				the_value = the_value.replace(/\r\n|\n|\r/g, '\\n');
-			}
-			
-			array_contents.push('"' + the_name + '":"' + the_value + '"');
+            }
+            else {
+                fill_array_contents(the_key, field_to_name_array[the_key]);
+            }
 		}
 	}
 
@@ -259,9 +267,40 @@ function send_back_selected(module, form, field, error_message, request_data)
 
 function toggleMore(spanId, img_id, module, action, params){
 	toggle_more_go = function() {
-		oReturn = function(body, caption, width, theme) {
-					return overlib(body, CAPTION, caption, STICKY, MOUSEOFF, 1000, WIDTH, width, CLOSETEXT, ('<img border=0 style="margin-left:2px; margin-right: 2px;" src=themes/' + theme + '/images/close.gif>'), CLOSETITLE, 'Click to Close', CLOSECLICK, FGCLASS, 'olFgClass', CGCLASS, 'olCgClass', BGCLASS, 'olBgClass', TEXTFONTCLASS, 'olFontClass', CAPTIONFONTCLASS, 'olCapFontClass', CLOSEFONTCLASS, 'olCloseFontClass', REF, spanId, REFC, 'LL', REFX, 13);
+				oReturn = function(body, caption, width, theme) {
+					
+					$(".ui-dialog").find(".open").dialog("close");
+
+					var el = '#'+spanId+ ' img';
+					if (action == 'DisplayInlineTeams')
+					{
+					    el = '#'+spanId;
+					}
+					var $dialog = $('<div class="open"></div>')
+					.html(body)
+					.dialog({
+						autoOpen: false,
+						title: caption,
+						width: 300,
+						position: {
+						    my: 'right top',
+						    at: 'left top',
+						    of: $(el)
+					  }
+					});
+
+					var width = $dialog.dialog( "option", "width" );
+					var pos = $(el).offset();
+					var ofWidth = $(el).width();
+
+					if((pos.left + ofWidth) - 40 < width) {
+					    $dialog.dialog("option","position",{my: 'left top',at: 'right top',of: $(el)})	;
+					}
+
+					$dialog.dialog('open');
+
 				}
+				
 		success = function(data) {
 					eval(data.responseText);
 
@@ -299,3 +338,8 @@ SUGAR.util.doWhen("window.document.forms['popup_query_form'] != null "
         }
     }
 );
+$(document).ready(function(){
+    $("ul.clickMenu").each(function(index, node){
+        $(node).sugarActionMenu();
+    });
+});

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -136,7 +136,7 @@ class ImportViewDupcheck extends ImportView
              $ik_field = explode('::', $ik);
 
              //field is not a custom field and was not included in the key, or was not in mapped fields, so skip
-             if(strpos($ik_field[0],'ustomfield::')>0 && (empty($ik_field[1]) || !in_array($ik_field[1], $mapped_fields))){
+             if(strpos($ik_field[0],'ustomfield::')>0 || (empty($ik_field[1]) || !in_array($ik_field[1], $mapped_fields))){
              //skip indexed fields that are not defined in user mapping or
                 continue;
              }

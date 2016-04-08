@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -209,11 +212,10 @@ eoq;
 		if(!empty($_REQUEST['uid'])) $_POST['mass'] = explode(',', $_REQUEST['uid']); // coming from listview
 		elseif(isset($_REQUEST['entire']) && empty($_POST['mass'])) {
 			if(empty($order_by))$order_by = '';
-			$ret_array = create_export_query_relate_link_patch($_REQUEST['module'], $this->searchFields, $this->where_clauses);
-			if(!isset($ret_array['join'])) {
-				$ret_array['join'] = '';
-			}
-			$query = $this->sugarbean->create_export_query($order_by, $ret_array['where'], $ret_array['join']);
+
+            // TODO: define filter array here to optimize the query
+            // by not joining the unneeded tables
+            $query = $this->sugarbean->create_new_list_query($order_by, $this->where_clauses, array(), array(), 0, '', false, $this, true, true);
 			$result = $db->query($query,true);
 			$new_arr = array();
 			while($val = $db->fetchByAssoc($result,false))
@@ -234,14 +236,7 @@ eoq;
 				if(isset($_POST['Delete'])){
 					$this->sugarbean->retrieve($id);
 					if($this->sugarbean->ACLAccess('Delete')){
-					//Martin Hu Bug #20872
-						if($this->sugarbean->object_name == 'EmailMan'){
-							$query = "DELETE FROM emailman WHERE id = '" . $this->sugarbean->id . "'";
-							$db->query($query);
-						} else {
-
-							$this->sugarbean->mark_deleted($id);
-						}
+						$this->sugarbean->mark_deleted($id);
 					}
 				}
 				else {
@@ -303,7 +298,7 @@ eoq;
 						}
 
 						//Call include/formbase.php, but do not call retrieve again
-						populateFromPost('', $newbean, true);
+                        populateFromPost('', $newbean, true, true);
 						$newbean->save_from_post = false;
 
 						if (!isset($_POST['parent_id'])) {
@@ -464,6 +459,9 @@ eoq;
 						$even = !$even; $newhtml .= $this->addDatetime($displayname,  $field["name"]); break;
 						case "datetime":
 						case "date":$even = !$even; $newhtml .= $this->addDate($displayname,  $field["name"]); break;
+                        default:
+                            $newhtml .= $this->addDefault($displayname,  $field, $even); break;
+                            break;
 					}
 				}
 
@@ -545,9 +543,9 @@ EOJS;
 			if(!empty($vardef['function']['include'])){
 				require_once($vardef['function']['include']);
 			}
-			return $function($focus, $vardef['name'], '', 'MassUpdate');
+			return call_user_func($function, $focus, $vardef['name'], '', 'MassUpdate');
 		}else{
-			return $function($focus, $vardef['name'], '', 'MassUpdate');
+			return call_user_func($function, $focus, $vardef['name'], '', 'MassUpdate');
 		}
 	}
 
@@ -636,7 +634,7 @@ EOJS;
 			//
 			///////////////////////////////////////
 
-			$change_parent_button = "<span class='id-ff'><button title='".$app_strings['LBL_SELECT_BUTTON_TITLE']."' accessKey='".$app_strings['LBL_SELECT_BUTTON_KEY']."'  type='button' class='button' value='".$app_strings['LBL_SELECT_BUTTON_LABEL']
+			$change_parent_button = "<span class='id-ff'><button title='".$app_strings['LBL_SELECT_BUTTON_TITLE']."'  type='button' class='button' value='".$app_strings['LBL_SELECT_BUTTON_LABEL']
 			."' name='button_parent_name' onclick='open_popup(document.MassUpdate.{$field['type_name']}.value, 600, 400, \"\", true, false, {$encoded_popup_request_data});'>
 			".SugarThemeRegistry::current()->getImage("id-ff-select", '', null, null, ".png", $app_strings['LBL_ID_FF_SELECT'])."
 			</button></span>";
@@ -714,6 +712,8 @@ EOHTML;
 	  * @param field_name name of the field
 	  */
 	function addInputType($displayname, $varname){
+		//letrium ltd
+		$displayname = addslashes($displayname);
 		$html = <<<EOQ
 	<td scope="row" width="20%">$displayname</td>
 	<td class='dataField' width="30%"><input type="text" name='$varname' size="12" id='{$varname}' maxlength='10' value=""></td>
@@ -771,7 +771,6 @@ EOQ;
     <input name='{$varname}' id='mass_{$varname}' class='sqsEnabled' autocomplete='off' type='text' value=''>
     <input name='{$id_name}' id='mass_{$id_name}' type='hidden' value=''>&nbsp;
     <input title='{$app_strings['LBL_SELECT_BUTTON_TITLE']}'
-        accessKey='{$app_strings['LBL_SELECT_BUTTON_KEY']}'
         type='button' class='button' value='{$app_strings['LBL_SELECT_BUTTON_LABEL']}' name='button'
         onclick='open_popup("$mod_type", 600, 400, "", true, false, {$encoded_popup_request_data});'
         />
@@ -841,7 +840,6 @@ EOHTML;
     <input name='{$id_name}' id='mass_{$id_name}' type='hidden' value=''>
 	<span class="id-ff multiple">
     <button title='{$app_strings['LBL_SELECT_BUTTON_TITLE']}'
-        accessKey='{$app_strings['LBL_SELECT_BUTTON_KEY']}'
         type='button' class='button' value='{$app_strings['LBL_SELECT_BUTTON_LABEL']}' name='button'
         onclick='open_popup("$mod_type", 600, 400, "", true, false, {$encoded_popup_request_data});'
         /><img alt="$img" src="$img"></button></span>
@@ -907,8 +905,7 @@ EOHTML;
 							$html = '<td scope="row">' . $displayname . " </td>\n"
 							. '<td><input class="sqsEnabled" type="text" autocomplete="off" id="mass_' . $varname .'" name="' . $varname . '" value="" /><input id="mass_' . $id_name . '" type="hidden" name="'
 							. $id_name . '" value="" />&nbsp;<span class="id-ff multiple"><button type="button" name="btn1" class="button" title="'
-							. $app_strings['LBL_SELECT_BUTTON_LABEL'] . '" accesskey="'
-							. $app_strings['LBL_SELECT_BUTTON_KEY'] . '" value="' . $app_strings['LBL_SELECT_BUTTON_LABEL'] . '" onclick='
+							. $app_strings['LBL_SELECT_BUTTON_LABEL'] . '"  value="' . $app_strings['LBL_SELECT_BUTTON_LABEL'] . '" onclick='
 							. "'open_popup(\"Accounts\",600,400,\"\",true,false,{$encoded_popup_request_data});' /><img alt=\"$img\" src=\"$img\"></button></span></td>\n";
 							$html .= '<script type="text/javascript" language="javascript">if(typeof sqs_objects == \'undefined\'){var sqs_objects = new Array;}sqs_objects[\'MassUpdate_' . $varname . '\'] = ' .
 							$json->encode($qsParent) . '; registerSingleSmartInputListener(document.getElementById(\'mass_' . $varname . '\'));
@@ -950,7 +947,7 @@ EOHTML;
 						$html = <<<EOQ
 		<td width="15%" scope="row">$displayname</td>
 		<td ><input class="sqsEnabled" autocomplete="off" id="mass_assigned_user_name" name='assigned_user_name' type="text" value=""><input id='mass_assigned_user_id' name='assigned_user_id' type="hidden" value="" />
-		<span class="id-ff multiple"><button id="mass_assigned_user_name_btn" title="{$app_strings['LBL_SELECT_BUTTON_TITLE']}" accessKey="{$app_strings['LBL_SELECT_BUTTON_KEY']}" type="button" class="button" value='{$app_strings['LBL_SELECT_BUTTON_LABEL']}' name=btn1
+		<span class="id-ff multiple"><button id="mass_assigned_user_name_btn" title="{$app_strings['LBL_SELECT_BUTTON_TITLE']}" type="button" class="button" value='{$app_strings['LBL_SELECT_BUTTON_LABEL']}' name=btn1
 				onclick='open_popup("Users", 600, 400, "", true, false, $encoded_popup_request_data);' /><img src="$img"></button></span>
 		</td>
 EOQ;
@@ -970,7 +967,7 @@ EOQ;
 	function addStatus($displayname, $varname, $options){
 		global $app_strings, $app_list_strings;
 
-		// cn: added "mass_" to the id tag to diffentieate from the status id in StoreQuery
+		// cn: added "mass_" to the id tag to differentiate from the status id in StoreQuery
 		$html = '<td scope="row" width="15%">'.$displayname.'</td><td>';
 		if(is_array($options)){
 			if(!isset($options['']) && !isset($options['0'])){
@@ -981,7 +978,12 @@ EOQ;
 			   }
 			   $options = $new_options;
 			}
-			$options = get_select_options_with_id_separate_key($options, $options, '', true);;
+            $options = get_select_options_with_id_separate_key(
+                $options,
+                $options,
+                '__SugarMassUpdateClearField__',
+                true
+            );
 			$html .= '<select id="mass_'.$varname.'" name="'.$varname.'">'.$options.'</select>';
 		}else{
 			$html .= $options;
@@ -1013,7 +1015,7 @@ EOQ;
 		}
 		$options = get_select_options_with_id_separate_key($options, $options, '', true);;
 
-		// cn: added "mass_" to the id tag to diffentieate from the status id in StoreQuery
+		// cn: added "mass_" to the id tag to differentiate from the status id in StoreQuery
 		$html = '<td scope="row" width="15%">'.$displayname.'</td>
 			 <td><select id="mass_'.$varname.'" name="'.$varname.'[]" size="5" MULTIPLE>'.$options.'</select></td>';
 		return $html;
@@ -1025,6 +1027,8 @@ EOQ;
 	  */
 	function addDate($displayname, $varname){
 		global $timedate;
+		//letrium ltd
+		$displayname = addslashes($displayname);
 		$userformat = '('. $timedate->get_user_date_format().')';
 		$cal_dateformat = $timedate->get_cal_date_format();
 		global $app_strings, $app_list_strings, $theme;
@@ -1220,7 +1224,7 @@ EOQ;
             }elseif(file_exists('modules/'.$module.'/metadata/metafiles.php')){
                 require('modules/'.$module.'/metadata/metafiles.php');
             }
-            
+
             $searchFields = $this->getSearchFields($module);
             $searchdefs = $this->getSearchDefs($module);
 
@@ -1230,11 +1234,12 @@ EOQ;
             }
 
             $searchForm = new SearchForm($seed, $module);
-            $searchForm->setup($searchdefs, $searchFields, 'include/SearchForm/tpls/SearchFormGeneric.tpl');
+            $searchForm->setup($searchdefs, $searchFields, 'SearchFormGeneric.tpl');
         }
 	/* bug 31271: using false to not add all bean fields since some beans - like SavedReports
 	   can have fields named 'module' etc. which may break the query */
-        $searchForm->populateFromArray(unserialize(base64_decode($query)), null, true); // see bug 31271
+        $query = sugar_unserialize(base64_decode($query));
+        $searchForm->populateFromArray($query, null, true);
         $this->searchFields = $searchForm->searchFields;
         $where_clauses = $searchForm->generateSearchWhere(true, $module);
         if (count($where_clauses) > 0 ) {
@@ -1249,15 +1254,15 @@ EOQ;
     {
         if (file_exists('custom/modules/'.$module.'/metadata/searchdefs.php'))
         {
-            require_once('custom/modules/'.$module.'/metadata/searchdefs.php');
+            require('custom/modules/'.$module.'/metadata/searchdefs.php');
         }
         elseif (!empty($metafiles[$module]['searchdefs']))
         {
-            require_once($metafiles[$module]['searchdefs']);
+            require($metafiles[$module]['searchdefs']);
         }
         elseif (file_exists('modules/'.$module.'/metadata/searchdefs.php'))
         {
-            require_once('modules/'.$module.'/metadata/searchdefs.php');
+            require('modules/'.$module.'/metadata/searchdefs.php');
         }
 
         return isset($searchdefs) ? $searchdefs : array();
@@ -1267,15 +1272,15 @@ EOQ;
     {
         if (file_exists('custom/modules/' . $module . '/metadata/SearchFields.php'))
         {
-            require_once('custom/modules/' . $module . '/metadata/SearchFields.php');
+            require('custom/modules/' . $module . '/metadata/SearchFields.php');
         }
         elseif(!empty($metafiles[$module]['searchfields']))
         {
-            require_once($metafiles[$module]['searchfields']);
+            require($metafiles[$module]['searchfields']);
         }
         elseif(file_exists('modules/'.$module.'/metadata/SearchFields.php'))
         {
-            require_once('modules/'.$module.'/metadata/SearchFields.php');
+            require('modules/'.$module.'/metadata/SearchFields.php');
         }
 
         return isset($searchFields) ? $searchFields : array();
@@ -1319,6 +1324,18 @@ EOQ;
         }
 
         return false;
+    }
+
+     /**
+     * Have to be overridden in children
+     * @param string $displayname field label
+     * @param string $field field name
+     * @param bool $even even or odd
+     * @return string html field data
+     */
+    protected function addDefault($displayname,  $field, & $even)
+    {
+        return '';
     }
 }
 

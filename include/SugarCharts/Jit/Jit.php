@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -50,8 +50,12 @@ class Jit extends JsChart {
 	
 	function getChartResources() {
 		return '
-		<link type="text/css" href="'.getJSPath('include/SugarCharts/Jit/css/base.css').'" rel="stylesheet" />
 		<!--[if lt IE 9]>
+        <script>
+            window.FlashCanvasOptions = {
+                swfPath: "' . $GLOBALS['sugar_config']['site_url'] . '/include/SugarCharts/Jit/FlashCanvas/"
+            };
+        </script>
 		<script type="text/javascript" src="'.getJSPath('include/SugarCharts/Jit/FlashCanvas/flashcanvas.js').'"></script>
 		<![endif]-->
 		<script language="javascript" type="text/javascript" src="'.getJSPath('include/SugarCharts/Jit/js/Jit/jit.js').'"></script>

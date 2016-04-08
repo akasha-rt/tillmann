@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -58,6 +58,11 @@ if(!isset($locale) || empty($locale)) {
 }
 global $sugar_config;
 global $sugar_flavor;
+
+require_once('modules/Trackers/TrackerManager.php');
+$trackerManager = TrackerManager::getInstance();
+$trackerManager->pause();
+$trackerManager->unsetMonitors();
 
 ///////////////////////////////////////////////////////////////////////////////
 ////	SYSTEM PREP
@@ -283,13 +288,6 @@ if($upgradeStepFile == 'end'){
 			deleteCache();
 		}
 		ob_end_clean();
-       if(isset($_SESSION['current_db_version']) && substr($_SESSION['current_db_version'],0,1) == 4){
-		   //Remove footer from themes except default, love and link themes
-		    logThis('Start removing footer.php file from themes...');
-		    	$deleteNot =array('themes/default/footer.php','themes/Love/footer.php','themes/Links/footer.php');
-		    	removeFileFromPath('footer.php','themes', $deleteNot);
-		    logThis('End removing footer.php file from themes...');
-       }
     //}
 }
 
@@ -534,13 +532,7 @@ if(!empty($GLOBALS['top_message'])){
 	$smarty->assign('top_message', $GLOBALS['top_message']);
 }
 
-if ($sugar_config['sugar_version'] < '5.5') {
-	$smarty->assign('includeContainerCSS', true);
-} else {
-	$smarty->assign('includeContainerCSS', false);
-} // else
+$smarty->assign('includeContainerCSS', false);
 $smarty->display('modules/UpgradeWizard/uw_main.tpl');
 ////	END PAGE OUTPUT
 ///////////////////////////////////////////////////////////////////////////////
-
-?>

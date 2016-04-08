@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -55,7 +55,6 @@ class SugarWidgetFieldBool extends SugarWidgetReportField
     function displayListPlain($layout_def)
     {
         $value = $this->_get_list_value($layout_def);
-        $module = $this->reporter->all_fields[$layout_def['column_key']]['module'];
         $name = $layout_def['name'];
         $layout_def['name'] = 'id';
         $key = $this->_get_column_alias($layout_def);

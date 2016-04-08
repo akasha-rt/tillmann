@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -160,12 +160,21 @@ foreach ($_POST['mass'] as $message_id) {
 //delete all entries from the emailman table that belong to the exempt list.
 //TODO:SM: may want to move this to query clause above instead
 if (!$test) {
-    $delete_query =  "DELETE FROM emailman WHERE emailman.campaign_id='{$campaign->id}' AND (emailman.related_id, emailman.related_type) IN
-    	(SELECT plp.related_id, plp.related_type FROM prospect_lists_prospects plp
-    		INNER JOIN prospect_lists pl ON pl.id = plp.prospect_list_id
-    		INNER JOIN prospect_list_campaigns plc ON plp.prospect_list_id = plc.prospect_list_id
-    		WHERE plp.deleted = 0 AND plc.deleted = 0 AND pl.deleted = 0 AND pl.list_type = 'exempt' AND  plc.campaign_id = '{$campaign->id}')
-    	";
+    $delete_query =  "
+    DELETE FROM emailman WHERE id IN (
+        SELECT em.id FROM (
+            SELECT emailman.id id
+            FROM emailman 
+            INNER JOIN prospect_lists_prospects plp
+            ON emailman.related_id =  plp.related_id AND emailman.related_type =  plp.related_type
+            INNER JOIN prospect_lists pl 
+            ON pl.id = plp.prospect_list_id 
+            INNER JOIN prospect_list_campaigns plc 
+            ON plp.prospect_list_id = plc.prospect_list_id 
+            WHERE plp.deleted = 0 AND plc.deleted = 0
+            AND pl.deleted = 0 AND pl.list_type = 'exempt'
+            AND plc.campaign_id = '{$campaign->id}') em
+    )";
     $campaign->db->query($delete_query);
 }
 

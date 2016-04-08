@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 require_once('include/ListView/ListViewSmarty.php');
@@ -76,6 +79,8 @@ class PopupSmarty extends ListViewSmarty{
 		$this->module = $module;
 		$this->searchForm = new SearchForm($this->seed, $this->module);
 		$this->th->deleteTemplate($module, $this->view);
+        $this->headerTpl = 'include/Popups/tpls/header.tpl';
+        $this->footerTpl = 'include/Popups/tpls/footer.tpl';
 
 	}
 
@@ -142,7 +147,6 @@ class PopupSmarty extends ListViewSmarty{
 		$this->th->ss->assign('searchForm', $this->searchForm->display(false));
         //rrs
 
-		if($this->overlib) $this->th->ss->assign('overlib', true);
 		if($this->export) $this->th->ss->assign('exportLink', $this->buildExportLink());
 		$this->th->ss->assign('quickViewLinks', $this->quickViewLinks);
 		if($this->mailMerge) $this->th->ss->assign('mergeLink', $this->buildMergeLink()); // still check for mailmerge access
@@ -231,16 +235,21 @@ class PopupSmarty extends ListViewSmarty{
 		$json = getJSONobj();
 		$this->th->ss->assign('jsLang', $jsLang);
 		$this->th->ss->assign('lang', substr($GLOBALS['current_language'], 0, 2));
-		$this->th->ss->assign('headerTpl', 'include/Popups/tpls/header.tpl');
-        $this->th->ss->assign('footerTpl', 'include/Popups/tpls/footer.tpl');
+        $this->th->ss->assign('headerTpl', $this->headerTpl);
+        $this->th->ss->assign('footerTpl', $this->footerTpl);
         $this->th->ss->assign('ASSOCIATED_JAVASCRIPT_DATA', 'var associated_javascript_data = '.$json->encode($associated_row_data). '; var is_show_fullname = '.$is_show_fullname.';');
 		$this->th->ss->assign('module', $this->seed->module_dir);
 		$request_data = empty($_REQUEST['request_data']) ? '' : $_REQUEST['request_data'];
+
 		$this->th->ss->assign('request_data', $request_data);
 		$this->th->ss->assign('fields', $this->fieldDefs);
 		$this->th->ss->assign('formData', $this->formData);
 		$this->th->ss->assign('APP', $GLOBALS['app_strings']);
 		$this->th->ss->assign('MOD', $GLOBALS['mod_strings']);
+        if (isset($this->_popupMeta['create']['createButton'])) 
+		{
+           $this->_popupMeta['create']['createButton'] = translate($this->_popupMeta['create']['createButton']);
+        }
 		$this->th->ss->assign('popupMeta', $this->_popupMeta);
         $this->th->ss->assign('current_query', base64_encode(serialize($_REQUEST)));
 		$this->th->ss->assign('customFields', $this->customFieldDefs);
@@ -263,7 +272,11 @@ class PopupSmarty extends ListViewSmarty{
 	/*
 	 * Setup up the smarty template. we added an extra step here to add the order by from the popupdefs.
 	 */
-	function setup($file) {
+	function setup($seed, $file = null, $where = null, $params = Array(), $offset = 0, $limit = -1, $filter_fields = Array(), $id_field = 'id') {
+		$args = func_get_args();
+		return call_user_func_array(array($this, '_setup'), $args);
+	}
+	function _setup($file) {
 
 	    if(isset($this->_popupMeta)){
 			if(isset($this->_popupMeta['create']['formBase'])) {
@@ -302,7 +315,7 @@ class PopupSmarty extends ListViewSmarty{
         $this->searchdefs[$this->module]['templateMeta']['widths']['field'] = 30;
 
         $this->searchForm->view = 'PopupSearchForm';
-		$this->searchForm->setup($this->searchdefs, $searchFields, 'include/SearchForm/tpls/SearchFormGenericAdvanced.tpl', 'advanced_search', $this->listviewdefs);
+		$this->searchForm->setup($this->searchdefs, $searchFields, 'SearchFormGenericAdvanced.tpl', 'advanced_search', $this->listviewdefs);
 
 		$lv = new ListViewSmarty();
 		$displayColumns = array();
@@ -380,6 +393,30 @@ class PopupSmarty extends ListViewSmarty{
             }
         }
 
+        if (isset($_REQUEST['request_data'])) {
+            $request_data = json_decode(html_entity_decode($_REQUEST['request_data']), true);
+            $_POST['field_to_name'] = $_REQUEST['field_to_name'] = array_keys($request_data['field_to_name_array']);
+        }
+
+        /**
+         * Bug #46842 : The relate field field_to_name_array fails to copy over custom fields 
+         * By default bean's create_new_list_query function loads fields displayed on the page or used in the search
+         * add fields used to populate forms from _viewdefs :: field_to_name_array to retrive from db
+         */
+        if ( isset($_REQUEST['field_to_name']) && $_REQUEST['field_to_name'] )
+        {
+            $_REQUEST['field_to_name'] = is_array($_REQUEST['field_to_name']) ? $_REQUEST['field_to_name'] : array($_REQUEST['field_to_name']);
+            foreach ( $_REQUEST['field_to_name'] as $add_field )
+            {
+                $add_field = strtolower($add_field);
+                if ( $add_field != 'id' && !isset($this->filter_fields[$add_field]) && isset($this->seed->field_defs[$add_field]) )
+                {
+                    $this->filter_fields[$add_field] = true;
+                }
+            }
+            
+        }
+
 
 		if (!empty($_REQUEST['query']) || (!empty($GLOBALS['sugar_config']['save_query']) && $GLOBALS['sugar_config']['save_query'] != 'populate_only')) {
 			$data = $this->lvd->getListViewData($this->seed, $searchWhere, 0, -1, $this->filter_fields, $params, 'id');
@@ -395,41 +432,7 @@ class PopupSmarty extends ListViewSmarty{
 			);
 		}
 
-		foreach($this->displayColumns as $columnName => $def)
-		{
-			$seedName =  strtolower($columnName);
-
-			if(empty($this->displayColumns[$columnName]['type'])){
-				if(!empty($this->lvd->seed->field_defs[$seedName]['type'])){
-					$seedDef = $this->lvd->seed->field_defs[$seedName];
-		            $this->displayColumns[$columnName]['type'] = (!empty($seedDef['custom_type']))?$seedDef['custom_type']:$seedDef['type'];
-		        }else{
-		        	$this->displayColumns[$columnName]['type'] = '';
-		        }
-			}//fi empty(...)
-
-			if(!empty($this->lvd->seed->field_defs[$seedName]['options'])){
-					$this->displayColumns[$columnName]['options'] = $this->lvd->seed->field_defs[$seedName]['options'];
-			}
-
-	        //C.L. Fix for 11177
-	        if($this->displayColumns[$columnName]['type'] == 'html') {
-	            $cField = $this->seed->custom_fields;
-	               if(isset($cField) && isset($cField->bean->$seedName)) {
-	                 	$seedName2 = strtoupper($columnName);
-	                 	$htmlDisplay = html_entity_decode($cField->bean->$seedName);
-	                 	$count = 0;
-	                 	while($count < count($data['data'])) {
-	                 		$data['data'][$count][$seedName2] = &$htmlDisplay;
-	                 	    $count++;
-	                 	}
-	            	}
-	        }//fi == 'html'
-
-			if (!empty($this->lvd->seed->field_defs[$seedName]['sort_on'])) {
-		    	$this->displayColumns[$columnName]['orderBy'] = $this->lvd->seed->field_defs[$seedName]['sort_on'];
-		    }
-		}
+        $this->fillDisplayColumnsWithVardefs();
 
 		$this->process($file, $data, $this->seed->object_name);
 	}
@@ -542,7 +545,7 @@ EOQ;
 		}
 
 
-		$addformheader = get_form_header($this->_popupMeta['create']['createButton'], $formSave, false);
+		$addformheader = get_form_header(translate($this->_popupMeta['create']['createButton']), $formSave, false);
 		return $addformheader;
 	}
 

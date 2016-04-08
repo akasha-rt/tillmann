@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -47,7 +47,11 @@ class TemplateInt extends TemplateRange
 		$this->vardef_map['autoinc_next'] = 'autoinc_next';
 		$this->vardef_map['autoinc_start'] = 'autoinc_start';
 		$this->vardef_map['auto_increment'] = 'auto_increment';
-	}
+        
+        $this->vardef_map['min'] = 'ext1';
+        $this->vardef_map['max'] = 'ext2';
+        $this->vardef_map['disable_num_format'] = 'ext3';
+    }
 
 	function get_html_edit(){
 		$this->prepare();
@@ -65,12 +69,21 @@ class TemplateInt extends TemplateRange
     function get_field_def(){
 		$vardef = parent::get_field_def();
 		$vardef['disable_num_format'] = isset($this->disable_num_format) ? $this->disable_num_format : $this->ext3;//40005
-		if(!empty($this->ext2)){
-		    $min = (!empty($this->ext1))?$this->ext1:0;
-		    $max = $this->ext2;
-		    $vardef['validation'] = array('type' => 'range', 'min' => $min, 'max' => $max);
-		}
-		if(!empty($this->auto_increment))
+
+        $vardef['min'] = isset($this->min) ? $this->min : $this->ext1;
+        $vardef['max'] = isset($this->max) ? $this->max : $this->ext2;
+        $vardef['min'] = filter_var($vardef['min'], FILTER_VALIDATE_INT);
+        $vardef['max'] = filter_var($vardef['max'], FILTER_VALIDATE_INT);
+        if ($vardef['min'] !== false || $vardef['max'] !== false)
+        {
+            $vardef['validation'] = array(
+                'type' => 'range',
+                'min' => $vardef['min'],
+                'max' => $vardef['max']
+            );
+        }
+
+        if(!empty($this->auto_increment))
 		{
 			$vardef['auto_increment'] = $this->auto_increment;
 			if ((empty($this->autoinc_next)) && isset($this->module) && isset($this->module->table_name))

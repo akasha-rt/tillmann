@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -44,14 +44,37 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * @since      Class available since Release 4.0
  */
 
-class QuickSearchDefaults {
+class QuickSearchDefaults
+{
 
 	var $form_name = 'EditView';
-	
+
+    /**
+     * getQuickSearchDefaults
+     *
+     * This is a static function to get an instance of QuickSearchDefaults object
+     *
+     * @param array $lookup Array with custom files and class names for custom QuickSearchDefaults classes, optional
+     * @return QuickSearchDefaults
+     */
+    static public function getQuickSearchDefaults(array $lookup = array())
+    {
+       $lookup['custom/include/QuickSearchDefaults.php'] = 'QuickSearchDefaultsCustom';
+       foreach ($lookup as $file => $class)
+       {
+           if (file_exists($file))
+           {
+               require_once($file);
+               return new $class();
+           }
+       }
+       return new QuickSearchDefaults();
+    }
+
 	function setFormName($name = 'EditView') {
 		$this->form_name = $name;
 	}
-	
+
     function getQSParent($parent = 'Accounts') {
         global $app_strings;
 
@@ -144,8 +167,8 @@ class QuickSearchDefaults {
                            'limit'=>'30',
                            'no_match_text'=> $app_strings['ERR_SQS_NO_MATCH']);
         return $qsContact;
-    }    
-    
+    }
+
     function getQSUser($p_name = 'assigned_user_name', $p_id ='assigned_user_id') {
         global $app_strings;
 
@@ -175,7 +198,7 @@ class QuickSearchDefaults {
         return $qsCampaign;
     }
 
-    
+
     /**
      * Loads Quick Search Object for any object (if suitable method is defined)
      *

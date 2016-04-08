@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -42,11 +45,12 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 class Configurator {
 	var $config = '';
 	var $override = '';
-	var $allow_undefined = array ('stack_trace_errors', 'export_delimiter', 'use_real_names', 'developerMode', 'default_module_favicon', 'authenticationClass', 'SAML_loginurl', 'SAML_X509Cert', 'dashlet_auto_refresh_min', 'show_download_tab');
+	var $allow_undefined = array ('stack_trace_errors', 'export_delimiter', 'use_real_names', 'developerMode', 'default_module_favicon', 'authenticationClass', 'SAML_loginurl', 'SAML_X509Cert', 'dashlet_auto_refresh_min', 'show_download_tab', 'enable_action_menu','enable_line_editing_list','enable_line_editing_detail');
 	var $errors = array ('main' => '');
 	var $logger = NULL;
 	var $previous_sugar_override_config_array = array();
 	var $useAuthenticationClass = false;
+    protected $error = null;
 
 	function Configurator() {
 		$this->loadConfig();
@@ -61,6 +65,13 @@ class Configurator {
 	function populateFromPost() {
 		$sugarConfig = SugarConfig::getInstance();
 		foreach ($_POST as $key => $value) {
+			if ($key == "logger_file_ext") {
+			    $trim_value = preg_replace('/.*\.([^\.]+)$/', '\1', $value);
+			    if(in_array($trim_value, $this->config['upload_badext'])) {
+			        $GLOBALS['log']->security("Invalid log file extension: trying to use invalid file extension '$value'.");
+			        continue;
+			    }
+			}
 			if (isset ($this->config[$key]) || in_array($key, $this->allow_undefined)) {
 				if (strcmp("$value", 'true') == 0) {
 					$value = true;
@@ -101,14 +112,24 @@ class Configurator {
 		$GLOBALS['sugar_config'] = $this->config;
 
 		//print_r($overrideArray);
+        //Bug#53013: Clean the tpl cache if action menu style has been changed.
+        if( isset($overrideArray['enable_action_menu']) &&
+                ( !isset($this->previous_sugar_override_config_array['enable_action_menu']) ||
+                    $overrideArray['enable_action_menu'] != $this->previous_sugar_override_config_array['enable_action_menu'] )
+        ) {
+            require_once('modules/Administration/QuickRepairAndRebuild.php');
+            $repair = new RepairAndClear;
+            $repair->module_list = array();
+            $repair->clearTpls();
+        }
 
 		foreach($overrideArray as $key => $val) {
 			if (in_array($key, $this->allow_undefined) || isset ($sugar_config[$key])) {
-				if (strcmp("$val", 'true') == 0) {
+				if (is_string($val) && strcmp($val, 'true') == 0) {
 					$val = true;
 					$this->config[$key] = $val;
 				}
-				if (strcmp("$val", 'false') == 0) {
+				if (is_string($val) && strcmp($val, 'false') == 0) {
 					$val = false;
 					$this->config[$key] = false;
 				}
@@ -139,7 +160,11 @@ class Configurator {
 	}
 
 	function saveConfig() {
-		$this->saveImages();
+        if($this->saveImages() === false)
+        {
+            return false;
+        }
+
 		$this->populateFromPost();
 		$this->handleOverride();
 		$this->clearCache();
@@ -148,11 +173,24 @@ class Configurator {
 	function readOverride() {
 		$sugar_config = array();
 		if (file_exists('config_override.php')) {
-			include('config_override.php');
+		    if ( !is_readable('config_override.php') ) {
+		        $GLOBALS['log']->fatal("Unable to read the config_override.php file. Check the file permissions");
+		    }
+	        else {
+	            include('config_override.php');
+	        }
 		}
 		return $sugar_config;
 	}
 	function saveOverride($override) {
+        require_once('install/install_utils.php');
+	    if ( !file_exists('config_override.php') ) {
+	    	touch('config_override.php');
+	    }
+	    if ( !(make_writable('config_override.php')) ||  !(is_writable('config_override.php')) ) {
+	        $GLOBALS['log']->fatal("Unable to write to the config_override.php file. Check the file permissions");
+	        return;
+	    }
 		$fp = sugar_fopen('config_override.php', 'w');
 		fwrite($fp, $override);
 		fclose($fp);
@@ -185,18 +223,30 @@ class Configurator {
 
 	function saveImages() {
 		if (!empty ($_POST['company_logo'])) {
-			$this->saveCompanyLogo("upload://".$_POST['company_logo']);
+            if($this->saveCompanyLogo("upload://".$_POST['company_logo']) === false)
+            {
+                return false;
+            }
 		}
 	}
 
 	function checkTempImage($path)
 	{
-	    if(!verify_uploaded_image($path)) {
+        if(!verify_uploaded_image($path)) {
+            $error = translate('LBL_ALERT_TYPE_IMAGE');
         	$GLOBALS['log']->fatal("A user ({$GLOBALS['current_user']->id}) attempted to use an invalid file for the logo - {$path}");
-        	sugar_die('Invalid File Type');
+            $this->error = $error;
+            return false;
 		}
 		return $path;
 	}
+
+    public function getError()
+    {
+        $e = $this->error;
+        $this->error = null;
+        return $e;
+    }
     /**
      * Saves the company logo to the custom directory for the default theme, so all themes can use it
      *
@@ -205,6 +255,11 @@ class Configurator {
 	function saveCompanyLogo($path)
     {
     	$path = $this->checkTempImage($path);
+        if($path === false)
+        {
+            return false;
+        }
+
         mkdir_recursive('custom/'.SugarThemeRegistry::current()->getDefaultImagePath(), true);
         copy($path,'custom/'. SugarThemeRegistry::current()->getDefaultImagePath(). '/company_logo.png');
         sugar_cache_clear('company_logo_attributes');
@@ -269,7 +324,7 @@ class Configurator {
 				'dateFormat' => '%c',
 				'maxSize' => '10MB',
 				'maxLogs' => 10,
-				'suffix' => '%m_%Y'),
+				'suffix' => ''), // bug51583, change default suffix to blank for backwards comptability
 			'level' => 'fatal');
 		}
 		$this->handleOverride(true);

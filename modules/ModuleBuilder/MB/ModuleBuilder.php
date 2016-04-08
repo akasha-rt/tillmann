@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -44,7 +44,7 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  
 
 define ( 'MB_PACKAGE_PATH', 'custom/modulebuilder/packages' ) ;
-define ( 'MB_PACKAGE_BUILD', 'custom/modulebuilder/builds' ) ;
+define('MB_PACKAGE_BUILD', 'custom' . DIRECTORY_SEPARATOR . 'modulebuilder' . DIRECTORY_SEPARATOR . 'builds');
 require_once ('modules/ModuleBuilder/MB/MBPackage.php') ;
 
 class ModuleBuilder
@@ -69,11 +69,16 @@ class ModuleBuilder
     
     }
 
+    /**
+     * @param $name
+     * @return MBPackage
+     */
     function getPackage ($name)
     {
-        if (! empty ( $this->packages [ $name ] ))
-            return $this->packages [ $name ] ;
-        $this->packages [ $name ] = new MBPackage ( $name ) ;
+        if (empty ( $this->packages [ $name ] ))
+            $this->packages [ $name ] = new MBPackage ( $name ) ;
+
+        return $this->packages [ $name ] ;
     }
     
     function getPackageKey ($name)
@@ -144,5 +149,25 @@ class ModuleBuilder
         return $nodes ;
     }
 
+    /**
+     * Function return module name and this aliases
+     *
+     * @param string $module
+     * @return array $aliases
+     */
+    static public function getModuleAliases($module)
+    {
+        $aliases = array($module);
+        $relate_arr = array(
+            'Users' => 'Employees',
+            'Employees' => 'Users'
+        );
+
+        if (isset($relate_arr[$module])){
+            $aliases[] = $relate_arr[$module];
+        }
+
+        return $aliases;
+    }
+
 }
-?>

@@ -1,36 +1,39 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -72,42 +75,10 @@ SUGAR.mySugar = function() {
 
 		
 		
-        clearChartsArray: function(){
-            charts[activeTab] = new Object();
-        },
 
-        addToChartsArray: function(name, xmlFile, width, height, styleSheet, colorScheme, langFile){
         
-            if (charts[activeTab] == null){
-                charts[activeTab] = new Object();
-            }
-            charts[activeTab][name] = new Object();
-            charts[activeTab][name]['name'] = name;
-            charts[activeTab][name]['xmlFile'] = xmlFile;
-            charts[activeTab][name]['width'] = width;
-            charts[activeTab][name]['height'] = height;
-            charts[activeTab][name]['styleSheet'] = styleSheet;
-            charts[activeTab][name]['colorScheme'] = colorScheme;	
-            charts[activeTab][name]['langFile'] = langFile;				
-        },
         
-        loadSugarChart: function(name, xmlFile, width, height, styleSheet, colorScheme, langFile){
-            loadChartSWF(name, xmlFile, width, height, styleSheet, colorScheme, langFile);
-        },
 		
-        loadSugarCharts: function(){
-            for (id in charts[activeTab]){
-                if(id != 'undefined'){
-                    SUGAR.mySugar.loadSugarChart(charts[activeTab][id]['name'], 
-                        charts[activeTab][id]['xmlFile'], 
-                        charts[activeTab][id]['width'], 
-                        charts[activeTab][id]['height'],
-                        charts[activeTab][id]['styleSheet'],
-                        charts[activeTab][id]['colorScheme'],
-                        charts[activeTab][id]['langFile']);
-                }
-            }
-        },
 		
 				
 		
@@ -245,7 +216,20 @@ SUGAR.mySugar = function() {
 		 	var fillInDashlet = function(data) {
 
 		 		ajaxStatus.hideStatus();
-				if(data) {		
+				if(data) {
+                    
+                    // before we refresh, lets make sure that the returned data is for the current dashlet in focus
+                    // AND that it is not the initial 'please reload' verbage, start by grabbing the current dashlet id
+                    current_dashlet_id = SUGAR.mySugar.currentDashlet.getAttribute('id');
+
+                    //lets extract the guid portion of the id, to use as a reference
+                    dashlet_guid =  current_dashlet_id.substr('dashlet_entire'.length);
+
+                    //now that we have the guid portion, let's search the returned text for it.  There should be many references to it.
+                    if(data.responseText.indexOf(dashlet_guid)<0 &&  data.responseText != SUGAR.language.get('app_strings', 'LBL_RELOAD_PAGE') ){
+                        //guid id was not found in the returned html, that means we have stale dashlet info due to an auto refresh, do not update
+                        return false;
+                    }
 					SUGAR.mySugar.currentDashlet.innerHTML = data.responseText;			
 				}
 
@@ -255,27 +239,18 @@ SUGAR.mySugar = function() {
 				var processChartScript = function(scriptData){
 					SUGAR.util.evalScript(scriptData.responseText);
 					//custom chart code
-					//SUGAR.mySugar.sugarCharts.loadSugarCharts(activePage);
+					SUGAR.mySugar.sugarCharts.loadSugarCharts(activePage);
 
-                    SUGAR.mySugar.loadSugarChart(charts[activeTab][id]['name'], 
-                        charts[activeTab][id]['xmlFile'], 
-                        charts[activeTab][id]['width'], 
-                        charts[activeTab][id]['height'],
-                        charts[activeTab][id]['styleSheet'],
-                        charts[activeTab][id]['colorScheme'],
-                        charts[activeTab][id]['langFile']);
 				}
 				if(typeof(is_chart_dashlet)=='undefined'){
 					is_chart_dashlet = false;
 				}
 				if (is_chart_dashlet){				
 					var chartScriptObj = YAHOO.util.Connect.asyncRequest('GET', scriptUrl,
-                    {
-                        success: processChartScript, 
-                        failure: processChartScript
-                    }, null);
+													  {success: processChartScript, failure: processChartScript}, null);
 				}
-                SUGAR.mySugar.attachToggleToolsetEvent(id);
+
+				$(window).resize();
 			}
 			
 			SUGAR.mySugar.currentDashlet = document.getElementById('dashlet_entire_' + id);
@@ -357,13 +332,6 @@ SUGAR.mySugar = function() {
 			ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_ADDING_DASHLET'));
 			var success = function(data) {
 
-                //check to see if a user preference error occurred
-                if(data.responseText == 'userpref_error'){
-                    //user preference error occured, close the dashlet dialog, flash the error message and exit processing
-                    SUGAR.mySugar.closeDashletsDialog();
-                    ajaxStatus.flashStatus(SUGAR.language.get('app_strings', 'ERROR_USER_PREFS_DASH'),7000);
-                    return;
-                }
 				colZero = document.getElementById('col_'+activeTab+'_0');
 				newDashlet = document.createElement('li'); // build the list item
 				newDashlet.id = 'dashlet_' + data.responseText;
@@ -377,6 +345,9 @@ SUGAR.mySugar = function() {
 					dashletEntire = document.getElementById('dashlet_entire_' + data.responseText);
 					dd = new ygDDList('dashlet_' + data.responseText); // make it draggable
 					dd.setHandleElId('dashlet_header_' + data.responseText);
+                    // Bug #47097 : Dashlets not displayed after moving them
+                    // add new property to save real id of dashlet, it needs to have ability reload dashlet by id
+                    dd.dashletID = data.responseText;
 					dd.onMouseDown = SUGAR.mySugar.onDrag;  
 					dd.onDragDrop = SUGAR.mySugar.onDrop;
 
@@ -387,15 +358,9 @@ SUGAR.mySugar = function() {
 					dashletEntire.style.top = '0px';
 					dashletEntire.className = 'dashletPanel';
 					
-                    SUGAR.mySugar.attachToggleToolsetEvent(data.responseText);										
-                    var anim = new YAHOO.util.Anim('dashlet_entire_' + data.responseText, {
-                        height: {
-                            to: dashletRegion.bottom - dashletRegion.top
-                        }
-                    }, .5 );
-                    anim.onComplete.subscribe(function() {
-                        document.getElementById('dashlet_entire_' + data.responseText).style.height = '100%';
-                    });	
+					
+					var anim = new YAHOO.util.Anim('dashlet_entire_' + data.responseText, { height: {to: dashletRegion.bottom - dashletRegion.top} }, .5 );
+					anim.onComplete.subscribe(function() { document.getElementById('dashlet_entire_' + data.responseText).style.height = '100%'; });	
 					anim.animate();
 					
 					newLayout =	SUGAR.mySugar.getLayout(true);
@@ -418,14 +383,11 @@ SUGAR.mySugar = function() {
 				
 				SUGAR.mySugar.retrieveDashlet(data.responseText, url, finishRetrieve, true); // retrieve it from the server
 			}
-            var cObj = YAHOO.util.Connect.asyncRequest('GET','index.php?to_pdf=1&module='+module+'&action=DynamicAction&DynamicAction=addDashlet&activeTab=' + activeTab + '&id=' + id+'&type=' + type + '&type_module=' + type_module, 
-            {
-                success: success, 
-                failure: success
-            }, null);						  
 
-			var cObj = YAHOO.util.Connect.asyncRequest('GET','index.php?to_pdf=1&module='+module+'&action=DynamicAction&DynamicAction=addDashlet&activeTab=' + activeTab + '&id=' + id+'&type=' + type + '&type_module=' + escape(type_module), 
-													  {success: success, failure: success}, null);						  
+			var cObj = YAHOO.util.Connect.asyncRequest('GET','index.php?to_pdf=1&module='+module+'&action=DynamicAction&DynamicAction=addDashlet&activeTab=' + activeTab + '&id=' + id+'&type=' + type + '&type_module=' + encodeURIComponent(type_module), 
+													  {success: success, failure: success}, null);
+
+			SUGAR.mySugar.sugarCharts.loadSugarCharts();
 
 			return false;
 		},
@@ -659,9 +621,18 @@ SUGAR.mySugar = function() {
 		
 		
 		renderDashletsDialog: function(){	
+            var minHeight = 120;
+            var maxHeight = 520;
+            var minMargin = 16;
+
+            // adjust dialog height according to current page height
+            var pageHeight = document.documentElement.clientHeight;
+            var height = Math.min(maxHeight, pageHeight - minMargin * 2);
+            height = Math.max(height, minHeight);
+
 			SUGAR.mySugar.dashletsDialog = new YAHOO.widget.Dialog("dashletsDialog", 
 			{ width : "480px",
-			  height: "520px",
+			  height: height + "px",
 			  fixedcenter : true,
 			  draggable:false,
 			  visible : false, 
@@ -676,487 +647,7 @@ SUGAR.mySugar = function() {
 			document.getElementById('dashletsDialog').style.display = '';																				 
 			SUGAR.mySugar.dashletsDialog.render();
 			document.getElementById('dashletsDialog_c').style.display = 'none';			
-        }	,
-                
-        // Added by RS BC 18-1-2012
-        togglePages: function(activePage){
-            var pageId = 'pageNum_' + activePage;
-            activeDashboardPage = activePage;
-            activeTab = activePage;
-		
-            Set_Cookie(cookiePageIndex,activePage,3000,false,false,false);
-		    
-            //hide all pages first for display purposes
-            for(var i=0; i < num_pages; i++){
-                var pageDivId = 'pageNum_'+i+'_div';
-                var pageDivElem = document.getElementById(pageDivId);
-                pageDivElem.style.display = 'none';
 		}	
-		
-            for(var i=0; i < num_pages; i++){
-                var tabId = 'pageNum_'+i;
-                var anchorId = 'pageNum_'+i+'_anchor';
-                var pageDivId = 'pageNum_'+i+'_div';
-		
-                var tabElem = document.getElementById(tabId);
-                var anchorElem = document.getElementById(anchorId);
-                var pageDivElem = document.getElementById(pageDivId);
-
-                if(tabId == pageId){
-                    if(!SUGAR.mySugar.pageIsLoaded(pageDivId))
-                        SUGAR.mySugar.retrievePage(i);
-		
-                    tabElem.className = 'active';
-                    anchorElem.className = 'current';
-                    pageDivElem.style.display = 'inline';
-                }
-                else{
-                    tabElem.className = '';
-                    anchorElem.className = '';
-                }
-            }
-        },
-		
-        deletePage: function(){
-            var pageNum = activeTab;
-            var tabListElem = document.getElementById('tabList');
-            var removeResult = '';
-
-            if(confirm(SUGAR.language.get('app_strings', 'LBL_DELETE_PAGE_CONFIRM')))
-                window.location = "index.php?module="+module+"&action=DynamicAction&DynamicAction=deletePage&pageNumToDelete="+pageNum;
-        },		
-
-        renamePage: function(pageNum){
-            SUGAR.mySugar.toggleSpansForRename(pageNum);
-            document.getElementById('pageNum_'+pageNum+'_name_input').focus();
-        },
-		
-        toggleSpansForRename: function(pageNum){
-            var tabInputSpan = document.getElementById('pageNum_'+pageNum+'_input_span');
-            var tabLinkSpan = document.getElementById('pageNum_'+pageNum+'_link_span');
-		
-            if(tabLinkSpan.style.display == 'none'){
-                tabLinkSpan.style.display = 'inline';
-                tabInputSpan.style.display = 'none';
-            }
-            else{
-                tabLinkSpan.style.display = 'none';
-                tabInputSpan.style.display = 'inline';
-            }
-        },	
-		
-        savePageTitle: function(pageNum,newTitleValue)
-        {
-            var currentTitleValue = document.getElementById('pageNum_'+pageNum+'_name_hidden_input').value;
-
-            if(newTitleValue == ''){
-                newTitleValue = currentTitleValue;
-                alert(SUGAR.language.get('app_strings', 'ERR_BLANK_PAGE_NAME'));
-            }
-            else if(newTitleValue != currentTitleValue)
-            {
-                ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_SAVING_PAGE_TITLE'));
-
-                url = 'index.php?DynamicAction=savePageTitle&action=DynamicAction&module='+module+'&to_pdf=1&newPageTitle='+JSON.stringify(newTitleValue)+'&pageId='+pageNum;
-
-                var setPageTitle = function(data)
-                {
-                    var pageTextSpan = document.getElementById('pageNum_'+pageNum+'_title_text');
-                    
-                    pageTextSpan.innerHTML = data.responseText;
-                    document.getElementById('pageNum_'+pageNum+'_name_input').value = data.responseText;
-                    document.getElementById('pageNum_'+pageNum+'_name_hidden_input').value = data.responseText;
-                    loadedPages.splice(pageNum,1);
-                    ajaxStatus.hideStatus();
-                }
-                var cObj = YAHOO.util.Connect.asyncRequest('GET', url, {
-                    success: setPageTitle, 
-                    failure: setPageTitle
-                }, null);
-            }
-
-            var pageTextSpan = document.getElementById('pageNum_'+pageNum+'_title_text');
-            pageTextSpan.innerHTML = newTitleValue;
-
-            SUGAR.mySugar.toggleSpansForRename(pageNum);
-        },
-
-        pageIsLoaded: function(pageDivId){
-            for(var count=0; count < loadedPages.length; count++)
-            {
-                if(loadedPages[count] == pageDivId)
-                    return true;
-            }
-            return false;
-        },
-        retrievePage: function(pageNum){
-            document.getElementById('loading_c').style.display = '';
-            SUGAR.mySugar.loading.show();
-
-            var pageCount = num_pages;
-            var addPageElem = document.getElementById('add_page');
-            var tabListElem = document.getElementById('tabList');
-
-            url = 'index.php?action=DynamicAction&DynamicAction=retrievePage&module='+module+'&to_pdf=1&pageId='+pageNum;
-
-            var populatePage = function(data) {
-                eval(data.responseText);
-
-                var htmlRepsonse = response['html'];
-                eval(response['script']);
-                
-                var pageDivElem = document.getElementById('pageNum_'+pageNum+'_div');
-
-                pageDivElem.innerHTML = htmlRepsonse;
-                loadedPages[loadedPages.length] = 'pageNum_'+pageNum+'_div';
-                
-                //-------------------------------------------------------------------------
-                //-------------------start new registration for drag drop--------------------
-                var counter = SUGAR.mySugar.homepage_dd.length;
-
-                if(YAHOO.util.DDM.mode == 1) {
-                    for(i in scriptResponse['newDashletsToReg']) {
-                        SUGAR.mySugar.homepage_dd[counter] = new ygDDList('dashlet_' + scriptResponse['newDashletsToReg'][i]);
-                        SUGAR.mySugar.homepage_dd[counter].setHandleElId('dashlet_header_' + scriptResponse['newDashletsToReg'][i]);
-                        SUGAR.mySugar.homepage_dd[counter].onMouseDown = SUGAR.mySugar.onDrag;
-                        SUGAR.mySugar.homepage_dd[counter].afterEndDrag = SUGAR.mySugar.onDrop;
-                        counter++;
-                    } 
-                }
-
-                for(chart in scriptResponse['chartsArray']){
-                    SUGAR.mySugar.addToChartsArray(scriptResponse['chartsArray'][chart]['id'],
-                        scriptResponse['chartsArray'][chart]['xmlFile'],
-                        scriptResponse['chartsArray'][chart]['width'],
-                        scriptResponse['chartsArray'][chart]['height'],
-                        scriptResponse['chartsArray'][chart]['styleSheet'],
-                        scriptResponse['chartsArray'][chart]['colorScheme'],
-                        scriptResponse['chartsArray'][chart]['langFile']);
-                }
-                
-                if(YAHOO.util.DDM.mode == 1) {
-                    for(var wp = 0; wp < scriptResponse['numCols']; wp++) {
-                        SUGAR.mySugar.homepage_dd[counter++] = new ygDDListBoundary('page_'+pageNum+'_hidden' + wp);
-                    }
-                }
-                //-------------------end new registration for drag drop--------------------
-                //-------------------------------------------------------------------------
-
-                ajaxStatus.hideStatus();
-                if(scriptResponse['trackerScript']){
-                    SUGAR.util.evalScript(scriptResponse['trackerScript']);
-                    if(typeof(trackerGridArray) != 'undefined' && trackerGridArray.length > 0) {
-                        for(x in trackerGridArray) {
-                            if(typeof(trackerGridArray[x]) != 'function') {
-                                trackerDashlet = new TrackerDashlet();
-                                trackerDashlet.init(trackerGridArray[x]);
-                            }
-                        }
-                    }
-                }
-                if(scriptResponse['dashletScript']){
-                    SUGAR.util.evalScript(scriptResponse['dashletScript']);	
-                }
-                if(scriptResponse['toggleHeaderToolsetScript']){
-                    SUGAR.util.evalScript(scriptResponse['toggleHeaderToolsetScript']);	
-                }
-                if(scriptResponse['dashletCtrl']){
-                    SUGAR.util.evalScript(scriptResponse['dashletCtrl']);			
-                }
-                SUGAR.mySugar.loadSugarCharts();
-                SUGAR.mySugar.loading.hide();                                                  
-                document.getElementById('loading_c').style.display = 'none';
-            }
-
-            var cObj = YAHOO.util.Connect.asyncRequest('GET', url,
-            {
-                success: populatePage, 
-                failure: populatePage
-            }, null);                                                 
-
-
-        },
-        
-        showAddPageDialog: function(){
-            if ( document.getElementById('addPageDialog_c') == null ) {
-                setTimeout(SUGAR.mySugar.showAddPageDialog,100);
-                return false;
-            }
-            document.getElementById('addPageDialog_c').style.display = '';
-            SUGAR.mySugar.addPageDialog.show();        	
-            SUGAR.mySugar.addPageDialog.configFixedCenter(null, false) ;
-        },
-        
-        addTab: function(newPageName,numCols){
-            var pageCount = num_pages;
-            var tabListElem = document.getElementById('tabList');
-            var addPageElem = document.getElementById('add_page');
-            var dashletCtrlsElem = document.getElementById('dashletCtrls');
-            var contentElem = document.getElementById('content');
-            var tabListContainerElem = document.getElementById('tabListContainer');
-            var contentElemWidth = contentElem.offsetWidth - 3;
-            var addPageElemWidth = addPageElem.offsetWidth + 2;
-            var dashletCtrlsElemWidth = dashletCtrlsElem.offsetWidth;
-            var tabListElemWidth = tabListElem.offsetWidth;
-            var maxWidth = contentElemWidth-(dashletCtrlsElemWidth+addPageElemWidth+2);
-
-            url = 'index.php?DynamicAction=addPage&action=DynamicAction&module='+module+'&to_pdf=1&numCols='+numCols+'&pageName='+JSON.stringify(newPageName);
-
-            var addBlankPage = function(data) {
-                var pageContainerDivElem = document.getElementById('pageContainer');
-                var newPageId = 'pageNum_' + pageCount + '_div';
-                var newPageDivElem = document.createElement('div');
-			
-                newPageDivElem.id = newPageId;
-                newPageDivElem.innerHTML = data.responseText;
-                newPageDivElem.style.display = 'none';
-			
-                pageContainerDivElem.insertBefore(newPageDivElem,document.getElementById('addPageDialog_c'));
-                loadedPages[num_pages] = newPageDivElem.id;
-			
-                ajaxStatus.hideStatus();		    
-			    
-                ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_NEW_PAGE_FEEDBACK'));
-                window.setTimeout('ajaxStatus.hideStatus()', 7500);
-                SUGAR.mySugar.togglePages(pageCount);
-            }	
-
-            ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_CREATING_NEW_PAGE'));
-            var cObj = YAHOO.util.Connect.asyncRequest('GET', url,
-            {
-                success: addBlankPage, 
-                failure: addBlankPage
-            } , null);
-		
-            var new_tab = document.createElement("li");
-            new_tab.id = 'pageNum_' + num_pages;
-			
-            var new_anchor = document.createElement("a");
-            new_anchor.id = 'pageNum_' + num_pages + '_anchor';
-            new_anchor.className = 'active';
-            new_anchor.href = "javascript:SUGAR.mySugar.togglePages('" + num_pages + "');"
-			
-            newPageName = newPageName.replace(/\\'/g,"'"); // Takes out the escaped quotes like \"
-
-            new_anchor.appendChild(SUGAR.mySugar.insertInputSpanElement(num_pages, newPageName));
-            new_anchor.appendChild(SUGAR.mySugar.insertTabNameDisplay(num_pages, newPageName));
-
-            var new_delete_img = document.createElement("img");
-            new_delete_img.id = 'pageNum_' + num_pages + '_delete_page_img';
-            new_delete_img.className = 'deletePageImg';
-            new_delete_img.style.display = 'none';
-            new_delete_img.onclick = function() {
-                return SUGAR.mySugar.deletePage();
 	 }; 
-            new_delete_img.src = 'index.php?entryPoint=getImage&imageName=info-del.png';
-            new_delete_img.border = 0;
-            new_delete_img.align = 'absmiddle';
-
-            new_anchor.appendChild(new_delete_img);
-
-            new_tab.appendChild(new_anchor);
-            tabListElem.appendChild(new_tab);
-            if(tabListElemWidth + new_tab.offsetWidth > maxWidth) {
-                tabListContainerElem.style.width = maxWidth+"px";
-                tabListElem.style.width = tabListElemWidth + new_tab.offsetWidth+"px";
-                tabListContainerElem.setAttribute("className","active yui-module yui-scroll");
-                tabListContainerElem.setAttribute("class","active yui-module yui-scroll");
-            }
-
-            //			SUGAR.mySugar.togglePages(num_pages);
-            num_pages = num_pages + 1;			
-        },
-		
-        insertInputSpanElement: function(page_num, pageName){
-            var inputSpanElement = document.createElement("span");
-            inputSpanElement.id = 'pageNum_'+page_num+'_input_span';
-            inputSpanElement.style.display = 'none';
-            var subInputSpanElement1 = document.createElement("input");
-            subInputSpanElement1.id = 'pageNum_'+page_num+'_name_hidden_input';
-            subInputSpanElement1.type = 'hidden';
-            subInputSpanElement1.value = pageName;
-			
-            inputSpanElement.appendChild(subInputSpanElement1);
-			
-            var subInputSpanElement2 = document.createElement("input");
-            subInputSpanElement2.id = 'pageNum_'+page_num+'_name_input';
-            subInputSpanElement2.type = 'text';
-            subInputSpanElement2.size = '10';
-            subInputSpanElement2.value = pageName;
-            subInputSpanElement2.onblur = function(){
-                return SUGAR.mySugar.savePageTitle(page_num, this.value);
-            }
-			
-            inputSpanElement.appendChild(subInputSpanElement2);
-			
-            return inputSpanElement;
-        },
-        showChangeLayoutDialog: function(tabNum){
-            document.getElementById('changeLayoutDialog_c').style.display = '';
-            SUGAR.mySugar.changeLayoutDialog.show();
-            SUGAR.mySugar.changeLayoutDialog.configFixedCenter(null, false) ;			
-        },
-        renderLoadingDialog:function(){
-            SUGAR.mySugar.loading=new YAHOO.widget.Panel("loading",{
-                width:"240px",
-                fixedcenter:true,
-                close:false,
-                draggable:false,
-                constraintoviewport:false,
-                modal:true,
-                visible:false,
-                effect:[{
-                    effect:YAHOO.widget.ContainerEffect.SLIDE,
-                    duration:0.5
-                },{
-                    effect:YAHOO.widget.ContainerEffect.FADE,
-                    duration:.5
-                }]
-            });
-            //SUGAR.mySugar.loading.setBody('<div id="loadingPage" align="center" style="vertical-align:middle;"><img src="'+SUGAR.themes.image_server+'index.php?entryPoint=getImage&themeName='+SUGAR.themes.theme_name+'&imageName=img_loading.gif" align="absmiddle" /> <b>'+SUGAR.language.get('app_strings','LBL_LOADING_PAGE')+'</b></div>');
-            SUGAR.mySugar.loading.setBody('<div id="loadingPage" align="center" style="vertical-align:middle;"><img src="themes/Sugar/images/img_loading.gif" align="absmiddle" /> <b>'+SUGAR.language.get('app_strings','LBL_LOADING_PAGE')+'</b></div>');
-            SUGAR.mySugar.loading.render(document.body);
-            document.getElementById('loading_c').style.display='none';
-        },
-        renderAddPageDialog: function() {
-            var handleSuccess = function(o){
-                var response = o.responseText;
-                eval(o.responseText);
-   
-                var pageName = result['pageName'];
-                var numCols = result['numCols'];
-			    
-                SUGAR.mySugar.addTab(pageName,numCols);	
-                if (!SUGAR.isIE){	
-                    setTimeout("document.getElementById('addPageDialog_c').style.display = 'none';", 2000);					
-                }
-                SUGAR.mySugar.addPageDialog.hide();
-            };
-			
-            var handleFailure = function(o){
-                if (!SUGAR.isIE){	
-                    setTimeout("document.getElementById('addPageDialog_c').style.display = 'none';", 2000);					
-                }
-                SUGAR.mySugar.addPageDialog.hide();
-            };
-					
-            var handleSubmit = function(){
-                this.submit();
-            };
-			
-            var handleCancel = function(){
-                SUGAR.mySugar.addPageDialog.hide();
-            };
-					     
-            // Instantiate the Dialog
-            SUGAR.mySugar.addPageDialog = new YAHOO.widget.Dialog("addPageDialog", 
-            {
-                width : "300px",
-                fixedcenter : true,
-                visible : false, 
-                draggable: false,
-                effect:[{
-                    effect:YAHOO.widget.ContainerEffect.SLIDE, 
-                    duration:0.5
-                },
-
-                {
-                    effect:YAHOO.widget.ContainerEffect.FADE,
-                    duration:0.5
-                }],																  
-                buttons : [ {
-                    text:SUGAR.language.get('app_strings', 'LBL_SUBMIT_BUTTON_LABEL'), 
-                    handler:handleSubmit, 
-                    isDefault:true
-                },
-                {
-                    text:SUGAR.language.get('app_strings', 'LBL_CANCEL_BUTTON_LABEL'), 
-                    handler:handleCancel
-                } ],
-                modal : true
-            } );
-																		 
-            SUGAR.mySugar.addPageDialog.callback = {
-                success: handleSuccess, 
-                failure: handleFailure
-            };
-
-            SUGAR.mySugar.addPageDialog.validate = function(){
-                var postData = this.getData();
-				
-                if (postData.pageName == ""){
-                    alert(SUGAR.language.get('app_strings', 'ERR_BLANK_PAGE_NAME'));
-                    return false;
-                }
-
-                /*var success = function(data) {
-					eval(data.responseText);
-					
-					if (duplicateName){
-						alert("Please enter another page name - there is already a page with that name.");
-						return false;
-					}
-					else{
-						return true;
-					}
-				}
-			
-				var cObj = YAHOO.util.Connect.asyncRequest('GET', 'index.php?to_pdf=true&module='+module+'&action=DynamicAction&DynamicAction=pageNameCheck&pageName='+postData.pageName, {success: success, failure: success});
-				*/
-                return true;
-            }
-
-            document.getElementById('addPageDialog').style.display = '';                                            
-            SUGAR.mySugar.addPageDialog.render();
-            document.getElementById('addPageDialog_c').style.display = 'none';			
-		
-        } ,
-        changePageLayout:function(numCols){
-            SUGAR.mySugar.changeLayout(numCols);
-            if(!SUGAR.isIE){
-                setTimeout("document.getElementById('changeLayoutDialog_c').style.display = 'none';",2000);
-            }
-            SUGAR.mySugar.changeLayoutDialog.hide();
-        } ,
-        renderChangeLayoutDialog:function(){
-            SUGAR.mySugar.changeLayoutDialog=new YAHOO.widget.Dialog("changeLayoutDialog",{
-                width:"300px",
-                fixedcenter:true,
-                visible:false,
-                draggable:false,
-                effect:[{
-                    effect:YAHOO.widget.ContainerEffect.SLIDE,
-                    duration:0.5
-                },{
-                    effect:YAHOO.widget.ContainerEffect.FADE,
-                    duration:0.5
-                }],
-                modal:true
-            });
-            document.getElementById('changeLayoutDialog').style.display='';
-            SUGAR.mySugar.changeLayoutDialog.render();
-            document.getElementById('changeLayoutDialog_c').style.display='none';
-        },
-        attachToggleToolsetEvent: function(dashletId){
-            var header = document.getElementById("dashlet_header_"+dashletId);
-            if	(YAHOO.env.ua.ie) {
-                YAHOO.util.Event.on(header, 'mouseenter', function() { 
-                    document.getElementById("dashlet_header_"+dashletId).className = "hd selected";
-                }); 
-					
-                YAHOO.util.Event.on(header, 'mouseleave', function() { 
-                    document.getElementById("dashlet_header_"+dashletId).className = "hd";
-                }); 
-            } else {
-                YAHOO.util.Event.on(header, 'mouseover', function() { 
-                    document.getElementById("dashlet_header_"+dashletId).className = "hd selected";
-                }); 
-					
-                YAHOO.util.Event.on(header, 'mouseout', function() { 
-                    document.getElementById("dashlet_header_"+dashletId).className = "hd";
-                }); 
-            }
-        }
-    }; 
 }();
 };

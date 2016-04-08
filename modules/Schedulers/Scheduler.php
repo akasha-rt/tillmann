@@ -2,43 +2,43 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
-/*********************************************************************************
-
- * Description:
- ********************************************************************************/
+require_once 'modules/SchedulersJobs/SchedulersJob.php';
 
 class Scheduler extends SugarBean {
 	// table columns
@@ -76,166 +76,72 @@ class Scheduler extends SugarBean {
 	var $timeOutMins = 60;
 	// standard SugarBean attrs
 	var $table_name				= "schedulers";
-	var $object_name			= "schedulers";
+	var $object_name			= "Scheduler";
 	var $module_dir				= "Schedulers";
 	var $new_schema				= true;
 	var $process_save_dates 	= true;
 	var $order_by;
 
+	public static $job_strings;
 
-    function Scheduler($init=true) {
+    public function __construct($init=true)
+    {
         parent::SugarBean();
-        if($init) {
-            $user = new User();
-            //check is default admin exists
-            $adminId = $this->db->getOne(
-                'SELECT id FROM users WHERE id='.$this->db->quoted('1').' AND is_admin=1 AND deleted=0 AND status='.$this->db->quoted('Active'),
+        $job = new SchedulersJob();
+        $this->job_queue_table = $job->table_name;
+    }
+
+    protected function getUser()
+    {
+        if(empty($this->user)) {
+            $this->user = Scheduler::initUser();
+        }
+        return $this->user;
+    }
+
+    /**
+     * Function returns an Admin user for running Schedulers or false if no admin users are present in the system
+     * (which means the Scheduler Jobs which need admin rights will fail to execute)
+     */
+    public static function initUser()
+    {
+        $user = new User();
+        $db = DBManagerFactory::getInstance();
+        
+        //Check is default admin exists
+        $adminId = $db->getOne(
+            'SELECT id FROM users WHERE id = ' . $db->quoted('1') . ' AND is_admin = 1 AND deleted = 0 AND status = ' . $db->quoted('Active'),
+            true,
+            'Error retrieving Admin account info'
+        );
+        
+        if ($adminId === false) {// Retrieve another admin if default admin doesn't exist
+            $adminId = $db->getOne(
+                'SELECT id FROM users WHERE is_admin = 1 AND deleted = 0 AND status = ' . $db->quoted('Active'),
                 true,
                 'Error retrieving Admin account info'
             );
-            if (false === $adminId) {//retrive another admin
-                $adminId = $this->db->getOne(
-                    'SELECT id FROM users WHERE is_admin=1 AND deleted=0 AND status='.$this->db->quoted('Active'),
-                    true,
-                    'Error retrieving Admin account info'
-                );
-                if ($adminId) {
-                    $user->retrieve($adminId);
-                } else {
-                    $GLOBALS['log']->fatal('No Admin account found!');
-                    return false;
-                }
-
-            } else {
-                $user->retrieve('1'); // Scheduler jobs run as default Admin
+            if ($adminId) {// Get admin user
+                $user->retrieve($adminId);
+            } else {// Return false and log error
+                $GLOBALS['log']->fatal('No Admin account found!');
+                return false;
             }
-            $this->user = $user;
+        } else {// Scheduler jobs run as default Admin
+            $user->retrieve('1'); 
         }
+        return $user;
     }
 
 
 	///////////////////////////////////////////////////////////////////////////
 	////	SCHEDULER HELPER FUNCTIONS
-	/**
-	 * executes Scheduled job
-	 */
-	function fire() {
-		if(empty($this->job)) { // only execute when valid
-			$GLOBALS['log']->fatal('Scheduler tried to fire an empty job!!');
-			return false;
-		}
-
-		$exJob = explode('::', $this->job);
-		if(is_array($exJob)) {
-			// instantiate a new SchedulersJob object and prep it
-
-
-			$trackerManager = TrackerManager::getInstance();
-			$trackerManager->pause();
-			$job				= new SchedulersJob();
-			$job->scheduler_id	= $this->id;
-			$job->scheduler		= $this;
-			$job->execute_time	= $job->handleDateFormat('now');
-			$jobId = $job->save();
-			$trackerManager->unPause();
-			$job->retrieve($jobId);
-
-			if($exJob[0] == 'function') {
-				$GLOBALS['log']->debug('----->Scheduler found a job of type FUNCTION');
-				require_once('modules/Schedulers/_AddJobsHere.php');
-
-				$job->setJobFlag(1);
-
-				$func = $exJob[1];
-				$GLOBALS['log']->debug('----->SchedulersJob firing '.$func);
-
-				$res = call_user_func($func);
-				if($res) {
-					$job->setJobFlag(2);
-					$job->finishJob();
-					return true;
-				} else {
-					$job->setJobFlag(3);
-					return false;
-				}
-			} elseif($exJob[0] == 'url') {
-				if(function_exists('curl_init')) {
-					$GLOBALS['log']->debug('----->SchedulersJob found a job of type URL');
-					$job->setJobFlag(1);
-
-					$GLOBALS['log']->debug('----->SchedulersJob firing URL job: '.$exJob[1]);
-					if($job->fireUrl($exJob[1])) {
-						$job->setJobFlag(2);
-						$job->finishJob();
-						return true;
-					} else {
-						$job->setJobFlag(3);
-						return false;
-					}
-				} else {
-					$job->setJobFlag(4);
-					return false;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * flushes dead or hung jobs
-	 */
-	function flushDeadJobs() {
-		$GLOBALS['log']->debug('-----> Scheduler flushing dead jobs');
-
-		$lowerLimit = mktime(0, 0, 0, 1, 1, 2005); // jan 01, 2005, GMT-0
-		$now = TimeDate::getInstance()->getNow()->ts; // current timestamp
-
-		$q = "	SELECT s.id, s.name FROM schedulers s WHERE s.deleted=0 AND s.status = 'In Progress'";
-		$r = $this->db->query($q);
-
-		if($r != null) {
-			while($a = $this->db->fetchByAssoc($r)) {
-				$q2 = "	SELECT st.id, st.execute_time FROM schedulers_times st
-						WHERE st.deleted=0
-						AND st.scheduler_id = '{$a['id']}'
-						ORDER BY st.execute_time DESC";
-				$r2 = $this->db->query($q2);
-				if($r2 != null) {
-					$a2 = $this->db->fetchByAssoc($r2); // we only care about the newest
-                    $a2['execute_time'] = $this->db->fromConvert($a2['execute_time'],'datetime');
-					if($a2 != null) {
-						$GLOBALS['log']->debug("-----> Scheduler found [ {$a['name']} ] 'In Progress' with most recent Execute Time at [ {$a2['execute_time']} GMT-0 ]");
-
-						$execTime = TimeDate::getInstance()->fromDB($a2['execute_time'])->ts;
-
-                        $GLOBALS['log']->debug("-----> Checking if Scheduler execTime ($execTime) is higher than lowerLimit ($lowerLimit)");
-
-						if($execTime > $lowerLimit) {
-							if(($now - $execTime) >= (60 * $this->timeOutMins)) {
-								$GLOBALS['log']->info("-----> Scheduler found a dead Job.  Flushing status and reseting Job");
-								$q3 = "UPDATE schedulers SET status = 'Active' WHERE id = '{$a['id']}'";
-								$this->db->query($q3);
-
-								$GLOBALS['log']->info("-----> Scheduler setting Job Instance status to 'failed'");
-								$q4 = "UPDATE schedulers_times SET status = 'failed' WHERE id = '{$a2['id']}'";
-								$this->db->query($q4);
-							} else {
-								$GLOBALS['log']->debug("-----> Scheduler will wait for job to complete - not past threshold of [ ".($this->timeOutMins * 60)."secs ] - timeDiff is ".($now - $execTime)." secs");
-							}
-						} else {
-							$GLOBALS['log']->fatal("-----> Scheduler got a bad execute time: 	[ {$a2['execute_time']} GMT-0 ]");
-						}
-
-					}
-				}
-			}
-		} // if
-	}
 
 	/**
 	 * calculates if a job is qualified to run
 	 */
-	function fireQualified() {
+	public function fireQualified()
+	{
 		if(empty($this->id)) { // execute only if we have an instance
 			$GLOBALS['log']->fatal('Scheduler called fireQualified() in a non-instance');
 			return false;
@@ -255,22 +161,35 @@ class Scheduler extends SugarBean {
 	}
 
 	/**
-	 * Checks if any jobs qualify to run at this moment
+	 * Create a job from this scheduler
+	 * @return SchedulersJob
 	 */
-	function checkPendingJobs() {
-		$this->cleanJobLog();
-		$allSchedulers = $this->get_full_list('', 'schedulers.status=\'Active\'');
+	public function createJob()
+	{
+	    $job = new SchedulersJob();
+	    $job->scheduler_id = $this->id;
+        $job->name = $this->name;
+        $job->execute_time = $GLOBALS['timedate']->nowDb();
+        $job->assigned_user_id = $this->getUser()->id;
+        $job->target = $this->job;
+        return $job;
+	}
+
+	/**
+	 * Checks if any jobs qualify to run at this moment
+	 * @param SugarJobQueue $queue
+	 */
+	public function checkPendingJobs($queue)
+	{
+		$allSchedulers = $this->get_full_list('', "schedulers.status='Active' AND NOT EXISTS(SELECT id FROM {$this->job_queue_table} WHERE scheduler_id=schedulers.id AND status!='".SchedulersJob::JOB_STATUS_DONE."')");
 
 		$GLOBALS['log']->info('-----> Scheduler found [ '.count($allSchedulers).' ] ACTIVE jobs');
 
 		if(!empty($allSchedulers)) {
 			foreach($allSchedulers as $focus) {
 				if($focus->fireQualified()) {
-					if($focus->fire()) {
-						$GLOBALS['log']->debug('----->Scheduler Job completed successfully');
-					} else {
-						$GLOBALS['log']->fatal('----->Scheduler Job FAILED');
-					}
+				    $job = $focus->createJob();
+				    $queue->submitJob($job, $this->getUser());
 				}
 			}
 		} else {
@@ -289,7 +208,8 @@ class Scheduler extends SugarBean {
 	 * 						the	 job_interval attribute
 	 * @return	false		If we the Scheduler is not in scope, return false.
 	 */
-	function deriveDBDateTimes($focus) {
+	function deriveDBDateTimes($focus)
+	{
         global $timedate;
 		$GLOBALS['log']->debug('----->Schedulers->deriveDBDateTimes() got an object of type: '.$focus->object_name);
 		/* [min][hr][dates][mon][days] */
@@ -303,6 +223,7 @@ class Scheduler extends SugarBean {
 		$today	= getdate($timedate->getNow()->ts);
 
 		// derive day part
+        $dayName = array();
 		if($days == '*') {
 			$GLOBALS['log']->debug('----->got * day');
 
@@ -334,7 +255,7 @@ class Scheduler extends SugarBean {
 			}
 
 			// check the day to be in scope:
-			if(!in_array(($today['wday']+6)%7, $dayName)) {//$dayName starts from Monday, while $today['wday'] starts from Sunday
+			if(!in_array($today['wday'], $dayName)) {
 				return false;
 			}
 		} else {
@@ -350,6 +271,7 @@ class Scheduler extends SugarBean {
 			$startMon = $timedate->fromDb(date_time_start)->month;
 			$startFrom = ($startMon % $mult);
 
+            $compMons = array();
 			for($i=$startFrom;$i<=12;$i+$mult) {
 				$compMons[] = $i+$mult;
 				$i += $mult;
@@ -359,6 +281,7 @@ class Scheduler extends SugarBean {
 				return false;
 			}
 		} elseif($mons != '*') {
+            $monName = array();
 			if(strstr($mons,',')) { // we have particular (groups) of months
 				$exMons = explode(',',$mons);
 				foreach($exMons as $k1 => $monGroup) {
@@ -387,6 +310,7 @@ class Scheduler extends SugarBean {
 		}
 
 		// derive dates part
+        $dateName = array();
 		if($dates == '*') {
 			$GLOBALS['log']->debug('----->got * dates');
 		} elseif(strstr($dates, '*/')) {
@@ -433,6 +357,7 @@ class Scheduler extends SugarBean {
 		// derive hours part
 		//$currentHour = gmdate('G');
 		//$currentHour = date('G', strtotime('00:00'));
+        $hrName = array();
 		if($hrs == '*') {
 			$GLOBALS['log']->debug('----->got * hours');
 			for($i=0;$i<24; $i++) {
@@ -469,6 +394,7 @@ class Scheduler extends SugarBean {
 		//_pp($hrName);
 		// derive minutes
 		//$currentMin = date('i');
+        $minName = array();
 		$currentMin = $timedate->getNow()->minute;
 		if(substr($currentMin, 0, 1) == '0') {
 			$currentMin = substr($currentMin, 1, 1);
@@ -616,8 +542,12 @@ class Scheduler extends SugarBean {
 				// if not, add NOW
                 if(!empty($validJobTime) && ($focus->last_run < $validJobTime[0]) && ($now > $validJobTime[0])) {
 				// cn: empty() bug 5914;
-				//if(!empty) should be checked, becasue if a scheduler is defined to run every day 4pm, then after 4pm, and it runs as 4pm, the $validJobTime will be empty, and it should not catch up
-				//if $focus->last_run is the the day before yesterday,  it should run yesterday and tomorrow,  but it hadn't run yesterday, then it should catch up today. But today is already filtered out when doing date check before. The catch up will not work on this occasion. If the scheduler runs at least one time on each day, I think this bug can be avoided.
+				// if(!empty) should be checked, becasue if a scheduler is defined to run every day 4pm, then after 4pm, and it runs as 4pm,
+				// the $validJobTime will be empty, and it should not catch up.
+				// If $focus->last_run is the the day before yesterday,  it should run yesterday and tomorrow,
+				// but it hadn't run yesterday, then it should catch up today.
+				// But today is already filtered out when doing date check before. The catch up will not work on this occasion.
+				// If the scheduler runs at least one time on each day, I think this bug can be avoided.
 					$validJobTime[] = $now;
 				}
 			}
@@ -628,13 +558,13 @@ class Scheduler extends SugarBean {
 	function handleIntervalType($type, $value, $mins, $hours) {
 		global $mod_strings;
 		/* [0]:min [1]:hour [2]:day of month [3]:month [4]:day of week */
-		$days = array (	0 => $mod_strings['LBL_MON'],
-						1 => $mod_strings['LBL_TUE'],
-						2 => $mod_strings['LBL_WED'],
-						3 => $mod_strings['LBL_THU'],
-						4 => $mod_strings['LBL_FRI'],
-						5 => $mod_strings['LBL_SAT'],
-						6 => $mod_strings['LBL_SUN'],
+		$days = array (	1 => $mod_strings['LBL_MON'],
+						2 => $mod_strings['LBL_TUE'],
+						3 => $mod_strings['LBL_WED'],
+						4 => $mod_strings['LBL_THU'],
+						5 => $mod_strings['LBL_FRI'],
+						6 => $mod_strings['LBL_SAT'],
+						0 => $mod_strings['LBL_SUN'],
 						'*' => $mod_strings['LBL_ALL']);
 		switch($type) {
 			case 0: // minutes
@@ -767,7 +697,7 @@ class Scheduler extends SugarBean {
 			$this->datesArray[$i] = $i;
 		}
 
-		$this->dayInt = array('*',1,2,3,4,5,6,7);
+		$this->dayInt = array('*',1,2,3,4,5,6,0);
 		$this->dayLabel = array('*',$mod_strings['LBL_MON'],$mod_strings['LBL_TUE'],$mod_strings['LBL_WED'],$mod_strings['LBL_THU'],$mod_strings['LBL_FRI'],$mod_strings['LBL_SAT'],$mod_strings['LBL_SUN']);
 		$this->monthsInt = array(0,1,2,3,4,5,6,7,8,9,10,11,12);
 		$this->monthsLabel = $app_list_strings['dom_cal_month_long'];
@@ -796,15 +726,6 @@ class Scheduler extends SugarBean {
 						);
 
 		$this->intervalParsed = $intA;
-	}
-
-	/**
-	 * soft-deletes all job logs older than 24 hours
-	 */
-	function cleanJobLog()
-	{
-		$GLOBALS['log']->info('DELETE FROM schedulers_times WHERE date_entered < '.db_convert("'" . TimeDate::getInstance()->getNow()->get("-1 day")->asDb() . "'", 'datetime'));
-		$this->db->query('DELETE FROM schedulers_times WHERE date_entered < '.db_convert("'" . TimeDate::getInstance()->getNow()->get("-1 day")->asDb() . "'", 'datetime'));
 	}
 
 	/**
@@ -899,28 +820,51 @@ class Scheduler extends SugarBean {
 	 * ones.
 	 */
 	function rebuildDefaultSchedulers() {
-		global $mod_strings;
+		$mod_strings = return_module_language($GLOBALS['current_language'], 'Schedulers');
 		// truncate scheduler-related tables
 		$this->db->query('DELETE FROM schedulers');
-		$this->db->query('DELETE FROM schedulers_times');
 
+        $sched1 = new Scheduler();
+        $sched1->name               = $mod_strings['LBL_OOTB_WORKFLOW'];
+        $sched1->job                = 'function::processAOW_Workflow';
+        $sched1->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched1->date_time_end      = null;
+        $sched1->job_interval       = '*::*::*::*::*';
+        $sched1->status             = 'Active';
+        $sched1->created_by         = '1';
+        $sched1->modified_user_id   = '1';
+        $sched1->catch_up           = '1';
+        $sched1->save();
+
+        $sched2 = new Scheduler();
+        $sched2->name               = $mod_strings['LBL_OOTB_REPORTS'];
+        $sched2->job                = 'function::aorRunScheduledReports';
+        $sched2->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched2->date_time_end      = null;
+        $sched2->job_interval       = '*::*::*::*::*';
+        $sched2->status             = 'Active';
+        $sched2->created_by         = '1';
+        $sched2->modified_user_id   = '1';
+        $sched2->catch_up           = '1';
+        $sched2->save();
 
         $sched3 = new Scheduler();
         $sched3->name               = $mod_strings['LBL_OOTB_TRACKER'];
         $sched3->job                = 'function::trimTracker';
-        $sched3->date_time_start    = create_date(2005,1,1) . ' ' . create_time(0,0,1);
-        $sched3->date_time_end      = create_date(2020,12,31) . ' ' . create_time(23,59,59);
+        $sched3->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched3->date_time_end      = null;
         $sched3->job_interval       = '0::2::1::*::*';
         $sched3->status             = 'Active';
         $sched3->created_by         = '1';
         $sched3->modified_user_id   = '1';
         $sched3->catch_up           = '1';
         $sched3->save();
+
 		$sched4 = new Scheduler();
 		$sched4->name				= $mod_strings['LBL_OOTB_IE'];
-		$sched4->job				= 'function::pollMonitoredInboxes';
-		$sched4->date_time_start	= create_date(2005,1,1) . ' ' . create_time(0,0,1);
-		$sched4->date_time_end		= create_date(2020,12,31) . ' ' . create_time(23,59,59);
+		$sched4->job				= 'function::pollMonitoredInboxesAOP';
+		$sched4->date_time_start	= create_date(2015,1,1) . ' ' . create_time(0,0,1);
+		$sched4->date_time_end		= null;
 		$sched4->job_interval		= '*::*::*::*::*';
 		$sched4->status				= 'Active';
 		$sched4->created_by			= '1';
@@ -931,8 +875,8 @@ class Scheduler extends SugarBean {
 		$sched5 = new Scheduler();
 		$sched5->name				= $mod_strings['LBL_OOTB_BOUNCE'];
 		$sched5->job				= 'function::pollMonitoredInboxesForBouncedCampaignEmails';
-		$sched5->date_time_start	= create_date(2005,1,1) . ' ' . create_time(0,0,1);
-		$sched5->date_time_end		= create_date(2020,12,31) . ' ' . create_time(23,59,59);
+		$sched5->date_time_start	= create_date(2015,1,1) . ' ' . create_time(0,0,1);
+		$sched5->date_time_end		= null;
 		$sched5->job_interval		= '0::2-6::*::*::*';
 		$sched5->status				= 'Active';
 		$sched5->created_by			= '1';
@@ -943,8 +887,8 @@ class Scheduler extends SugarBean {
 		$sched6 = new Scheduler();
 		$sched6->name				= $mod_strings['LBL_OOTB_CAMPAIGN'];
 		$sched6->job				= 'function::runMassEmailCampaign';
-		$sched6->date_time_start	= create_date(2005,1,1) . ' ' . create_time(0,0,1);
-		$sched6->date_time_end		= create_date(2020,12,31) . ' ' . create_time(23,59,59);
+		$sched6->date_time_start	= create_date(2015,1,1) . ' ' . create_time(0,0,1);
+		$sched6->date_time_end		= null;
 		$sched6->job_interval		= '0::2-6::*::*::*';
 		$sched6->status				= 'Active';
 		$sched6->created_by			= '1';
@@ -952,12 +896,11 @@ class Scheduler extends SugarBean {
 		$sched6->catch_up			= '1';
 		$sched6->save();
 
-
         $sched7 = new Scheduler();
         $sched7->name               = $mod_strings['LBL_OOTB_PRUNE'];
         $sched7->job                = 'function::pruneDatabase';
-        $sched7->date_time_start    = create_date(2005,1,1) . ' ' . create_time(0,0,1);
-        $sched7->date_time_end      = create_date(2020,12,31) . ' ' . create_time(23,59,59);
+        $sched7->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched7->date_time_end      = null;
         $sched7->job_interval       = '0::4::1::*::*';
         $sched7->status             = 'Inactive';
         $sched7->created_by         = '1';
@@ -965,10 +908,77 @@ class Scheduler extends SugarBean {
         $sched7->catch_up           = '0';
         $sched7->save();
 
+        $sched8 = new Scheduler();
+        $sched8->name               = $mod_strings['LBL_OOTB_LUCENE_INDEX'];
+        $sched8->job                = 'function::aodIndexUnindexed';
+        $sched8->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched8->date_time_end      = null;
+        $sched8->job_interval       = "0::0::*::*::*";
+        $sched8->status             = 'Active';
+        $sched8->created_by         = '1';
+        $sched8->modified_user_id   = '1';
+        $sched8->catch_up           = '0';
+        $sched8->save();
 
+        $sched9 = new Scheduler();
+        $sched9->name               = $mod_strings['LBL_OOTB_OPTIMISE_INDEX'];
+        $sched9->job                = 'function::aodOptimiseIndex';
+        $sched9->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched9->date_time_end      = null;
+        $sched9->job_interval       = "0::*/3::*::*::*";
+        $sched9->status             = 'Active';
+        $sched9->created_by         = '1';
+        $sched9->modified_user_id   = '1';
+        $sched9->catch_up           = '0';
+        $sched9->save();
 
+        $sched12 = new Scheduler();
+        $sched12->name               = $mod_strings['LBL_OOTB_SEND_EMAIL_REMINDERS'];
+        $sched12->job                = 'function::sendEmailReminders';
+        $sched12->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched12->date_time_end      = null;
+        $sched12->job_interval       = '*::*::*::*::*';
+        $sched12->status             = 'Active';
+        $sched12->created_by         = '1';
+        $sched12->modified_user_id   = '1';
+        $sched12->catch_up           = '0';
+        $sched12->save();
 
+        $sched13 = new Scheduler();
+        $sched13->name               = $mod_strings['LBL_OOTB_CLEANUP_QUEUE'];
+        $sched13->job                = 'function::cleanJobQueue';
+        $sched13->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched13->date_time_end      = null;
+        $sched13->job_interval       = '0::5::*::*::*';
+        $sched13->status             = 'Active';
+        $sched13->created_by         = '1';
+        $sched13->modified_user_id   = '1';
+        $sched13->catch_up           = '0';
+        $sched13->save();
 
+        $sched14 = new Scheduler();
+        $sched14->name              = $mod_strings['LBL_OOTB_REMOVE_DOCUMENTS_FROM_FS'];
+        $sched14->job               = 'function::removeDocumentsFromFS';
+        $sched14->date_time_start   = create_date(2015, 1, 1) . ' ' . create_time(0, 0, 1);
+        $sched14->date_time_end     = null;
+        $sched14->job_interval      = '0::3::1::*::*';
+        $sched14->status            = 'Active';
+        $sched14->created_by        = '1';
+        $sched14->modified_user_id  = '1';
+        $sched14->catch_up          = '0';
+        $sched14->save();
+
+        $sched15 = new Scheduler();
+        $sched15->name               = $mod_strings['LBL_OOTB_SUGARFEEDS'];
+        $sched15->job                = 'function::trimSugarFeeds';
+        $sched15->date_time_start    = create_date(2015,1,1) . ' ' . create_time(0,0,1);
+        $sched15->date_time_end      = null;
+        $sched15->job_interval       = '0::2::1::*::*';
+        $sched15->status             = 'Active';
+        $sched15->created_by         = '1';
+        $sched15->modified_user_id   = '1';
+        $sched15->catch_up           = '1';
+        $sched15->save();
 	}
 
 	////	END SCHEDULER HELPER FUNCTIONS
@@ -981,7 +991,7 @@ class Scheduler extends SugarBean {
 	 * function overrides the one in SugarBean.php
 	 */
 	function create_export_query($order_by, $where, $show_deleted = 0) {
-		return $this->create_new_list_query($order_by, $where,array(),array(), $show_deleted = 0);
+		return $this->create_new_list_query($order_by, $where,array(),array(), $show_deleted);
 	}
 
 	/**
@@ -1004,7 +1014,8 @@ class Scheduler extends SugarBean {
 	/**
 	 * function overrides the one in SugarBean.php
 	 */
-	function get_list_view_data(){
+	function get_list_view_data()
+	{
 		global $mod_strings;
 		$temp_array = $this->get_list_view_array();
         $temp_array["ENCODED_NAME"]=$this->name;
@@ -1023,10 +1034,24 @@ class Scheduler extends SugarBean {
 	/**
 	 * returns the bean name - overrides SugarBean's
 	 */
-	function get_summary_text() {
+	function get_summary_text()
+	{
 		return $this->name;
 	}
 	////	END STANDARD SUGARBEAN OVERRIDES
 	///////////////////////////////////////////////////////////////////////////
+	static public function getJobsList()
+	{
+		if(empty(self::$job_strings)) {
+			global $mod_strings;
+			include_once('modules/Schedulers/_AddJobsHere.php');
+
+			// job functions
+			self::$job_strings = array('url::' => 'URL');
+			foreach($job_strings as $k=>$v){
+				self::$job_strings['function::' . $v] = $mod_strings['LBL_'.strtoupper($v)];
+			}
+		}
+		return self::$job_strings;
+	}
 } // end class definition
-?>

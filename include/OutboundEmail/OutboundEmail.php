@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -331,7 +331,7 @@ class OutboundEmail {
 	}
 
 	/**
-	 *  Determine if the user is alloweed to use the current system outbound connection.
+	 *  Determine if the user is allowed to use the current system outbound connection.
 	 */
 	function isAllowUserAccessToSystemDefaultOutbound()
 	{
@@ -416,10 +416,39 @@ class OutboundEmail {
 		foreach($this->field_defs as $def) {
 			if(isset($_POST[$def])) {
 				$this->$def = $_POST[$def];
-			} else {
+			} else if ($def != 'mail_smtppass') {
 				$this->$def = "";
 			}
 		}
+	}
+
+	/**
+	 * Generate values for saving into outbound_emails table
+	 * @param array $keys
+	 * @return array
+	 */
+	protected function getValues(&$keys)
+	{
+	    $values = array();
+            $validKeys = array();
+
+	    foreach($keys as $def) {
+	    	if ($def == 'mail_smtppass' && !empty($this->$def)) {
+	    		$this->$def = blowfishEncode(blowfishGetKey('OutBoundEmail'), $this->$def);
+	    	} // if
+	    	if($def == 'mail_smtpauth_req' || $def == 'mail_smtpssl' || $def == 'mail_smtpport'){
+	    		if(empty($this->$def)){
+	    			$this->$def = 0;
+	    		}
+	    		$values[] = intval($this->$def);
+                        $validKeys[] = $def;
+	    	} else if (isset($this->$def)) {
+	    		$values[] = $this->db->quoted($this->$def);
+                        $validKeys[] = $def;
+	    	}
+	    }
+            $keys = $validKeys;
+	    return $values;
 	}
 
 	/**
@@ -427,76 +456,22 @@ class OutboundEmail {
 	 */
 	function save() {
 		require_once('include/utils/encryption_utils.php');
-		if(empty($this->id) || $this->new_with_id) {
+	    if( empty($this->id) ) {
+	        $this->id = create_guid();
+			$this->new_with_id = true;
+		}
 
-		    if( empty($this->id) )
-			    $this->id = create_guid();
+		$cols = $this->field_defs;
+		$values = $this->getValues($cols);
 
-			$cols = '';
-			$values = '';
-
-			foreach($this->field_defs as $def) {
-			    if(!empty($cols)) {
-					$cols .= ", ";
-				}
-				if(!empty($values)) {
-					$values .= ", ";
-				}
-				$cols .= $def;
-				$pattern = '\\';
-				if ($def == 'mail_smtppass' && !empty($this->$def)) {
-					$this->$def = blowfishEncode(blowfishGetKey('OutBoundEmail'), $this->$def);
-				} // if
-				if($def == 'mail_smtpauth_req' || $def == 'mail_smtpssl'){
-					if(empty($this->$def)){
-						$this->$def = 0;
-					}
-					$values .= $this->$def;
-				}elseif($def == 'mail_smtpuser' && strpos($this->$def, '\\' )){ //bug 41766: taking care of '\' in username
-					$temp = explode('\\', $this->$def);
-					$this->$def = $temp[0] . '\\\\' .$temp[1];
-					$values .= "{$def} = '{$this->$def}'";
-				}else{
-					$values .= "'{$this->$def}'";
-				}
-
-
-			}
-
-			$q  = "INSERT INTO outbound_email ($cols) VALUES ({$values})";
+		if($this->new_with_id) {
+			$q  = sprintf("INSERT INTO outbound_email (%s) VALUES (%s)", implode($cols, ","), implode($values, ","));
 		} else {
-			$values = array();
-			foreach($this->field_defs as $def) {
-				switch($def) {
-					case 'mail_smtpport':
-					case 'mail_smtpauth_req':
-					case 'mail_smtpssl':
-						if(empty($this->$def)){
-							$this->$def = 0;
-						}
-                        $values []= "{$def} = {$this->$def}";
-						break;
-					case 'mail_smtppass':
-						if(!empty($this->mail_smtppass)) {
-							$this->mail_smtppass = blowfishEncode(blowfishGetKey('OutBoundEmail'), $this->mail_smtppass);
-						} else {
-							// ignore empty password unless username is empty too
-							if(!empty($this->mail_smtpuser)) {
-                                continue;
-							}
-						}
-                        $values []= "{$def} = '{$this->$def}'";
-						break;
-					case 'mail_smtpuser':
-						if(strpos($this->$def, '\\' )){ //bug 41766: taking care of '\' in username
-							$temp = explode('\\', $this->$def);
-							$this->$def = $temp[0] . '\\\\' .$temp[1];
-						}
-					default:
-                        $values []= "{$def} = '{$this->$def}'";
-				}
-			}
-			$q = "UPDATE outbound_email SET ".implode(', ', $values)." WHERE id = '{$this->id}'";
+		    $updvalues = array();
+		    foreach($values as $k => $val) {
+		        $updvalues[] = "{$cols[$k]} = $val";
+		    }
+			$q = "UPDATE outbound_email SET ".implode(', ', $updvalues)." WHERE id = ".$this->db->quoted($this->id);
 		}
 
 		$this->db->query($q, true);
@@ -531,6 +506,7 @@ class OutboundEmail {
 	 */
 	function updateUserSystemOverrideAccounts()
 	{
+		require_once('include/utils/encryption_utils.php');
 	    $updateFields = array('mail_smtptype','mail_sendtype','mail_smtpserver', 'mail_smtpport','mail_smtpauth_req','mail_smtpssl');
 
 	    //Update the username ans password for the override accounts if alloweed access.
@@ -539,24 +515,12 @@ class OutboundEmail {
 	        $updateFields[] = 'mail_smtpuser';
 	        $updateFields[] = 'mail_smtppass';
 	    }
-
-	    $values = "";
-	    foreach ($updateFields as $singleField)
-	    {
-	        if(!empty($values))
-					$values .= ", ";
-	        if($singleField == 'mail_smtpauth_req' || $singleField == 'mail_smtpssl')
-	        {
-				if(empty($this->$singleField))
-				    $this->$singleField = 0;
-
-                $values .= "{$singleField} = {$this->$singleField} ";
-	        }
-	        else
-	            $values .= "{$singleField} = '{$this->$singleField}' ";
-	    }
-
-	    $query = "UPDATE outbound_email set {$values} WHERE type='system-override' ";
+        $values = $this->getValues($updateFields);
+        $updvalues = array();
+		foreach($values as $k => $val) {
+		        $updvalues[] = "{$updateFields[$k]} = $val";
+		}
+        $query = "UPDATE outbound_email set ".implode(', ', $updvalues)." WHERE type='system-override' ";
 
 	    $this->db->query($query);
 	}
@@ -577,7 +541,7 @@ class OutboundEmail {
 			return false;
 		}
 
-		$q = "DELETE FROM outbound_email WHERE id = '{$this->id}'";
+		$q = "DELETE FROM outbound_email WHERE id = ".$this->db->quoted($this->id);
 		return $this->db->query($q);
 	}
 

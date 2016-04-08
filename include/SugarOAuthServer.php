@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -167,7 +167,7 @@ class SugarOAuthServer
 		    $this->provider->setTimestampNonceHandler(array($this,'timestampNonceChecker'));
 		    $this->provider->setTokenHandler(array($this,'tokenHandler'));
 	        if(!empty($req_path)) {
-		        $this->provider->setRequestTokenPath($req_path);  // No token needed for this end point
+		        $this->provider->isRequestTokenEndpoint($req_path);  // No token needed for this end point
 	        }
 	    	$this->provider->checkOAuthRequest(null, $this->decodePostGet());
 	    	if(mt_rand() % 10 == 0) {
@@ -189,6 +189,10 @@ class SugarOAuthServer
         $GLOBALS['log']->debug("OAUTH: requestToken");
         $token = OAuthToken::generate();
         $token->setConsumer($this->consumer);
+        $params = $this->provider->getOAuthParams();
+        if(!empty($params['oauth_callback']) && $params['oauth_callback'] != 'oob') {
+            $token->setCallbackURL($params['oauth_callback']);
+        }
         $token->save();
         return $token->queryString();
     }

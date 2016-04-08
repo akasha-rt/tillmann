@@ -1,36 +1,39 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -72,6 +75,7 @@ if (typeof(SUGAR) == "undefined") {
 
 // Namespaces
 SUGAR.namespace("themes");
+SUGAR.namespace("tour");
 
 /**
  * Namespace for Homepage
@@ -126,9 +130,10 @@ var callbackIndex = 16;
 var allowblank = 8;
 var validate = new Array();
 var maxHours = 24;
-var requiredTxt = 'Missing Required Field:'
-var invalidTxt = 'Invalid Value:'
+var requiredTxt = 'Missing Required Field:';
+var invalidTxt = 'Invalid Value:';
 var secondsSinceLoad = 0;
+var alertsTimeoutId;
 var inputsWithErrors = new Array();
 var tabsWithErrors = new Array();
 var lastSubmitTime = 0;
@@ -151,13 +156,78 @@ function isSupportedIE() {
 
 	// IE Check supports ActiveX controls
 	if (userAgent.indexOf("msie") != -1 && userAgent.indexOf("mac") == -1 && userAgent.indexOf("opera") == -1) {
-		var version = navigator.appVersion.match(/MSIE (.\..)/)[1] ;
+		var version = navigator.appVersion.match(/MSIE (\d+\.\d+)/)[1] ;
 		if(version >= 5.5 && version < 10) {
 			return true;
 		} else {
 			return false;
 		}
 	}
+}
+
+function checkMinSupported(c, s) {
+    var current = c.split(".");
+    var supported = s.split(".");
+    for (var i in supported) {
+        if (current[i] && parseInt(current[i]) > parseInt(supported[i])) return true;
+        else if (current[i] && parseInt(current[i]) < parseInt(supported[i])) return false;
+    }
+    return true;
+}
+
+function checkMaxSupported(c, s) {
+    var current = c.split(".");
+    var supported = s.split(".");
+    for (var i in supported) {
+        if (current[i] && parseInt(current[i]) > parseInt(supported[i])) return false;
+        else if (current[i] && parseInt(current[i]) < parseInt(supported[i])) return true;
+    }
+    return true;
+}
+
+SUGAR.isSupportedBrowser = function(){
+    var supportedBrowsers = {
+        msie : {min:9, max:11}, // IE 9, 11
+        safari : {min:534}, // Safari 5.1
+        mozilla : {min:31.0}, // Firefox 31.0
+        chrome : {min:37} // Chrome 37 
+    };
+    var current = String($.browser.version);
+    var supported;
+    if ($.browser.msie || (!(window.ActiveXObject) && "ActiveXObject" in window)){ // Internet Explorer
+        supported = supportedBrowsers['msie'];
+    }
+    else if ($.browser.mozilla) { // Firefox
+        supported = supportedBrowsers['mozilla'];
+    }
+    else {
+        $.browser.chrome = /chrome/.test(navigator.userAgent.toLowerCase());
+        if($.browser.chrome){ // Chrome
+            current = navigator.userAgent.match(/Chrome\/(.*?) /)[1];
+            supported = supportedBrowsers['chrome'];
+        }
+        else if($.browser.safari){ // Safari
+            supported = supportedBrowsers['safari'];
+        }
+    }
+    if (current && supported)
+        return checkMinSupported(current, String(supported.min)) && (!supported.max || checkMaxSupported(current, String(supported.max)));
+    else
+        return false;
+}
+
+SUGAR.isIECompatibilityMode = function(){
+    var agentStr = navigator.userAgent;
+    var mode = false;
+    if (agentStr.indexOf("MSIE 7.0") > -1 &&
+        (agentStr.indexOf("Trident/5.0") > -1 || // IE9 Compatibility View
+         agentStr.indexOf("Trident/4.0") > -1    // IE8 Compatibility View
+        )
+    )
+    {
+        mode = true;
+    }
+    return mode;
 }
 
 SUGAR.isIE = isSupportedIE();
@@ -190,19 +260,39 @@ function checkAlerts() {
 	for(mj = 0 ; mj < alertList.length; mj++) {
 		if(alertList[mj]['done'] == 0) {
 			if(alertList[mj]['time'] < secondsSinceLoad && alertList[mj]['time'] > -1 ) {
-				alertmsg = alertList[mj]['type'] + ":" + alertList[mj]['name'] + "\n" +alertList[mj]['subtitle']+ "\n"+ alertList[mj]['description'] + "\n\n";
-				alertList[mj]['done'] = 1;
-				if(alertList[mj]['redirect'] == '') {
-					alert(alertmsg);
-				}
-				else if(confirm(alertmsg)) {
-					window.location = alertList[mj]['redirect'];
-				}
-			}
+                alertList[mj]['done'] = 1;
+                if(typeof Alerts !== "undefined") {
+                    //
+                    // Use Alerts module
+                    Alerts.prototype.show(
+                        {
+                            title: alertList[mj]['type'] + ": " + alertList[mj]['name'],
+                            options: {
+                                body: alertList[mj]['subtitle']+ "\n"+ alertList[mj]['description'] + "\n\n",
+                                url_redirect: alertList[mj]['redirect'],
+                                target_module: alertList[mj]['type']
+                            }
+                        }
+                    );
+                } else {
+                    //
+                    // Revert back to the legacy
+                    alertmsg = alertList[mj]['type'] + ":" + alertList[mj]['name'] + "\n" +alertList[mj]['subtitle']+ "\n"+ alertList[mj]['description'] + "\n\n";
+                    alertList[mj]['done'] = 1;
+                    alertmsg = alertList[mj]['type'] + ":" + alertList[mj]['name'] + "\n" +alertList[mj]['subtitle']+ "\n"+ alertList[mj]['description'] + "\n\n";
+                    alertList[mj]['done'] = 1;
+                    if(alertList[mj]['redirect'] == '') {
+                        alert(alertmsg);
+                    }
+                    else if(confirm(alertmsg)) {
+                        window.location = alertList[mj]['redirect'];
+                    }
+                }
+            }
 		}
 	}
 
-	setTimeout("checkAlerts()", 1000);
+    alertsTimeoutId = setTimeout("checkAlerts()", 1000);
 }
 
 function toggleDisplay(id) {
@@ -215,7 +305,7 @@ function toggleDisplay(id) {
 			this.document.getElementById(id+"_anchor").innerHTML='[ - ]';
 	}
 	else {
-		this.document.getElementById(id).style.display = 'none'
+		this.document.getElementById(id).style.display = 'none';
 		if(this.document.getElementById(id+"link") != undefined) {
 			this.document.getElementById(id+"link").style.display = '';
 		}
@@ -262,30 +352,30 @@ function addToValidateCallback(formname, name, type, required, msg, callback)
 
 function addToValidateRange(formname, name, type,required,  msg,min,max) {
 	addToValidate(formname, name, type,required,  msg);
-	validate[formname][validate[formname].length - 1][jstypeIndex] = 'range'
+	validate[formname][validate[formname].length - 1][jstypeIndex] = 'range';
 	validate[formname][validate[formname].length - 1][minIndex] = min;
 	validate[formname][validate[formname].length - 1][maxIndex] = max;
 }
 
 function addToValidateIsValidDate(formname, name, type, required, msg) {
 	addToValidate(formname, name, type, required, msg);
-	validate[formname][validate[formname].length - 1][jstypeIndex] = 'date'
+	validate[formname][validate[formname].length - 1][jstypeIndex] = 'date';
 }
 
 function addToValidateIsValidTime(formname, name, type, required, msg) {
 	addToValidate(formname, name, type, required, msg);
-	validate[formname][validate[formname].length - 1][jstypeIndex] = 'time'
+	validate[formname][validate[formname].length - 1][jstypeIndex] = 'time';
 }
 
 function addToValidateDateBefore(formname, name, type, required, msg, compareTo) {
 	addToValidate(formname, name, type,required,  msg);
-	validate[formname][validate[formname].length - 1][jstypeIndex] = 'isbefore'
+	validate[formname][validate[formname].length - 1][jstypeIndex] = 'isbefore';
 	validate[formname][validate[formname].length - 1][compareToIndex] = compareTo;
 }
 
 function addToValidateDateBeforeAllowBlank(formname, name, type, required, msg, compareTo, allowBlank) {
 	addToValidate(formname, name, type,required,  msg);
-	validate[formname][validate[formname].length - 1][jstypeIndex] = 'isbefore'
+	validate[formname][validate[formname].length - 1][jstypeIndex] = 'isbefore';
 	validate[formname][validate[formname].length - 1][compareToIndex] = compareTo;
 	validate[formname][validate[formname].length - 1][allowblank] = allowBlank;
 }
@@ -329,7 +419,6 @@ function addToValidateMoreThan(formname, name, type, required, msg, min) {
 
 
 function removeFromValidate(formname, name) {
-    
 	for(i = 0; i < validate[formname].length; i++)
 	{
 		if(validate[formname][i][nameIndex] == name)
@@ -488,20 +577,23 @@ function getDateObject(dtStr) {
 	var mh = dt[date_reg_positions['m']];
 	var dy = dt[date_reg_positions['d']];
     var dtar = dtStr.split(' ');
+    var date1;
     if(typeof(dtar[1])!='undefined' && isTime(dtar[1])) {//if it is a timedate, we should make date1 to have time value
         var t1 = dtar[1].replace(/am/i,' AM');
         var t1 = t1.replace(/pm/i,' PM');
         //bug #37977: where time format 23.00 causes java script error
         t1=t1.replace(/\./, ':');
-        date1 = new Date(Date.parse(mh+'/'+dy+ '/'+yr+' '+t1));
+        date1 = new Date(mh+'/'+dy+'/'+yr+' '+t1);
     }
     else
     {
-        var date1 = new Date();
-        date1.setFullYear(yr); // xxxx 4 char year
-        date1.setMonth(mh-1); // 0-11 Bug 4048: javascript Date obj months are 0-index
-        date1.setDate(dy); // 1-31
+        date1 = new Date(mh+'/'+dy+'/'+yr);
     }
+
+    if (isNaN(date1.valueOf())) {
+        return null;
+    }
+
 	return date1;
 }
 
@@ -613,16 +705,17 @@ function isDBName(str) {
 }
 var time_reg_format = "[0-9]{1,2}\:[0-9]{2}";
 function isTime(timeStr) {
-    var time_reg_format = "[0-9]{1,2}\:[0-9]{2}";
-	time_reg_format = time_reg_format.replace('([ap]m)', '');
-	time_reg_format = time_reg_format.replace('([AP]M)', '');
+    var timeRegex = time_reg_format;
+    // eliminate the am/pm from the external time_reg_format
+	timeRegex = timeRegex.replace(/[ ]*\([^)]*m\)/i, '');
 	if(timeStr.length== 0){
 		return true;
 	}
 	//we now support multiple time formats
-	myregexp = new RegExp(time_reg_format)
-	if(!myregexp.test(timeStr))
-		return false
+	myregexp = new RegExp(timeRegex);
+	if(!myregexp.test(timeStr)) {
+        return false;
+    }
 
 	return true;
 }
@@ -630,7 +723,16 @@ function isTime(timeStr) {
 function inRange(value, min, max) {
     if (typeof num_grp_sep != 'undefined' && typeof dec_sep != 'undefined')
        value = unformatNumberNoParse(value, num_grp_sep, dec_sep).toString();
-	return value >= min && value <= max;
+    var result = true;
+    if (typeof min == 'number' && value < min)
+    {
+        result = false;
+    }
+    if (typeof max == 'number' && value > max)
+    {
+        result = false;
+    }
+    return result;
 }
 
 function bothExist(item1, item2) {
@@ -695,7 +797,7 @@ function add_error_style(formname, input, txt, flash) {
     {
 		// We only need to setup the flashy-flashy on the first entry, it loops through all fields automatically
 	    if ( inputsWithErrors.length == 1 ) {
-	      for(wp = 1; wp <= 10; wp++) {
+	      for(var wp = 1; wp <= 10; wp++) {
 	        window.setTimeout('fade_error_style(style, '+wp*10+')',1000+(wp*50));
 	      }
 	    }
@@ -845,6 +947,7 @@ function validate_form(formname, startsWith){
 				if(typeof form[validate[formname][i][nameIndex]]  != 'undefined' && typeof form[validate[formname][i][nameIndex]].value != 'undefined'){
 					var bail = false;
 
+
                     //If a field is not required and it is blank or is binarydependant, skip validation.
                     //Example of binary dependant fields would be the hour/min/meridian dropdowns in a date time combo widget, which require further processing than a blank check
                     if(!validate[formname][i][requiredIndex] && trim(form[validate[formname][i][nameIndex]].value) == '' && (typeof(validate[formname][i][jstypeIndex]) != 'undefined' && validate[formname][i][jstypeIndex]  != 'binarydep'))
@@ -881,6 +984,13 @@ function validate_form(formname, startsWith){
 							break;
 						case 'DBName':
 							if(!isDBName(trim(form[validate[formname][i][nameIndex]].value))){
+								isError = true;
+								add_error_style(formname, validate[formname][i][nameIndex], invalidTxt + " " +	validate[formname][i][msgIndex]);
+							}
+							break;
+                        // Bug #49614 : Check value without trimming before
+						case 'DBNameRaw':
+							if(!isDBName(form[validate[formname][i][nameIndex]].value)){
 								isError = true;
 								add_error_style(formname, validate[formname][i][nameIndex], invalidTxt + " " +	validate[formname][i][msgIndex]);
 							}
@@ -998,7 +1108,18 @@ function validate_form(formname, startsWith){
 								if(!inRange(trim(form[validate[formname][i][nameIndex]].value), validate[formname][i][minIndex], validate[formname][i][maxIndex])){
 									isError = true;
                                     var lbl_validate_range = SUGAR.language.get('app_strings', 'LBL_VALIDATE_RANGE');
-                                    add_error_style(formname, validate[formname][i][nameIndex], validate[formname][i][msgIndex] + " value " + form[validate[formname][i][nameIndex]].value + " " + lbl_validate_range + " (" +validate[formname][i][minIndex] + " - " + validate[formname][i][maxIndex] +  ") ");
+                                    if (typeof validate[formname][i][minIndex] == 'number' && typeof validate[formname][i][maxIndex] == 'number')
+                                    {
+                                        add_error_style(formname, validate[formname][i][nameIndex], validate[formname][i][msgIndex] + " value " + form[validate[formname][i][nameIndex]].value + " " + lbl_validate_range + " (" +validate[formname][i][minIndex] + " - " + validate[formname][i][maxIndex] +  ")");
+                                    }
+                                    else if (typeof validate[formname][i][minIndex] == 'number')
+                                    {
+                                        add_error_style(formname, validate[formname][i][nameIndex], validate[formname][i][msgIndex] + " " + SUGAR.language.get('app_strings', 'MSG_SHOULD_BE') + ' ' + validate[formname][i][minIndex] + ' ' + SUGAR.language.get('app_strings', 'MSG_OR_GREATER'));
+                                    }
+                                    else if (typeof validate[formname][i][maxIndex] == 'number')
+                                    {
+                                        add_error_style(formname, validate[formname][i][nameIndex], validate[formname][i][msgIndex] + " " + SUGAR.language.get('app_strings', 'MSG_IS_MORE_THAN') + ' ' + validate[formname][i][maxIndex]);
+                                    }
 								}
 							break;
 							case 'isbefore':
@@ -1191,7 +1312,7 @@ function validate_form(formname, startsWith){
 		for(var wp = 0; wp < inputsWithErrors.length; wp++) {
 			var elementCoor = findElementPos(inputsWithErrors[wp]);
 			if(!(elementCoor.x >= nwX && elementCoor.y >= nwY &&
-				elementCoor.x <= seX && elementCoor.y <= seY)) { // if input is not within viewport
+                elementCoor.x <= seX+nwX && elementCoor.y <= seY+nwY)) { // if input is not within viewport, modify for SI bug 52497
 					inView = false;
 					scrollToTop = elementCoor.y - 75;
 					scrollToLeft = elementCoor.x - 75;
@@ -1343,7 +1464,7 @@ function getXMLHTTPinstance() {
 
 	// IE Check supports ActiveX controls
 	if (userAgent.indexOf("msie") != -1 && userAgent.indexOf("mac") == -1 && userAgent.indexOf("opera") == -1) {
-		var version = navigator.appVersion.match(/MSIE (.\..)/)[1] ;
+		var version = navigator.appVersion.match(/MSIE (\d+\.\d+)/)[1] ;
 		if(version >= 5.5 ) {
 			try {
 				xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
@@ -1601,8 +1722,15 @@ function sendAndRetrieve(theForm, theDiv, loadingStr) {
 	}
 	if(typeof loadingStr == 'undefined') SUGAR.language.get('app_strings', 'LBL_LOADING');
 	ajaxStatus.showStatus(loadingStr);
-	YAHOO.util.Connect.setForm(theForm);
-	var cObj = YAHOO.util.Connect.asyncRequest('POST', 'index.php', {success: success, failure: success});
+    oForm = new YAHOO.util.Element(theForm);
+    if ( oForm.get('enctype') && oForm.get('enctype') == 'multipart/form-data' ) {
+        // the second argument is true to indicate file upload.
+        YAHOO.util.Connect.setForm(theForm, true);
+        var cObj = YAHOO.util.Connect.asyncRequest('POST', 'index.php', {upload: success, failure: success});
+    } else {
+        YAHOO.util.Connect.setForm(theForm);
+        var cObj = YAHOO.util.Connect.asyncRequest('POST', 'index.php', {success: success, failure: success});
+    }
 	return false;
 }
 
@@ -1616,8 +1744,15 @@ function sendAndRedirect(theForm, loadingStr, redirect_location) {
 	}
 	if(typeof loadingStr == 'undefined') SUGAR.language.get('app_strings', 'LBL_LOADING');
 	ajaxStatus.showStatus(loadingStr);
-	YAHOO.util.Connect.setForm(theForm);
-	var cObj = YAHOO.util.Connect.asyncRequest('POST', 'index.php', {success: success, failure: success});
+    oForm = new YAHOO.util.Element(theForm);
+    if ( oForm.get('enctype') && oForm.get('enctype') == 'multipart/form-data' ) {
+        // the second argument is true to indicate file upload.
+        YAHOO.util.Connect.setForm(theForm, true);
+        var cObj = YAHOO.util.Connect.asyncRequest('POST', 'index.php', {upload: success, failure: success});
+    } else {
+        YAHOO.util.Connect.setForm(theForm);
+        var cObj = YAHOO.util.Connect.asyncRequest('POST', 'index.php', {success: success, failure: success});
+    }
 	return false;
 }
 
@@ -1704,7 +1839,6 @@ function initEditView(theForm) {
 function onUnloadEditView(theForm) {
 
 	var dataHasChanged = false;
-
     if ( typeof editViewSnapshots == 'undefined' ) {
         // No snapshots, move along
         return;
@@ -1829,21 +1963,16 @@ sugarListView.prototype.confirm_action = function(del) {
 
 }
 sugarListView.get_num_selected = function () {
-	if(typeof document.MassUpdate != 'undefined') {
-		the_form = document.MassUpdate;
-		for(wp = 0; wp < the_form.elements.length; wp++) {
-			if(typeof the_form.elements[wp].name != 'undefined' && the_form.elements[wp].name == 'selectCount[]') {
-				return the_form.elements[wp].value;
-			}
-		}
-	}
-	return 0;
+    var selectCount = $("input[name='selectCount[]']:first");
+    if(selectCount.length > 0)
+        return parseInt(selectCount.val().replace("+", ""));
+    return 0;
 
 }
 sugarListView.update_count = function(count, add) {
 	if(typeof document.MassUpdate != 'undefined') {
 		the_form = document.MassUpdate;
-		for(wp = 0; wp < the_form.elements.length; wp++) {
+		for(var wp = 0; wp < the_form.elements.length; wp++) {
 			if(typeof the_form.elements[wp].name != 'undefined' && the_form.elements[wp].name == 'selectCount[]') {
 				if(add)	{
 					the_form.elements[wp].value = parseInt(the_form.elements[wp].value,10) + count;
@@ -1915,7 +2044,7 @@ sugarListView.prototype.use_external_mail_client_callback = function(o)
 }
 
 sugarListView.prototype.send_form_for_emails = function(select, currentModule, action, no_record_txt,action_module,totalCount, totalCountError) {
-	if ( typeof(SUGAR.config.email_sugarclient_listviewmaxselect) != 'undefined' ) {
+	if ( typeof(SUGAR.config.email_sugarclient_listviewmaxselect) === 'undefined' ) {
 	    maxCount = 10;
 	}
 	else {
@@ -2258,12 +2387,37 @@ sugarListView.prototype.save_checks = function(offset, moduleString) {
 sugarListView.prototype.check_item = function(cb, form) {
 	if(cb.checked) {
 		sugarListView.update_count(1, true);
+
 	}else{
 		sugarListView.update_count(-1, true);
 		if(typeof form != 'undefined' && form != null) {
 			sugarListView.prototype.updateUid(cb, form);
 		}
 	}
+	sugarListView.prototype.toggleSelected();
+}
+
+sugarListView.prototype.toggleSelected = function() {
+
+	var numSelected = sugarListView.get_num_selected();
+	var selectedRecords = document.getElementById("selectedRecordsTop");
+	var selectActions = document.getElementById("selectActions");
+	var selectActionsDisabled = document.getElementById("selectActionsDisabled");
+	if(numSelected > 0) {
+        $(selectedRecords).removeAttr("style").addClass("show");
+        $(".selectActionsDisabled").hide();
+        jQuery('ul[name=selectActions]').each(function () {
+            jQuery(this).removeAttr("style").addClass("show");
+        });
+
+	} else {
+        $(selectedRecords).hide();
+        $(".selectActionsDisabled").removeAttr("style").addClass("show");
+        jQuery('ul[name=selectActions]').each(function () {
+            jQuery(this).hide();
+        });
+	}
+
 }
 
 /**#28000, remove the  unselect record id from MassUpdate.uid **/
@@ -2282,9 +2436,9 @@ sugarListView.prototype.updateUid = function(cb  , form){
 sugarListView.prototype.check_entire_list = function(form, field, value, list_count) {
 	// count number of items
 	count = 0;
-	document.MassUpdate.massall.checked = true;
-	document.MassUpdate.massall.disabled = true;
-
+    $(document.MassUpdate.massall).each(function(){
+            $(this).attr('checked', true).attr('disabled', true);
+        });
 	for (i = 0; i < form.elements.length; i++) {
 		if(form.elements[i].name == field && form.elements[i].disabled == false) {
 			if(form.elements[i].checked != value) count++;
@@ -2293,21 +2447,24 @@ sugarListView.prototype.check_entire_list = function(form, field, value, list_co
 		}
 	}
 	document.MassUpdate.select_entire_list.value = 1;
-	//if(value)
 	sugarListView.update_count(list_count, false);
-	//else sugarListView.update_count(-1 * count, true);
+    sugarListView.prototype.toggleSelected();
 }
 
 sugarListView.prototype.check_all = function(form, field, value, pageTotal) {
 	// count number of items
 	count = 0;
-	document.MassUpdate.massall.checked = value;
+    $(document.MassUpdate.massall).each(function(){$(this).attr('checked', value);});
 	if (document.MassUpdate.select_entire_list &&
 		document.MassUpdate.select_entire_list.value == 1)
-		document.MassUpdate.massall.disabled = true;
-	else
-		document.MassUpdate.massall.disabled = false;
-
+    {
+        sugarListView.prototype.toggleSelected();
+        $(document.MassUpdate.massall).each(function(){$(this).attr('disabled', true);});
+	}
+    else
+    {
+        $(document.MassUpdate.massall).each(function(){$(this).attr('disabled', false);});
+    }
 	for (i = 0; i < form.elements.length; i++) {
 		if(form.elements[i].name == field && !(form.elements[i].disabled == true && form.elements[i].checked == false)) {
 			form.elements[i].disabled = false;
@@ -2326,6 +2483,8 @@ sugarListView.prototype.check_all = function(form, field, value, pageTotal) {
 		sugarListView.update_count(count, true);
 	else
 		sugarListView.update_count(-1 * count, true);
+
+	sugarListView.prototype.toggleSelected();
 }
 sugarListView.check_all = sugarListView.prototype.check_all;
 sugarListView.confirm_action = sugarListView.prototype.confirm_action;
@@ -2339,10 +2498,13 @@ sugarListView.prototype.check_boxes = function() {
 
 	if(typeof theForm.uid.value != 'undefined' && theForm.uid.value != "") {
 		checked_items = theForm.uid.value.split(",");
-		if (theForm.select_entire_list.value == 1)
+		if (theForm.select_entire_list.value == 1) {
 			document.MassUpdate.massall.disabled = true;
+            sugarListView.prototype.toggleSelected();
+            $("a[name=selectall]:first").click();
+        }
 
-		for(wp = 0 ; wp < inputs_array.length; wp++) {
+		for(var wp = 0 ; wp < inputs_array.length; wp++) {
 			if(inputs_array[wp].name == "mass[]") {
 				inputsCount++;
 				if (theForm.select_entire_list.value == 1) {
@@ -2355,19 +2517,16 @@ sugarListView.prototype.check_boxes = function() {
 						if(inputs_array[wp].value == checked_items[i]) {
 							checkedCount++;
 							inputs_array[wp].checked = true;
+                            //Bug#52748: Total # of checked items are calculated in back-end side
+							//sugarListView.prototype.check_item(inputs_array[wp], document.MassUpdate);
 						}
 					}
 				}
 			}
 		}
-		if (theForm.select_entire_list.value == 0)
-			sugarListView.update_count(checked_items.length);
-		else
-			sugarListView.update_count(0, true);
-
 	}
 	else {
-		for(wp = 0 ; wp < inputs_array.length; wp++) {
+		for(var wp = 0 ; wp < inputs_array.length; wp++) {
 			if(inputs_array[wp].name == "mass[]") {
 				inputs_array[wp].checked = false;
 				inputs_array[wp].disabled = false;
@@ -2381,7 +2540,6 @@ sugarListView.prototype.check_boxes = function() {
 	}
 	if(checkedCount > 0 && checkedCount == inputsCount)
 		document.MassUpdate.massall.checked = true;
-
 }
 
 
@@ -2423,7 +2581,7 @@ sugarListView.prototype.send_mass_update = function(mode, no_record_txt, del) {
 
 	switch(mode) {
 		case 'selected':
-			for(wp = 0; wp < document.MassUpdate.elements.length; wp++) {
+			for(var wp = 0; wp < document.MassUpdate.elements.length; wp++) {
 				var reg_for_existing_uid = new RegExp('^'+RegExp.escape(document.MassUpdate.elements[wp].value)+'[\s]*,|,[\s]*'+RegExp.escape(document.MassUpdate.elements[wp].value)+'[\s]*,|,[\s]*'+RegExp.escape(document.MassUpdate.elements[wp].value)+'$|^'+RegExp.escape(document.MassUpdate.elements[wp].value)+'$');
 				//when the uid is already in document.MassUpdate.uid.value, we should not add it to ar.
 				if(typeof document.MassUpdate.elements[wp].name != 'undefined'
@@ -2487,9 +2645,11 @@ sugarListView.prototype.clear_all = function() {
 	document.MassUpdate.uid.value = '';
 	document.MassUpdate.select_entire_list.value = 0;
 	sugarListView.check_all(document.MassUpdate, 'mass[]', false);
-	document.MassUpdate.massall.checked = false;
-	document.MassUpdate.massall.disabled = false;
+    $(document.MassUpdate.massall).each(function(){
+        $(this).attr('checked', false).attr('disabled', false);
+    });
 	sugarListView.update_count(0);
+	sugarListView.prototype.toggleSelected();
 }
 
 sListView = new sugarListView();
@@ -2744,13 +2904,31 @@ SUGAR.util = function () {
 
 			return el;
 		},
-		paramsToUrl : function (params) {
-			url = "";
-			for (i in params) {
-				url += i + "=" + params[i] + "&";
-			}
-			return url;
-		},
+        paramsToUrl : function (params) {
+            var parts = [];
+            for (var i in params)
+            {
+                if (params.hasOwnProperty(i))
+                {
+                    parts.push(encodeURIComponent(i) + '=' + encodeURIComponent(params[i]));
+                }
+            }
+            return parts.join("&")+"&";
+        },
+        // Evaluates a script in a global context
+        // Workarounds based on findings by Jim Driscoll
+        // http://weblogs.java.net/blog/driscoll/archive/2009/09/08/eval-javascript-global-context
+        globalEval: function( data ) {
+            var rnotwhite = /\S/;
+            if ( data && rnotwhite.test( data ) ) {
+                // We use execScript on Internet Explorer
+                // We use an anonymous function so that context is window
+                // rather than jQuery in Firefox
+                ( window.execScript || function( data ) {
+                    window[ "eval" ].call( window, data );
+                } )( data );
+            }
+        },
 	    evalScript:function(text){
 			if (isSafari) {
 				var waitUntilLoaded = function(){
@@ -2810,16 +2988,80 @@ SUGAR.util = function () {
             while(result && result.index > lastIndex){
             	lastIndex = result.index
 				try{
-					var script = document.createElement('script');
-                  	script.type= 'text/javascript';
+                    // Bug #49205 : Subpanels fail to load when selecting subpanel tab
+                    // Change approach to handle javascripts included to body of ajax response.
+                    // To load & run javascripts and inline javascript in correct order load them as synchronous requests
+                    // JQuery library uses this approach to eval scripts
                   	if(result[1].indexOf("src=") > -1){
-						var srcRegex = /.*src=['"]([a-zA-Z0-9_\&\/\.\?=:-]*)['"].*/igm;
+						var srcRegex = /.*src=['"]([a-zA-Z0-9_\-\&\/\.\?=:-]*)['"].*/igm;
 						var srcResult =  result[1].replace(srcRegex, '$1');
-						script.src = srcResult;
+
+                        // Check is ulr cross domain or not
+                        var r1 = /:\/\//igm;
+                        if ( r1.test(srcResult) && srcResult.indexOf(window.location.hostname) == -1 )
+                        {
+                            // if script is cross domain it cannot be loaded via ajax request
+                            // try load script asynchronous by creating script element in the body
+                            // YUI 3.3 doesn't allow load scrips synchronously
+                            // YUI 3.5 do it
+                            YUI().use('get', function (Y)
+                            {
+                                var url = srcResult;
+                                Y.Get.script(srcResult,
+                                {
+                                    autopurge: false,
+                                    onSuccess : function(o) {  },
+                                    onFailure: function(o) { },
+                                    onTimeout: function(o) { }
+                                });
+                            });
+                            // TODO: for YUI 3.5 - load scripts as script object synchronous
+                            /*
+                            YUI().use('get', function (Y) {
+                                var url = srcResult;
+                                Y.Get.js([{url: url, async: false}], function (err) {});
+                            });
+                            */
+                        }
+                        else
+                        {
+                            // Bug #49205 : Subpanels fail to load when selecting subpanel tab
+                            // Create a YUI instance using the io-base module.
+                            (function (srcResult) {
+                                YUI().use("io-base",function(Y)
+                                {
+                                    var cfg,response;
+                                    cfg={
+                                        method:'GET',
+                                        sync:true,
+                                        on:{
+                                            success:function(transactionid,response,arguments)
+                                            {
+                                                SUGAR.util.globalEval(response.responseText);
+                                            }
+                                        }
+                                    };
+                                    // Call synchronous request to load javascript content
+                                    // restonse will be processed in success function
+                                    response=Y.io(srcResult,cfg);
+                                });
+                            })(srcResult);
+                        }
                   	}else{
-                  		script.text = result[2];
+                        // Bug #49205 : Subpanels fail to load when selecting subpanel tab
+                        // execute script in global context
+                        // Bug #57288 : don't eval with html comment-out script; that causes syntax error in IE
+                        var srcRegex = /<!--([\s\S]*?)-->/;
+                        var srcResult = srcRegex.exec(result[2]);
+                        if (srcResult && srcResult.index > -1)
+                        {
+                            SUGAR.util.globalEval(srcResult[1]);
+                        }
+                        else
+                        {
+                            SUGAR.util.globalEval(result[2]);
+                        }
                   	}
-                  	document.body.appendChild(script);
 	              }
 	              catch(e) {
                       if(typeof(console) != "undefined" && typeof(console.log) == "function")
@@ -2872,7 +3114,7 @@ SUGAR.util = function () {
 		    		if(typeof spans[wp].innerHTML != 'undefined' && spans[wp].innerHTML == ('wp_shortcut_fill_' + je)) {
 		    			if(typeof spans[wp].parentNode.parentNode == 'object') {
 		    				if(typeof spans[wp].parentNode.parentNode.onclick != 'undefined') {
-		    					spans[wp].parentNode.parentNode.onclick = null;
+		    					spans[wp].parentNode.parentNode.onclick = nulld;
 		    				}
 		    				// If the wp_shortcut span is contained by an A tag, replace the A with a DIV.
 		    				if(spans[wp].parentNode.tagName == 'A' && !isIE) {
@@ -2937,7 +3179,7 @@ SUGAR.util = function () {
 					try {
 						if (typeof appendMode != 'undefined' && appendMode)
 						{
-							theDiv.innerHTML += data.responseText;
+							theDiv.insertAdjacentHTML('beforeend', data.responseText);
 						}
 						else
 						{
@@ -2981,35 +3223,147 @@ SUGAR.util = function () {
 		},
 
 		/**
+		 * Renders Query UI Help Dialog
+		 */
+		showHelpTips: function(el,helpText,myPos,atPos,id) {
+				if(myPos == undefined || myPos == "") {
+					myPos = "left top";
+				}
+				if(atPos == undefined || atPos == "") {
+					atPos = "right top";
+				}
+
+				var pos = $(el).offset(),
+                    ofWidth = $(el).width(),
+                    elmId = id || 'helpTip' + pos.left + '_' + ofWidth,
+                    $dialog = elmId ? ( $("#"+elmId).length > 0 ? $("#"+elmId) : $('<div></div>').attr("id", elmId) ) : $('<div></div>');
+                $dialog.html(helpText)
+					.dialog({
+						autoOpen: false,
+						title: SUGAR.language.get('app_strings', 'LBL_HELP'),
+						position: {
+						    my: myPos,
+						    at: atPos,
+						    of: $(el)
+					 	}
+					});
+
+
+					var width = $dialog.dialog( "option", "width" );
+
+					if((pos.left + ofWidth) - 40 < width) {
+						$dialog.dialog("option","position",{my: 'left top',at: 'right top',of: $(el)})	;
+					}
+					$dialog.dialog('open');
+					$(".ui-dialog").appendTo("#content");
+
+
+		},
+		getStaticAdditionalDetails: function(el, body, caption, show_buttons) {
+			if(typeof show_buttons == "undefined") {
+				show_buttons = false;
+			}
+
+			$(".ui-dialog").find(".open").dialog("close");
+
+			var $dialog = $('<div class="open"></div>')
+			.html(body)
+			.dialog({
+				autoOpen: false,
+				title: caption,
+				width: 300,
+				position: {
+				    my: 'right top',
+				    at: 'left top',
+				    of: $(el)
+			  }
+			});
+
+			if(show_buttons) {
+				$(".ui-dialog").find('.ui-dialog-titlebar-close').css("display","none");
+				$(".ui-dialog").find('.ui-dialog-title').css("width","100%");
+			}
+
+
+			var width = $dialog.dialog( "option", "width" );
+			var pos = $(el).offset();
+			var ofWidth = $(el).width();
+
+			if((pos.left + ofWidth) - 40 < width) {
+				$dialog.dialog("option","position",{my: 'left top',at: 'right top',of: $(el)})	;
+			}
+
+			$dialog.dialog('open');
+			$(".ui-dialog").appendTo("#content");
+
+		},
+
+		closeStaticAdditionalDetails: function() {
+			$(".ui-dialog").find(".open").dialog("close");
+		},
+		/**
 		 * Retrieves additional details dynamically
 		 */
-		getAdditionalDetails: function(bean, id, spanId) {
+		getAdditionalDetails: function(bean, id, spanId, show_buttons) {
+			if(typeof show_buttons == "undefined")
+				show_buttons = false;
+				var el = '#'+spanId;
 			go = function() {
 				oReturn = function(body, caption, width, theme) {
-					var _refx = 25-width;
-					return overlib(body, CAPTION, caption, STICKY, MOUSEOFF, 1000, WIDTH, width, CLOSETEXT, ('<img border=0 style="margin-left:2px; margin-right: 2px;" src=index.php?entryPoint=getImage&themeName='+SUGAR.themes.theme_name+'&imageName=close.gif>'), CLOSETITLE, SUGAR.language.get('app_strings','LBL_ADDITIONAL_DETAILS_CLOSE_TITLE'), CLOSECLICK, FGCLASS, 'olFgClass', CGCLASS, 'olCgClass', BGCLASS, 'olBgClass', TEXTFONTCLASS, 'olFontClass', CAPTIONFONTCLASS, 'olCapFontClass', CLOSEFONTCLASS, 'olCloseFontClass', REF, spanId, REFC, 'LL', REFX, _refx);
+
+					$(".ui-dialog").find(".open").dialog("close");
+
+					var $dialog = $('<div class="open"></div>')
+					.html(body)
+					.dialog({
+						autoOpen: false,
+						title: caption,
+						width: 300,
+						position: {
+						    my: 'right top',
+						    at: 'left top',
+						    of: $(el)
+					  }
+					});
+				if(show_buttons) {
+					$(".ui-dialog").find('.ui-dialog-titlebar-close').css("display","none");
+					$(".ui-dialog").find('.ui-dialog-title').css("width","100%");
+				}
+
+					var width = $dialog.dialog( "option", "width" );
+					var pos = $(el).offset();
+					var ofWidth = $(el).width();
+
+					if((pos.left + ofWidth) - 40 < width) {
+						$dialog.dialog("option","position",{my: 'left top',at: 'right top',of: $(el)})	;
+					}
+
+					$dialog.dialog('open');
+					$(".ui-dialog").appendTo("#content");
 				}
 
 				success = function(data) {
 					eval(data.responseText);
 
-					SUGAR.util.additionalDetailsCache[spanId] = new Array();
-					SUGAR.util.additionalDetailsCache[spanId]['body'] = result['body'];
-					SUGAR.util.additionalDetailsCache[spanId]['caption'] = result['caption'];
-					SUGAR.util.additionalDetailsCache[spanId]['width'] = result['width'];
-					SUGAR.util.additionalDetailsCache[spanId]['theme'] = result['theme'];
+					SUGAR.util.additionalDetailsCache[id] = new Array();
+					SUGAR.util.additionalDetailsCache[id]['body'] = result['body'];
+					SUGAR.util.additionalDetailsCache[id]['caption'] = result['caption'];
+					SUGAR.util.additionalDetailsCache[id]['width'] = result['width'];
+					SUGAR.util.additionalDetailsCache[id]['theme'] = result['theme'];
 					ajaxStatus.hideStatus();
-					return oReturn(SUGAR.util.additionalDetailsCache[spanId]['body'], SUGAR.util.additionalDetailsCache[spanId]['caption'], SUGAR.util.additionalDetailsCache[spanId]['width'], SUGAR.util.additionalDetailsCache[spanId]['theme']);
+					return oReturn(SUGAR.util.additionalDetailsCache[id]['body'], SUGAR.util.additionalDetailsCache[id]['caption'], SUGAR.util.additionalDetailsCache[id]['width'], SUGAR.util.additionalDetailsCache[id]['theme']);
 				}
 
-				if(typeof SUGAR.util.additionalDetailsCache[spanId] != 'undefined')
-					return oReturn(SUGAR.util.additionalDetailsCache[spanId]['body'], SUGAR.util.additionalDetailsCache[spanId]['caption'], SUGAR.util.additionalDetailsCache[spanId]['width'], SUGAR.util.additionalDetailsCache[spanId]['theme']);
+				if(typeof SUGAR.util.additionalDetailsCache[id] != 'undefined')
+					return oReturn(SUGAR.util.additionalDetailsCache[id]['body'], SUGAR.util.additionalDetailsCache[id]['caption'], SUGAR.util.additionalDetailsCache[id]['width'], SUGAR.util.additionalDetailsCache[id]['theme']);
 
-				if(typeof SUGAR.util.additionalDetailsCalls[spanId] != 'undefined') // call already in progress
+				if(typeof SUGAR.util.additionalDetailsCalls[id] != 'undefined') // call already in progress
 					return;
 				ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_LOADING'));
 				url = 'index.php?to_pdf=1&module=Home&action=AdditionalDetailsRetrieve&bean=' + bean + '&id=' + id;
-				SUGAR.util.additionalDetailsCalls[spanId] = YAHOO.util.Connect.asyncRequest('GET', url, {success: success, failure: success});
+				if(show_buttons)
+					url += '&show_buttons=true';
+				SUGAR.util.additionalDetailsCalls[id] = YAHOO.util.Connect.asyncRequest('GET', url, {success: success, failure: success});
 
 				return false;
 			}
@@ -3130,7 +3484,9 @@ SUGAR.util = function () {
                             context = item.overrideContext;
                         }
                     }
-                    item.fn.call(context, item.obj);
+                    if(item.fn) {
+                        item.fn.call(context, item.obj);
+                    }
                 };
 
                 var i, len, item, test;
@@ -3168,7 +3524,65 @@ SUGAR.util = function () {
                     }
                 }
                 this._doWhenLocked = false;
-            }
+            },
+        buildAccessKeyLabels : function() {
+            if (typeof(Y.env.ua) !== 'undefined'){
+                envStr = '';
+                browserOS = Y.env.ua['os'];
+                isIE = Y.env.ua['ie'];
+                isCR = Y.env.ua['chrome'];
+                isFF = Y.env.ua['gecko'];
+                isWK = Y.env.ua['webkit'];
+                isOP = Y.env.ua['opera'];
+                controlKey = '';
+
+                //first determine the OS
+                if(browserOS=='macintosh'){
+                    //we got a mac, lets use the mac specific commands while we check the browser
+                    if(isIE){
+                        //IE on a Mac? Not possible, but let's assign alt anyways for completions sake
+                        controlKey = 'Alt+';
+                    }else if(isWK || isFF){
+                        //Chrome or safari on a mac
+                        //firefox moved to webkit standard starting with FF14
+                        controlKey = 'Ctrl+Opt+';
+                    }else if(isOP){
+                        //Opera on a mac
+                        controlKey = 'Shift+Esc: ';
+                    }else{
+                        //default for everything else on a mac
+                        controlKey = 'Ctrl+';
+                    }
+                }else{
+                    //this is not a mac so let's use the windows/unix commands while we check the browser
+                    if(isFF){
+                        //FF on windows/unix
+                        controlKey = 'Alt+Shift+';
+                    }else if(isOP){
+                        //Opera on windows/unix
+                        controlKey = 'Shift+Esc: ';
+                    }else {
+                        //this is the default for safari, IE and Chrome
+                        //if this is webkit and is NOT google, then we are most likely looking at Safari
+                        controlKey = 'Alt+';
+                    }
+
+                }
+
+                //now lets retrieve all elements of type input
+                allButtons = document.getElementsByTagName('input');
+                //iterate through list and modify title if the accesskey is not empty
+                for(i=0;i<allButtons.length;i++){
+                    if(allButtons[i].getAttribute('accesskey') && allButtons[i].getAttribute('type') && allButtons[i].getAttribute('type')=='button'){
+                        allButtons[i].setAttribute('title',allButtons[i].getAttribute('title')+' ['+controlKey+allButtons[i].getAttribute('accesskey')+']');
+                    }
+                }
+                //now change the text in the help div
+                $("#shortcuts_dialog").html(function(i, text)  {
+                    return text.replace(/Alt\+/g,controlKey);
+                });
+            }// end if (typeof(Y.env.ua) !== 'undefined')
+        }//end buildAccessKeyLabels()
 	};
 }(); // end util
 SUGAR.util.additionalDetailsCache = new Array();
@@ -3289,8 +3703,17 @@ SUGAR.savedViews = function() {
 			SUGAR.tabChooser.movementCallback(document.getElementById('display_tabs_td').getElementsByTagName('select')[0]);
 
 			// This check is needed for the Activities module (Calls/Meetings/Tasks).
-			if (document.search_form.orderBy)
-				document.search_form.orderBy.options.value = SUGAR.savedViews.selectedOrderBy;
+            if (document.search_form.orderBy)
+            {
+                if (document.search_form.orderBy.length > 1 && document.search_form.orderBy[1].type == 'select-one')
+                {
+                    document.search_form.orderBy[1].options.value = SUGAR.savedViews.selectedOrderBy;
+                }
+                else
+                {
+                    document.search_form.orderBy.options.value = SUGAR.savedViews.selectedOrderBy;
+                }
+            }
 
 			// handle direction
 			if(SUGAR.savedViews.selectedSortOrder == 'DESC') document.getElementById('sort_order_desc_radio').checked = true;
@@ -3322,6 +3745,22 @@ SUGAR.searchForm = function() {
 	                    }
 					}
 				}
+
+                //clear thesearch form accesekeys and reset them to the appropriate link
+                adv = document.getElementById('advanced_search_link');
+                bas = document.getElementById('basic_search_link');
+                adv.setAttribute('accesskey','');
+                bas.setAttribute('accesskey','');
+                a_key = SUGAR.language.get("app_strings", "LBL_ADV_SEARCH_LNK_KEY");
+
+                //reset the ccesskey based on theview
+                if(theView === 'advanced_search'){
+
+                    bas.setAttribute('accesskey',a_key);
+                }else{
+                    adv.setAttribute('accesskey',a_key);
+                }
+                
 				// show the good search form.
 				document.getElementById(module + theView + 'SearchForm').style.display = '';
                 //if its not the first tab show there is a previous tab.
@@ -3345,6 +3784,11 @@ SUGAR.searchForm = function() {
                          }
                      }
                  }
+                // Remove the previously selected div, so that only data from current div to be sent as form data to the server-side
+                if (document.getElementById(module + thepreviousView + '_search' + 'SearchForm'))
+                {
+                    document.getElementById(module + thepreviousView + '_search' + 'SearchForm').innerHTML = '';
+                }
 			}
 
 			// if tab is not cached
@@ -3404,7 +3848,7 @@ SUGAR.searchForm = function() {
                 if ( typeof(elem.type) == 'undefined' ) {
                     continue;
                 }
-                
+
                 if ( typeof(elem.type) != 'undefined' && typeof(skipElementNames) != 'undefined'
                         && SUGAR.util.arrayIndexOf(skipElementNames, elem.name) != -1 )
                 {
@@ -3415,9 +3859,20 @@ SUGAR.searchForm = function() {
 
                 if ( elemType == 'text' || elemType == 'textarea' || elemType == 'password' ) {
                     elem.value = '';
-                }
-                else if ( elemType == 'select' || elemType == 'select-one' || elemType == 'select-multiple' ) {
+                } else if (elemType == 'select-one') {
                     // We have, what I hope, is a select box, time to unselect all options
+                    var optionList = elem.options,
+                        selectedIndex = 0;
+                    for (var ii = 0; ii < optionList.length; ii++) {
+                        if (optionList[ii].value == '') {
+                            selectedIndex = ii;
+                            break;
+                        }
+                    }
+                    if (optionList.length > 0) {
+                        optionList[selectedIndex].selected = "selected";
+                    }
+                } else if (elemType == 'select-multiple') {
                     var optionList = elem.options;
                     for ( var ii = 0 ; ii < optionList.length ; ii++ ) {
                         optionList[ii].selected = false;
@@ -3428,16 +3883,46 @@ SUGAR.searchForm = function() {
                     elem.selected = false;
                 }
                 else if ( elemType == 'hidden' ) {
-                    // We only want to reset the hidden values that link to the select boxes.
-                    if ( ( elem.name.length > 3 && elem.name.substring(elem.name.length-3) == '_id' )
-                         || ((elem.name.length > 9) && (elem.name.substring(elem.name.length - 9) == '_id_basic'))
-                         || ( elem.name.length > 12 && elem.name.substring(elem.name.length-12) == '_id_advanced' ) ) {
+                    if (
+                        // For bean selection
+                        elem.name.indexOf("_id") != -1
+                        // For custom fields
+                        || elem.name.indexOf("_c") != -1
+                        // For advanced fields, like team collection, or datetime fields
+                        || elem.name.indexOf("_advanced") != -1
+                        )
+                    {
                         elem.value = '';
                     }
                 }
             }
+
+            // If there are any collections
+            if (typeof(collection) !== 'undefined')
+            {
+                // Loop through all the collections on the page and run clean_up()
+                for (key in collection)
+                {
+                    // Clean up only removes blank fields, if any
+                    collection[key].clean_up();
+                }
+            }
+
+            SUGAR.searchForm.clearBasicSearchOrderToDefault(form);
 			SUGAR.savedViews.clearColumns = true;
-		}
+		},
+        // This function sets sorting to default Sugar values after BasicSearch Clear button is pressed
+        clearBasicSearchOrderToDefault: function(form)
+        {
+            if(form.elements['searchFormTab']){
+                var formType = form.elements['searchFormTab'].value;
+                if (formType == 'basic_search')
+                {
+                    form.elements['orderBy'].value = 'DATE_ENTERED';
+                    form.elements['sortOrder'].value = 'DESC';
+                }
+            }
+        }
 	};
 }();
 // Code for the column/tab chooser used on homepage and in admin section
@@ -4001,18 +4486,38 @@ function open_popup(module_name, width, height, initial_filter, close_popup, hid
 		+ ',height=' + height
 		+ ',resizable=1,scrollbars=1';
 
-	if (popup_mode == '' && popup_mode == 'undefined') {
+	if (popup_mode == '' || popup_mode == undefined) {
 		popup_mode='single';
 	}
 	URL+='&mode='+popup_mode;
-	if (create == '' && create == 'undefined') {
+	if (create == '' || create == undefined) {
 		create = 'false';
 	}
 	URL+='&create='+create;
 
-	if (metadata != '' && metadata != 'undefined') {
+	if (metadata != '' && metadata != undefined) {
 		URL+='&metadata='+metadata;
 	}
+
+    // Bug #46842 : The relate field field_to_name_array fails to copy over custom fields
+    // post fields that should be populated from popup form
+	if(popup_request_data.jsonObject) {
+		var request_data = popup_request_data.jsonObject;
+	} else {
+		var request_data = popup_request_data;
+	}
+    var field_to_name_array_url = '';
+
+    if (request_data && request_data.field_to_name_array != undefined) {
+        for(var key in request_data.field_to_name_array) {
+            if ( key.toLowerCase() != 'id' ) {
+                field_to_name_array_url += '&field_to_name[]='+encodeURIComponent(key.toLowerCase());
+            }
+        }
+    }
+    if ( field_to_name_array_url ) {
+        URL+=field_to_name_array_url;
+    }
 
 	win = SUGAR.util.openWindow(URL, windowName, windowFeatures);
 
@@ -4034,7 +4539,7 @@ function open_popup(module_name, width, height, initial_filter, close_popup, hid
  */
 var from_popup_return  = false;
 
-//Function replaces special HTML chars for usage in text boxes 
+//Function replaces special HTML chars for usage in text boxes
 function replaceHTMLChars(value) {
 	return value.replace(/&amp;/gi,'&').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&#039;/gi,'\'').replace(/&quot;/gi,'"');
 }
@@ -4103,14 +4608,16 @@ function set_return(popup_reply_data)
 				}
 			}
 		}
-		
+
         if(label_data_str != label_str && current_label_data_str != label_str){
         	// Bug 48726 Start
         	if (typeof popupConfirm != 'undefined')
         	{
         		if (popupConfirm > -1) {
         			set_return_basic(popup_reply_data,/\S/);
-        		} 
+        		} else {
+        			set_return_basic(popup_reply_data,/account/);
+        		}
         	}
         	// Bug 48726 End
         	else if(confirm(SUGAR.language.get('app_strings', 'NTC_OVERWRITE_ADDRESS_PHONE_CONFIRM') + '\n\n' + label_data_str))
@@ -4387,25 +4894,38 @@ closeActivityPanel: {
 	               text: closeText,
 	               constraintoviewport: true,
 	               buttons: [ { text:SUGAR.language.get("app_strings", "LBL_EMAIL_OK"), handler:function(){
+						//	alert("DELETE!");
+
 	                   if (SUGAR.util.closeActivityPanel.panel)
                             SUGAR.util.closeActivityPanel.panel.hide();
 
                         ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_SAVING'));
                         var args = "action=save&id=" + id + "&record=" + id + "&status=" + new_status + "&module=" + module;
-                        // 20110307 Frank Steegmans: Fix for bug 42361, Any field with a default configured in any activity will be set to this default when closed using the close dialog
-                        // TODO: Take id out and regression test. Left id in for now to not create any other unexpected problems
-                        //var args = "action=save&id=" + id + "&status=" + new_status + "&module=" + module;
-                        var callback = {
-                            success:function(o)
-                            {
-                                // Bug 45792: Firefox seems to believe reloading a page after an ajax request means you are re-submitting a form and gives you the warning for it.
-                                // So instead, we reload from a timeout
-								window.setTimeout("window.location.reload(true);",0);
-                            },
-                            argument:{'parentContainerId':parentContainerId}
-                        };
 
-                        YAHOO.util.Connect.asyncRequest('POST', 'index.php', callback, args);
+					   //SuiteCRM bug #618
+					   //The bug fix above (42361) has been taken out as the 'search_form' element it tries to find
+					   //is never found in the dashlet.  This means that the entire page was always reloaded whenever
+					   //a meeting or call was removed.  The callback below will only refresh the entire page if the
+					   //parent container cannot be found, else it will refresh just the dashlet panel to reflect the
+					   //updated data
+						var callback = {
+							success:function() {
+								//If the parent entry is not found, refresh the entire page
+								var parent = $('div[id^="dashlet_entire_"]').has($("#"+id));
+								if(parent.length === 0)
+								{
+									window.location.reload(true)
+								}
+								else
+								{
+									//else just refresh the parent panel using the SUGAR.mysugar.retrieveDashlet method
+									SUGAR.mySugar.retrieveDashlet(parent.attr('id').replace("dashlet_entire_",""));
+								}
+							}
+
+						}
+					   YAHOO.util.Connect.asyncRequest('POST', 'index.php', callback, args);
+
 
 	               }, isDefault:true },
 	                          { text:SUGAR.language.get("app_strings", "LBL_EMAIL_CANCEL"),  handler:function(){SUGAR.util.closeActivityPanel.panel.hide(); }} ]
@@ -4417,14 +4937,18 @@ closeActivityPanel: {
     }
 },
 
-setEmailPasswordDisplay: function(id, exists) {
+setEmailPasswordDisplay: function(id, exists, formName) {
 	link = document.getElementById(id+'_link');
 	pwd = document.getElementById(id);
 	if(!pwd || !link) return;
 	if(exists) {
+            pwd.disabled = true;
     	pwd.style.display = 'none';
     	link.style.display = '';
+        if(typeof(formName) != 'undefined')
+            removeFromValidate(formName, id);
 	} else {
+            pwd.disabled = false;
     	pwd.style.display = '';
     	link.style.display = 'none';
 	}
@@ -4434,6 +4958,7 @@ setEmailPasswordEdit: function(id) {
 	link = document.getElementById(id+'_link');
 	pwd = document.getElementById(id);
 	if(!pwd || !link) return;
+        pwd.disabled = false;
 	pwd.style.display = '';
 	link.style.display = 'none';
 },
@@ -4539,4 +5064,26 @@ SUGAR.MultiEnumAutoComplete.getMultiSelectValuesFromKeys = function(options_inde
         }
     }
     return final_arr;
+}
+
+function convertReportDateTimeToDB(dateValue, timeValue)
+{
+    var date_match = dateValue.match(date_reg_format);
+    var time_match = timeValue.match(/([0-9]{1,2})\:([0-9]{1,2})([ap]m)/);
+    if ( date_match != null && time_match != null) {
+        time_match[1] = parseInt(time_match[1]);
+        if (time_match[3] == 'pm') {
+            time_match[1] = time_match[1] + 12;
+            if (time_match[1] >= 24) {
+                time_match[1] = time_match[1] - 24;
+            }
+        } else if (time_match[3] == 'am' && time_match[1] == 12) {
+            time_match[1] = 0;
+        }
+        if (time_match[1] < 10) {
+            time_match[1] = '0' + time_match[1];
+        }
+        return date_match[date_reg_positions['Y']] + "-"+date_match[date_reg_positions['m']] + "-"+date_match[date_reg_positions['d']] + ' '+ time_match[1] + ':' + time_match[2] + ':00';
+    }
+    return '';
 }

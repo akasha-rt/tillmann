@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -659,6 +659,12 @@ class SugarDateTime extends DateTime
      */
     public function modify($modify)
     {
+        // We can't user PHP_VERSION_ID here because problem with yesterday and tomorrow appears in defferent versions
+        // In that case we just set time to midnight for yesterday & tomorrow
+        // To leave time as it is we can use -+1 day instead of yesterday & tomorrow
+        if (strpos($modify, 'yesterday') !== false || strpos($modify, 'tomorrow') !== false) {
+            $this->setTime(0, 0);
+        }
         if(PHP_VERSION_ID >= 50300 || $modify != 'first day of next month') {
             parent::modify($modify);
         } else {

@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /**
@@ -46,9 +49,9 @@ class LanguageManager
 	 * @param module - the name of the module we are working with
 	 * @param templates - an array of templates this module uses
 	 */
-	function createLanguageFile($module , $templates=array('default'), $refresh = false){
+	static function createLanguageFile($module , $templates=array('default'), $refresh = false){
 		global $mod_strings, $current_language;
-		if(!empty($GLOBALS['sugar_config']['developerMode']) || !empty($_SESSION['developerMode'])){
+		if(inDeveloperMode() || !empty($_SESSION['developerMode'])){
         	$refresh = true;
     	}
 		$temp_mod_strings = $mod_strings;
@@ -71,16 +74,16 @@ class LanguageManager
 	 * @param lang - current language this module use
 	 * @param loaded_mod_strings - the string that we will add the module template language  into
 	 */
-	function loadTemplateLanguage($module , $templates , $lang, $loaded_mod_strings){
+	static function loadTemplateLanguage($module , $templates , $lang, $loaded_mod_strings){
 		$templates = array_reverse($templates);
 		foreach($templates as $template){
 			$temp = LanguageManager::addTemplate($module,$lang, $template);
-			$loaded_mod_strings = sugarArrayMerge($loaded_mod_strings, $temp);
+			$loaded_mod_strings = sugarLangArrayMerge($loaded_mod_strings, $temp);
 		}
 		return $loaded_mod_strings;
 	}
 
-	function addTemplate($module, $lang, $template){
+	static function addTemplate($module, $lang, $template){
 		if($template == 'default')$template = 'basic';
 		$templates = array();
 		$fields = array();
@@ -102,7 +105,7 @@ class LanguageManager
 		}
 	}
 
-	function saveCache($module,$lang, $loaded_mod_strings, $additonal_objects= array()){
+	static function saveCache($module,$lang, $loaded_mod_strings, $additonal_objects= array()){
 		if(empty($lang))
 			$lang = $GLOBALS['sugar_config']['default_language'];
 
@@ -121,7 +124,7 @@ class LanguageManager
 	 *                      clear language cache for all modules.
 	 * @param string lang the name of the object we are clearing this is for sugar_cache
 	 */
-	function clearLanguageCache($module_dir = '', $lang = ''){
+	static function clearLanguageCache($module_dir = '', $lang = ''){
 		if(empty($lang)) {
 			$languages = array_keys($GLOBALS['sugar_config']['languages']);
 		} else {
@@ -152,7 +155,7 @@ class LanguageManager
 	 * @param string module_dir the module_dir to clear
 	 * @param string lang the name of the language file we are clearing this is for sugar_cache
 	 */
-	function _clearCache($module_dir = '', $lang){
+	static function _clearCache($module_dir = '', $lang){
 		if(!empty($module_dir) && !empty($lang)){
 			$file = sugar_cached('modules/').$module_dir.'/language/'.$lang.'.lang.php';
 			if(file_exists($file)){
@@ -171,13 +174,13 @@ class LanguageManager
 	 * @param string $lang the given language we wish to load
 	 * @param array $additional_search_paths an array which allows a consumer to pass in additional vardef locations to search
 	 */
-	function refreshLanguage($module, $lang, $loaded_mod_strings = array(), $additional_search_paths = null){
+	static function refreshLanguage($module, $lang, $loaded_mod_strings = array(), $additional_search_paths = null){
 		// Some of the vardefs do not correctly define dictionary as global.  Declare it first.
 		$lang_paths = array(
 					'modules/'.$module.'/language/'.$lang.'.lang.php',
 					'modules/'.$module.'/language/'.$lang.'.lang.override.php',
-					'custom/modules/'.$module.'/Ext/Language/'.$lang.'.lang.ext.php',
 					'custom/modules/'.$module.'/language/'.$lang.'.lang.php',
+					'custom/modules/'.$module.'/Ext/Language/'.$lang.'.lang.ext.php',
 				 );
 
 		#27023, if this module template language file was not attached , get the template from this module vardef cache file if exsits and load the template language files.
@@ -211,7 +214,7 @@ class LanguageManager
 						$loaded_mod_strings = sugarArrayMergeRecursive($loaded_mod_strings, $mod_strings);
 					}
 					else{
-						$loaded_mod_strings = sugarArrayMerge($loaded_mod_strings, $mod_strings);
+						$loaded_mod_strings = sugarLangArrayMerge($loaded_mod_strings, $mod_strings);
 					}
 				}
 			}
@@ -223,7 +226,7 @@ class LanguageManager
 			LanguageManager::saveCache($module, $lang, $loaded_mod_strings);
 	}
 
-	function loadModuleLanguage($module, $lang, $refresh=false){
+	static function loadModuleLanguage($module, $lang, $refresh=false){
 		//here check if the cache file exists, if it does then load it, if it doesn't
 		//then call refreshVardef
 		//if either our session or the system is set to developerMode then refresh is set to true
@@ -234,7 +237,7 @@ class LanguageManager
 		if(!$refresh)
 		{
 			$return_result = sugar_cache_retrieve($key);
-			if(!empty($return_result)){
+			if(!empty($return_result) && is_array($return_result)){
 				return $return_result;
 			}
 		}

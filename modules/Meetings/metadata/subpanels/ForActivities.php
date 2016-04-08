@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -47,21 +47,16 @@ $subpanel_layout = array(
 				
 	'list_fields' => array(
 		'object_image'=>array(
+			'vname' => 'LBL_OBJECT_IMAGE',
 			'widget_class' => 'SubPanelIcon',
  		 	'width' => '2%',
 			'image2'=>'__VARIABLE',
  		 	'image2_ext_url_field'=>'displayed_url',
 		),
-		'close_button'=>array(
-			'widget_class' => 'SubPanelCloseButton',
-			'vname' => 'LBL_LIST_CLOSE',
-			'sortable'=>false,
-			'width' => '6%',
-		),
 		'name'=>array(
 			 'vname' => 'LBL_LIST_SUBJECT',
 			 'widget_class' => 'SubPanelDetailViewLink',
-			 'width' => '30%',
+			 'width' => '42%',
 		),
 		'status'=>array(
 			 'widget_class' => 'SubPanelActivitiesStatusField',
@@ -106,6 +101,12 @@ $subpanel_layout = array(
 			 'widget_class' => 'SubPanelEditButton',
 			 'width' => '2%',
 		),
+		'close_button'=>array(
+			'widget_class' => 'SubPanelCloseButton',
+			'vname' => 'LBL_LIST_CLOSE',
+			'sortable'=>false,
+			'width' => '6%',
+		),
 		'remove_button'=>array(
 			'vname' => 'LBL_REMOVE',
 			 'widget_class' => 'SubPanelRemoveButton',
@@ -115,6 +116,9 @@ $subpanel_layout = array(
 			'usage'=>'query_only',
 	
 		),	
+		'recurring_source'=>array(
+			'usage'=>'query_only',	
+		),
 	),
 );		
 ?>

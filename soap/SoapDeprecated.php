@@ -2,7 +2,7 @@
  if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -214,7 +214,7 @@ function validate_user($user_name, $password){
 	$user->user_name = $user_name;
 	$system_config = new Administration();
 	$system_config->retrieveSettings('system');
-	$authController = new AuthenticationController((!empty($sugar_config['authenticationClass'])? $sugar_config['authenticationClass'] : 'SugarAuthenticate'));
+	$authController = new AuthenticationController();
 	// Check to see if the user name and password are consistent.
 	if($user->authenticate_user($password)){
 		// we also need to set the current_user.

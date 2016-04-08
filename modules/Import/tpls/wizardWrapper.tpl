@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -45,28 +45,13 @@
 {/literal}
 </style>
 <script type="text/javascript" src="{sugar_getjspath file='cache/include/javascript/sugar_grp_yui_widgets.js'}"></script>
-{overlib_includes}
-<div class="dashletPanelMenu">
-    <div class="hd">
-        <div class="tl"></div>
-        <div class="hd-center"></div>
-        <div class="tr"></div>
-    </div>
+<div class="dashletPanelMenu wizard">
     <div class="bd">
-        <div class="ml"></div>
-        <div class="bd-center">
             <div class="screen">
                 {$MODULE_TITLE}
                 <br>
                 {$CONTENT}
             </div>
-        </div>
-        <div class="mr"></div>
-    </div>
-    <div class="ft">
-        <div class="bl"></div>
-        <div class="ft-center"></div>
-        <div class="br"></div>
     </div>
 </div>
 

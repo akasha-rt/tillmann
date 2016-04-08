@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -49,8 +49,11 @@
                     'layout' => array(  					
 						'basic_search' => array(
 						 	'name',
+                            'type' => array('name' => 'type', 'type'=>'enum', 'function' => array('name' => 'EmailTemplate::getTypeOptionsForSearch'))
 							),
-					    'advanced_search' => array('name','subject','description',
+					    'advanced_search' => array('name',
+                                                        'type' => array('name' => 'type', 'type'=>'enum', 'function' => array('name' => 'EmailTemplate::getTypeOptionsForSearch')),
+                                                        'subject','description',
                                 					    'assigned_user_id' => 
                                 					      array (
                                 					        'name' => 'assigned_user_id',

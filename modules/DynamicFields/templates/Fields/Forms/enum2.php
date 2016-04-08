@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -42,6 +42,7 @@
  */
  function get_body(&$ss, $vardef){
  	$multi = false;
+    $radio = false;
  	if (isset ($vardef['type']) && $vardef['type'] == 'multienum')
  		$multi = true;
  		
@@ -56,6 +57,7 @@
 
 	if(!empty($_REQUEST['type']) && $_REQUEST['type'] == 'radioenum'){
 		$edit_mod_strings['LBL_DROP_DOWN_LIST'] = $edit_mod_strings['LBL_RADIO_FIELDS'];
+        $radio = true;
 	}
 	$package_strings = array();
 	if(!empty($_REQUEST['view_package'])){
@@ -105,6 +107,7 @@
 	$ss->assign('show', $show);
 	$ss->assign('selected_options', $selected_options);
 	$ss->assign('multi', isset($multi) ? $multi: false);
+    $ss->assign('radio', isset($radio) ? $radio: false);
 	$ss->assign('dropdown_name',(!empty($vardef['options']) ? $vardef['options'] : ''));
 
 	require_once('include/JSON.php');

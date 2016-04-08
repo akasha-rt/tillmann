@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -40,6 +43,9 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 require_once 'Zend/Oauth/Provider.php';
 require_once 'modules/OAuthKeys/OAuthKey.php';
 
+/**
+ * OAuth token
+ */
 class OAuthToken extends SugarBean
 {
 	public $module_dir = 'OAuthTokens';
@@ -55,6 +61,7 @@ class OAuthToken extends SugarBean
     public $consumer;
     public $assigned_user_id;
     public $consumer_obj;
+    public $callback_url;
     // authdata is not preserved so far since we don't have any useful data yet
     // so it's an extension point for the future
     public $authdata;
@@ -85,6 +92,7 @@ class OAuthToken extends SugarBean
 	/**
 	 * Associate the token with the consumer key
 	 * @param OAuthKey $consumer
+	 * @return OAuthToken
 	 */
 	public function setConsumer($consumer)
 	{
@@ -94,6 +102,17 @@ class OAuthToken extends SugarBean
 	}
 
 	/**
+	 * Set callback URL for request token
+	 * @param string $url
+	 * @return OAuthToken
+	 */
+    public function setCallbackURL($url)
+    {
+        $this->callback_url = $url;
+        return $this;
+    }
+
+    /**
 	 * Generate random token
 	 * @return string
 	 */
@@ -113,7 +132,7 @@ class OAuthToken extends SugarBean
         return new self($t, $s);
     }
 
-    public function save()
+    public function save($check_notify = false)
     {
         $this->token_ts = time();
         if(!isset($this->id)) {
@@ -135,8 +154,7 @@ class OAuthToken extends SugarBean
         if(empty($ltoken->id)) return null;
         $ltoken->token = $ltoken->id;
         if(!empty($ltoken->consumer)) {
-            $ltoken->consumer_obj = new OAuthKey();
-            $ltoken->consumer_obj->retrieve($ltoken->consumer);
+            $ltoken->consumer_obj = BeanFactory::getBean("OAuthKeys", $ltoken->consumer);
             if(empty($ltoken->consumer_obj->id)) {
                 return null;
             }
@@ -152,6 +170,23 @@ class OAuthToken extends SugarBean
 	    $this->setState(self::INVALID);
 	    $this->verify = false;
 	    return $this->save();
+	}
+
+	/**
+	 * Create a new authorized token for specific user
+	 * This bypasses normal OAuth process and creates a ready-made access token
+	 * @param OAuthKey $consumer
+	 * @param User $user
+	 * @return OAuthToken
+	 */
+	public static function createAuthorized($consumer, $user)
+	{
+	    $token = self::generate();
+	    $token->setConsumer($consumer);
+	    $token->setState(self::ACCESS);
+	    $token->assigned_user_id = $user->id;
+        $token->save();
+        return $token;
 	}
 
 	/**
@@ -200,9 +235,9 @@ class OAuthToken extends SugarBean
 	{
 	    global $db;
 	    // delete invalidated tokens older than 1 day
-	    $db->query("DELETE FROM oauth_token WHERE status = ".self::INVALID." AND token_ts < ".time()-60*60*24);
+	    $db->query("DELETE FROM oauth_tokens WHERE tstate = ".self::INVALID." AND token_ts < ".(time()-60*60*24));
 	    // delete request tokens older than 1 day
-	    $db->query("DELETE FROM oauth_token WHERE status = ".self::REQUEST." AND token_ts < ".time()-60*60*24);
+	    $db->query("DELETE FROM oauth_tokens WHERE tstate = ".self::REQUEST." AND token_ts < ".(time()-60*60*24));
 	}
 
 	/**
@@ -231,10 +266,37 @@ class OAuthToken extends SugarBean
 	    return Zend_Oauth_Provider::OK;
 	}
 
+	/**
+	 * Delete token by ID
+	 * @param string id
+	 * @see SugarBean::mark_deleted($id)
+	 */
 	public function mark_deleted($id)
 	{
 	    $this->db->query("DELETE from {$this->table_name} WHERE id='".$this->db->quote($id)."'");
 	}
+
+	/**
+	 * Delete tokens by consumer ID
+	 * @param string $user
+	 */
+	public static function deleteByConsumer($consumer_id)
+	{
+	   global $db;
+	   $db->query("DELETE FROM oauth_tokens WHERE consumer='".$db->quote($consumer_id) ."'");
+	}
+
+	/**
+	 * Delete tokens by user ID
+	 * @param string $user
+	 */
+	public static function deleteByUser($user_id)
+	{
+	   global $db;
+	   $db->query("DELETE FROM oauth_tokens WHERE assigned_user_id='".$db->quote($user_id) ."'");
+	}
+
+
 }
 
 function displayDateFromTs($focus, $field, $value, $view='ListView')

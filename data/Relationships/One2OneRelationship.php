@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -64,15 +64,18 @@ class One2OneRelationship extends M2MRelationship
         {
             $lhsLinkName = $this->lhsLink;
             $rhsLinkName = $this->rhsLink;
-            //In a one to one, any existing links from boths sides must be removed first.
+            //In a one to one, any existing links from both sides must be removed first.
             //one2Many will take care of the right side, so we'll do the left.
             $lhs->load_relationship($lhsLinkName);
             $this->removeAll($lhs->$lhsLinkName);
             $rhs->load_relationship($rhsLinkName);
             $this->removeAll($rhs->$rhsLinkName);
 
-            parent::add($lhs, $rhs, $additionalFields);
+            return parent::add($lhs, $rhs, $additionalFields);
         }
+
+        // data matched what was there so return false, since nothing happened
+        return false;
     }
 
 

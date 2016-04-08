@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -56,11 +59,11 @@ $mod_strings = array(
 	'ERR_UW_FILE_NOT_READABLE'					=> 'File could not be read.',
 	'ERR_UW_FILE_NOT_WRITABLE'					=> 'File cannot be moved or written to',
 	'ERR_UW_FLAVOR_2'							=> 'Upgrade Flavor: ',
-	'ERR_UW_FLAVOR'								=> 'SugarCRM System Flavor: ',
-	'ERR_UW_LOG_FILE_UNWRITABLE'				=> './upgradeWizard.log could not be created/written to.  Please fix permissions on your SugarCRM directory.',
+	'ERR_UW_FLAVOR'								=> 'SuiteCRM System Flavor: ',
+	'ERR_UW_LOG_FILE_UNWRITABLE'				=> './upgradeWizard.log could not be created/written to.  Please fix permissions on your SuiteCRM directory.',
 	'ERR_UW_MBSTRING_FUNC_OVERLOAD'				=> 'mbstring.func_overload set to a value higher than 1.  Please change this in your php.ini and restart the web server.',
-	'ERR_UW_MYSQL_VERSION'						=> 'SugarCRM requires MySQL version 4.1.2 or newer.  Found: ',
-	'ERR_UW_OCI8_VERSION'				        => 'Your version of Oracle is not supported by Sugar.  You will need to install a version that is compatible with the Sugar application.  Please consult the Compatibility Matrix in the Release Notes for supported Oracle Versions. Current version: ',
+	'ERR_UW_MYSQL_VERSION'						=> 'SuiteCRM requires MySQL version 4.1.2 or newer.  Found: ',
+	'ERR_UW_OCI8_VERSION'				        => 'Your version of Oracle is not supported by SuiteCRM.  You will need to install a version that is compatible with the SuiteCRM application.  Please consult the Compatibility Matrix in the Release Notes for supported Oracle Versions. Current version: ',
 	'ERR_UW_NO_FILE_UPLOADED'					=> 'Please specify a file and try again!',
 	'ERR_UW_NO_FILES'							=> 'An error occurred, no files were found to check.',
 	'ERR_UW_NO_MANIFEST'						=> 'The zip file is missing a manifest.php file.  Cannot proceed.',
@@ -71,18 +74,8 @@ $mod_strings = array(
 	'ERR_UW_ONLY_PATCHES'						=> 'You can only upload patches on this page.',
 	'ERR_UW_PREFLIGHT_ERRORS'					=> 'Errors Found During Preflight Check',
 	'ERR_UW_UPLOAD_ERR'							=> 'There was an error uploading the file, please try again!<br>\n',
-	'ERR_UW_VERSION'							=> 'SugarCRM System Version: ',
+	'ERR_UW_VERSION'							=> 'SuiteCRM System Version: ',
 	'ERR_UW_WRONG_TYPE'							=> 'This page is not for running ',
-	'ERR_UW_PHP_FILE_ERRORS'					=> array(
-													1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
-													2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
-													3 => 'The uploaded file was only partially uploaded.',
-													4 => 'No file was uploaded.',
-													5 => 'Unknown error.',
-													6 => 'Missing a temporary folder.',
-													7 => 'Failed to write file to disk.',
-													8 => 'File upload stopped by extension.',
-),
 	'LBL_BUTTON_BACK'							=> '< Back',
 	'LBL_BUTTON_CANCEL'							=> 'Cancel',
 	'LBL_BUTTON_DELETE'							=> 'Delete Package',
@@ -105,9 +98,9 @@ $mod_strings = array(
 	'LBL_UW_COMMIT_ADD_TASK_DESC_1'				=> "Backups of Overwritten Files are in the following directory: \n",
 	'LBL_UW_COMMIT_ADD_TASK_DESC_2'				=> "Manually merge the following files:\n",
 	'LBL_UW_COMMIT_ADD_TASK_NAME'				=> 'Upgrade Process: Manually Merge Files',
-	'LBL_UW_COMMIT_ADD_TASK_OVERVIEW'			=> 'Please use whichever diff method is most familiar to you to merge these files.  Until this is complete, your SugarCRM installation will be in an uncertain state, and the upgrade incomplete.',
+	'LBL_UW_COMMIT_ADD_TASK_OVERVIEW'			=> 'Please use whichever diff method is most familiar to you to merge these files.  Until this is complete, your SuiteCRM installation will be in an uncertain state, and the upgrade incomplete.',
 	'LBL_UW_COMPLETE'							=> 'Complete',
-	'LBL_UW_CONTINUE_CONFIRMATION'              => 'This new version of Sugar contains new license agreement.  Would you like to continue?',
+	'LBL_UW_CONTINUE_CONFIRMATION'              => 'This new version of SuiteCRM contains new license agreement.  Would you like to continue?',
 	'LBL_UW_COMPLIANCE_ALL_OK'					=> 'All System Settings Requirements Satisfied',
 	'LBL_UW_COMPLIANCE_CALLTIME'				=> 'PHP Setting: Call Time Pass By Reference',
 	'LBL_UW_COMPLIANCE_CURL'					=> 'cURL Module',
@@ -115,14 +108,18 @@ $mod_strings = array(
 	'LBL_UW_COMPLIANCE_MBSTRING'				=> 'MBStrings Module',
 	'LBL_UW_COMPLIANCE_MBSTRING_FUNC_OVERLOAD'	=> 'MBStrings mbstring.func_overload Parameter',
 	'LBL_UW_COMPLIANCE_MEMORY'					=> 'PHP Setting: Memory Limit',
+    'LBL_UW_COMPLIANCE_STREAM'                  => 'PHP Setting: Stream',
 	'LBL_UW_COMPLIANCE_MSSQL_MAGIC_QUOTES'		=> 'MS SQL Server & PHP Magic Quotes GPC',
 	'LBL_UW_COMPLIANCE_MYSQL'					=> 'Minimum MySQL Version',
+    'LBL_UW_COMPLIANCE_DB'                      => 'Minimum Database Version',
 	'LBL_UW_COMPLIANCE_PHP_INI'					=> 'Location of php.ini',
 	'LBL_UW_COMPLIANCE_PHP_VERSION'				=> 'Minimum PHP Version',
 	'LBL_UW_COMPLIANCE_SAFEMODE'				=> 'PHP Setting: Safe Mode',
 	'LBL_UW_COMPLIANCE_TITLE'					=> 'Server Settings Check',
 	'LBL_UW_COMPLIANCE_TITLE2'					=> 'Detected Settings',
 	'LBL_UW_COMPLIANCE_XML'						=> 'XML Parsing',
+	'LBL_UW_COMPLIANCE_ZIPARCHIVE'				=> 'Zip Support',
+	'LBL_UW_COMPLIANCE_PCRE_VERSION'			=> 'PCRE Version',
 
 	'LBL_UW_COPIED_FILES_TITLE'					=> 'Files Copied Successfully',
 	'LBL_UW_CUSTOM_TABLE_SCHEMA_CHANGE'			=> 'Custom Table Schema Changes',
@@ -214,8 +211,8 @@ $mod_strings = array(
 	'LBL_UW_SKIPPED_FILES_TITLE'				=> 'Skipped Files',
 	'LBL_UW_SKIPPING_FILE_OVERWRITE'			=> 'Skipping File Overwrites - Manual Merge Selected.',
 	'LBL_UW_SQL_RUN'							=> 'Check when SQL has been manually run',
-	'LBL_UW_START_DESC'							=> 'This wizard will assist you in upgrading this Sugar instance.',
-	'LBL_UW_START_DESC2'						=> 'Note: We recommend that you backup the Sugar database and the system files (all of the files in the SugarCRM folder) before upgrading your production system. We highly recommend that you perform a test upgrade on a cloned instance of your production system first.',
+	'LBL_UW_START_DESC'							=> 'This wizard will assist you in upgrading this SuiteCRM instance.',
+	'LBL_UW_START_DESC2'						=> 'Note: We recommend that you backup the SuiteCRM database and the system files (all of the files in the SuiteCRM folder) before upgrading your production system. We highly recommend that you perform a test upgrade on a cloned instance of your production system first.',
 	'LBL_UW_START_DESC3'						=> 'Click Next to perform a check on your system to make sure that the system is ready for the upgrade. The check includes file permissions, database privileges and server settings.',
 	'LBL_UW_START_UPGRADED_UW_DESC'				=> 'The new Upgrade Wizard will now resume the upgrade process. Please continue your upgrade.',
 	'LBL_UW_START_UPGRADED_UW_TITLE'			=> 'Welcome to the new Upgrade Wizard',
@@ -241,7 +238,7 @@ $mod_strings = array(
 	'LBL_UW_FOLLOWING_MODULES_CUSTOMIZED'       => 'The following modules are detected as customized and preserved',
 	'LBL_UW_FOLLOWING_MODULES_UPGRADED'         => 'The following modules are detected as Studio-customized and have been upgraded',
 
-	'LBL_UW_SUGAR_COMMUNITY_EDITION_LICENSE'    => 'The Sugar Community Edition 5.0 uses GNU Affero General Public License version 3. This upgrade will convert your existing license to the new license displayed below.',
+	'LBL_UW_SUGAR_COMMUNITY_EDITION_LICENSE'    => 'The SuiteCRM Community Edition 5.0 uses GNU Affero General Public License version 3. This upgrade will convert your existing license to the new license displayed below.',
 
 
 	'LBL_START_UPGRADE_IN_PROGRESS'             => 'Start in progress',
@@ -259,14 +256,14 @@ $mod_strings = array(
     'LBL_UPGRADE_TAKES_TIME_HAVE_PATIENCE'      => 'Upgrade may take some time',
     'LBL_UPLOADE_UPGRADE_IN_PROGRESS'           => 'Upload Checks in Progress',
 	'LBL_UPLOADING_UPGRADE_PACKAGE'      		=> 'Uploading Upgrade Package ',
-    'LBL_UW_DORP_THE_OLD_SCHMEA' 				=> 'Would you like Sugar to drop the depricated 451 Schema ?',
+    'LBL_UW_DORP_THE_OLD_SCHMEA' 				=> 'Would you like SuiteCRM to drop the depricated 451 Schema ?',
 	'LBL_UW_DROP_SCHEMA_UPGRADE_WIZARD'			=> 'Upgrade Wizard Drops old 451 schema',
 	'LBL_UW_DROP_SCHEMA_MANUAL'					=> 'Manual Drop Schema Post Upgrade',
 	'LBL_UW_DROP_SCHEMA_METHOD'					=> 'Old Schema Drop Method',
 	'LBL_UW_SHOW_OLD_SCHEMA_TO_DROP'			=> 'Show Old Schema that could be dropped',
 	'LBL_UW_SKIPPED_QUERIES_ALREADY_EXIST'      => 'Skipped Queries',
 	'LBL_INCOMPATIBLE_PHP_VERSION'              => 'Php version 5 or above is required.',
-	'ERR_CHECKSYS_PHP_INVALID_VER'      => 'Your version of PHP is not supported by Sugar.  You will need to install a version that is compatible with the Sugar application.  Please consult the Compatibility Matrix in the Release Notes for supported PHP Versions. Your version is ',
+	'ERR_CHECKSYS_PHP_INVALID_VER'      => 'Your version of PHP is not supported by SuiteCRM.  You will need to install a version that is compatible with the SuiteCRM application.  Please consult the Compatibility Matrix in the Release Notes for supported PHP Versions. Your version is ',
 	'LBL_BACKWARD_COMPATIBILITY_ON' 			=> 'Php Backward Compatibility mode is turned on. Set zend.ze1_compatibility_mode to Off for proceeding further',
 	//including some strings from moduleinstall that are used in Upgrade
 	'LBL_ML_ACTION' => 'Action',
@@ -283,7 +280,7 @@ $mod_strings = array(
 	//adding the string used in tracker. copying from homepage
 	'LBL_HOME_PAGE_4_NAME' => 'Tracker',
 	'LBL_CURRENT_PHP_VERSION' => '(Your current php version is ',
-	'LBL_RECOMMENDED_PHP_VERSION' => '. Recommended php version is 5.2.1 or above)',
+	'LBL_RECOMMENDED_PHP_VERSION' => '. Recommended php version is 5.2.2 or above)',
 	'LBL_MODULE_NAME' => 'UpgradeWizard',
 	'LBL_UPLOAD_SUCCESS' => 'Upgrade package successfully uploaded. Click Next to perform a final check.',
 	'LBL_UW_TITLE_LAYOUTS' => 'Confirm Layouts',
@@ -295,6 +292,8 @@ $mod_strings = array(
     'LBL_UW_CONFIRM_LAYOUT_RESULTS' => 'Confirm Layout Results',
     'LBL_UW_CONFIRM_LAYOUT_RESULTS_DESC' => 'The following layouts were merged successfully:',
 	'LBL_SELECT_FILE' => 'Select File:',
+    'ERROR_VERSION_INCOMPATIBLE' => 'The uploaded file is not compatible with this version of SuiteCRM: ',
+    'ERROR_FLAVOR_INCOMPATIBLE'  => 'The uploaded file is not compatible with this flavor (Community Edition, Professional, or Enterprise) of SuiteCRM: ',
 	'LBL_LANGPACKS' => 'Language Packs' /*for 508 compliance fix*/,
 	'LBL_MODULELOADER' => 'Module Loader' /*for 508 compliance fix*/,
 	'LBL_PATCHUPGRADES' => 'Patch Upgrades' /*for 508 compliance fix*/,
@@ -302,5 +301,15 @@ $mod_strings = array(
 	'LBL_WORKFLOW' => 'Workflow' /*for 508 compliance fix*/,
 	'LBL_UPGRADE' => 'Upgrade' /*for 508 compliance fix*/,
 	'LBL_PROCESSING' => 'Processing' /*for 508 compliance fix*/,
+	
+	'ERR_UW_PHP_FILE_ERRORS'					=> array(
+													1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+													2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+													3 => 'The uploaded file was only partially uploaded.',
+													4 => 'No file was uploaded.',
+													5 => 'Unknown error.',
+													6 => 'Missing a temporary folder.',
+													7 => 'Failed to write file to disk.',
+													8 => 'File upload stopped by extension.',
+),
 );
-?>

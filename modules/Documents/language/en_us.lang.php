@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -114,7 +117,6 @@ $mod_strings = array (
 	//document list view.
 	'LBL_LIST_FORM_TITLE' => 'Document List',
 	'LBL_LIST_DOCUMENT' => 'Document',
-	'LBL_LIST_CATEGORY' => 'Category',
 	'LBL_LIST_SUBCATEGORY' => 'Sub Category',
 	'LBL_LIST_REVISION' => 'Revision',
 	'LBL_LIST_LAST_REV_CREATOR' => 'Published By',
@@ -151,11 +153,11 @@ $mod_strings = array (
 	'ERR_DELETE_LATEST_VERSION'=> 'You are not allowed to delete the latest revision of a document.',
 	'LNK_NEW_MAIL_MERGE' => 'Mail Merge',
 	'LBL_MAIL_MERGE_DOCUMENT' => 'Mail Merge Template:',
+	'ERR_MISSING_FILE' => 'This document is missing a file, most likely due to  an error during upload.  Please retry uploading the file or contact your administrator.',
 
 	'LBL_TREE_TITLE' => 'Documents',
 	//sub-panel vardefs.
 	'LBL_LIST_DOCUMENT_NAME'=>'Name',
-	'LBL_CONTRACT_NAME'=>'Contract Name:',
 	'LBL_LIST_IS_TEMPLATE'=>'Template?',
 	'LBL_LIST_TEMPLATE_TYPE'=>'Document Type',
 	'LBL_LIST_SELECTED_REVISION'=>'Selected Revision',
@@ -175,6 +177,8 @@ $mod_strings = array (
     'LBL_SEARCH_EXTERNAL_DOCUMENT' => 'File Name',
     'LBL_EXTERNAL_DOCUMENT_NOTE' => 'The first 20 most recently modified files are displayed in descending order in the list below. Use the Search to find other files.',
     'LBL_LIST_EXT_DOCUMENT_NAME' => 'File Name',
+    'ERR_INVALID_EXTERNAL_API_ACCESS' => 'The user attempted to access an invalid external API ({0})',
+    'ERR_INVALID_EXTERNAL_API_LOGIN' => 'The login check failed for external API ({0})',
 
     // Links around the world
     'LBL_ACCOUNTS_SUBPANEL_TITLE' => 'Accounts',

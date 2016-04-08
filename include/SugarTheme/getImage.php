@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,11 +35,21 @@ if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
  * "Powered by SugarCRM".
  ********************************************************************************/
 
+
+// Bug 57062 ///////////////////////////////
+if((!empty($_REQUEST['spriteNamespace']) && substr_count($_REQUEST['spriteNamespace'], '..') > 0) || 
+	(!empty($_REQUEST['imageName']) && substr_count($_REQUEST['imageName'], '..') > 0)) {
+    die();
+}
+// End Bug 57062 ///////////////////////////////
+
+
 // try to use the user's theme if we can figure it out
-if ( isset($_REQUEST['themeName']) )
+if ( isset($_REQUEST['themeName']) && SugarThemeRegistry::current()->name != $_REQUEST['themeName']) {
     SugarThemeRegistry::set($_REQUEST['themeName']);
-elseif ( isset($_SESSION['authenticated_user_theme']) )
+} elseif ( isset($_SESSION['authenticated_user_theme']) ) {
     SugarThemeRegistry::set($_SESSION['authenticated_user_theme']);
+}
 
 while(substr_count($_REQUEST['imageName'], '..') > 0){
 	$_REQUEST['imageName'] = str_replace('..', '.', $_REQUEST['imageName']);
@@ -81,7 +91,7 @@ $etag = '"'.md5_file($filename).'"';
 header("Cache-Control: private");
 header("Pragma: dummy=bogus");
 header("Etag: $etag");
-header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 2592000));
 
 $ifmod = isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
     ? strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $last_modified_time : null;

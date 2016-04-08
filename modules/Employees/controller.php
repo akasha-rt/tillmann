@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -53,10 +53,10 @@ class EmployeesController extends SugarController{
         {
             $u = new User();
             $u->retrieve($_REQUEST['record']);
-            $u->deleted = 1;
             $u->status = 'Inactive';
             $u->employee_status = 'Terminated';
             $u->save();
+            $u->mark_deleted($u->id);
             $GLOBALS['log']->info("User id: {$GLOBALS['current_user']->id} deleted user record: {$_REQUEST['record']}");
             
                 SugarApplication::redirect("index.php?module=Employees&action=index");

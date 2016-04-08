@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 /*********************************************************************************
@@ -188,6 +191,18 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 		$_POST['reminder_time'] = $current_user->getPreference('reminder_time');
 		$_POST['reminder_checked']=1;
 	}
+	
+	if(!isset($_POST['email_reminder_checked']) || (isset($_POST['email_reminder_checked']) && $_POST['email_reminder_checked'] == '0')) {
+		$_POST['email_reminder_time'] = -1;
+	}
+	if(!isset($_POST['email_reminder_time'])){
+		$_POST['email_reminder_time'] = $current_user->getPreference('email_reminder_time');
+		$_POST['email_reminder_checked'] = 1;
+	}
+	
+	// don't allow to set recurring_source from a form
+	unset($_POST['recurring_source']);
+	
 	$time_format = $timedate->get_user_time_format();
     $time_separator = ":";
     if(preg_match('/\d+([^\d])\d+([^\d]*)/s', $time_format, $match)) {
@@ -213,6 +228,22 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 	   sugar_cleanup(true);
 	}
 
+    // if dates changed
+    if (!empty($focus->id)) {
+        $oldBean = new Meeting();
+        $oldBean->retrieve($focus->id);
+        if (($focus->date_start != $oldBean->date_start) || ($focus->date_end != $oldBean->date_end)) {
+            $focus->date_changed = true;
+        } else {
+            $focus->date_changed = false;
+        }
+    }
+
+    $newBean = true;
+    if (!empty($focus->id)) {
+        $newBean = false;
+    }
+
 	//add assigned user and current user if this is the first time bean is saved
   	if(empty($focus->id) && !empty($_REQUEST['return_module']) && $_REQUEST['return_module'] =='Meetings' && !empty($_REQUEST['return_action']) && $_REQUEST['return_action'] =='DetailView'){
 		//if return action is set to detail view and return module to meeting, then this is from the long form, do not add the assigned user (only the current user)
@@ -233,7 +264,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 	  	$_POST['user_invitees'] .= ','.$_POST['assigned_user_id'].', ';
 
 	  	//add current user if the assigned to user is different than current user.
-	  	if($current_user->id != $_POST['assigned_user_id']){
+	  	if($current_user->id != $_POST['assigned_user_id'] && $_REQUEST['module'] != "Calendar"){
 	  		$_POST['user_invitees'] .= ','.$current_user->id.', ';
 	  	}
 
@@ -243,7 +274,9 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 
 
 	if( (isset($_POST['isSaveFromDetailView']) && $_POST['isSaveFromDetailView'] == 'true') ||
-        (isset($_POST['is_ajax_call']) && !empty($_POST['is_ajax_call']) && !empty($focus->id) )
+        (isset($_POST['is_ajax_call']) && !empty($_POST['is_ajax_call']) && !empty($focus->id) ||
+        (isset($_POST['return_action']) && $_POST['return_action'] == 'SubPanelViewer') && !empty($focus->id))||
+         !isset($_POST['user_invitees']) // we need to check that user_invitees exists before processing, it is ok to be empty
     ){
         $focus->save(true);
         $return_id = $focus->id;
@@ -266,7 +299,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 	        $deleteUsers = array();
 	    	$focus->load_relationship('users');
 	    	// Get all users for the meeting
-	    	$q = 'SELECT mu.user_id, mu.accept_status FROM meetings_users mu WHERE mu.meeting_id = \''.$focus->id.'\'';
+	    	$q = 'SELECT mu.user_id, mu.accept_status FROM meetings_users mu WHERE mu.meeting_id = \''.$focus->id.'\' AND mu.deleted=0';
 	    	$r = $focus->db->query($q);
 	    	$acceptStatusUsers = array();
 	    	while($a = $focus->db->fetchByAssoc($r)) {
@@ -297,7 +330,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 
 	        $deleteContacts = array();
 	    	$focus->load_relationship('contacts');
-	    	$q = 'SELECT mu.contact_id, mu.accept_status FROM meetings_contacts mu WHERE mu.meeting_id = \''.$focus->id.'\'';
+	    	$q = 'SELECT mu.contact_id, mu.accept_status FROM meetings_contacts mu WHERE mu.meeting_id = \''.$focus->id.'\' AND mu.deleted=0';
 	    	$r = $focus->db->query($q);
 	    	$acceptStatusContacts = array();
 	    	while($a = $focus->db->fetchByAssoc($r)) {
@@ -326,7 +359,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 
 	        $deleteLeads = array();
 	    	$focus->load_relationship('leads');
-	    	$q = 'SELECT mu.lead_id, mu.accept_status FROM meetings_leads mu WHERE mu.meeting_id = \''.$focus->id.'\'';
+	    	$q = 'SELECT mu.lead_id, mu.accept_status FROM meetings_leads mu WHERE mu.meeting_id = \''.$focus->id.'\' AND mu.deleted=0';
 	    	$r = $focus->db->query($q);
 	    	$acceptStatusLeads = array();
 	    	while($a = $focus->db->fetchByAssoc($r)) {
@@ -368,6 +401,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 	    	}
 	    	// Call the Meeting module's save function to handle saving other fields besides
 	    	// the users and contacts relationships
+            $focus->update_vcal = false;    // Bug #49195 : don't update vcal b/s related users aren't saved yet, create vcal cache below
 	    	$focus->save(true);
 	    	$return_id = $focus->id;
 	    	if(empty($return_id)){
@@ -390,7 +424,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 
 	    		if(!isset($acceptStatusUsers[$user_id])) {
 	    			$focus->users->add($user_id);
-	    		} else {
+	    		} else if (!$focus->date_changed) {
 	    			// update query to preserve accept_status
 	    			$qU  = 'UPDATE meetings_users SET deleted = 0, accept_status = \''.$acceptStatusUsers[$user_id].'\' ';
 	    			$qU .= 'WHERE meeting_id = \''.$focus->id.'\' ';
@@ -412,7 +446,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 
 	    		if(!isset($acceptStatusContacts[$contact_id])) {
 	    		    $focus->contacts->add($contact_id);
-	    		} else {
+	    		} else if (!$focus->date_changed) {
 	    			// update query to preserve accept_status
 	    			$qU  = 'UPDATE meetings_contacts SET deleted = 0, accept_status = \''.$acceptStatusContacts[$contact_id].'\' ';
 	    			$qU .= 'WHERE meeting_id = \''.$focus->id.'\' ';
@@ -433,7 +467,7 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 
 	    		if(!isset($acceptStatusLeads[$lead_id])) {
 	    		    $focus->leads->add($lead_id);
-	    		} else {
+	    		} else if (!$focus->date_changed) {
 	    			// update query to preserve accept_status
 	    			$qU  = 'UPDATE meetings_leads SET deleted = 0, accept_status = \''.$acceptStatusLeads[$lead_id].'\' ';
 	    			$qU .= 'WHERE meeting_id = \''.$focus->id.'\' ';
@@ -442,14 +476,27 @@ function handleSave($prefix,$redirect=true, $useRequired=false) {
 	    		}
 	    	}
 
+            // Bug #49195 : update vcal
+            vCal::cache_sugar_vcal($current_user);
+            
 	    	// CCL - Comment out call to set $current_user as invitee
 	    	// set organizer to auto-accept
-	    	//$focus->set_accept_status($current_user, 'accept');
+            if ($focus->assigned_user_id == $current_user->id && $newBean) {
+	    	$focus->set_accept_status($current_user, 'accept');
+            }
 
 	    	////	END REBUILD INVITEE RELATIONSHIPS
 	    	///////////////////////////////////////////////////////////////////////////
 		}
 	}
+
+	if(!empty($_POST['is_ajax_call']))
+	{
+		$json = getJSONobj();
+		echo $json->encode(array('status' => 'success', 'get' => ''));
+		exit;
+	}
+
 	if (isset($_REQUEST['return_module']) && $_REQUEST['return_module'] == 'Home'){
 		header("Location: index.php?module=Home&action=index");
 	}

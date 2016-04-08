@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -62,10 +62,7 @@ class SugarCacheAPC extends SugarCacheAbstract
     /**
      * @see SugarCacheAbstract::_setExternal()
      */
-    protected function _setExternal(
-        $key,
-        $value
-        )
+    protected function _setExternal($key,$value)
     {
         apc_store($key,$value,$this->_expireTimeout);
     }
@@ -73,9 +70,7 @@ class SugarCacheAPC extends SugarCacheAbstract
     /**
      * @see SugarCacheAbstract::_getExternal()
      */
-    protected function _getExternal(
-        $key
-        )
+    protected function _getExternal($key)
     {
         $res = apc_fetch($key);
         if($res === false) {
@@ -88,9 +83,7 @@ class SugarCacheAPC extends SugarCacheAbstract
     /**
      * @see SugarCacheAbstract::_clearExternal()
      */
-    protected function _clearExternal(
-        $key
-        )
+    protected function _clearExternal($key)
     {
         apc_delete($key);
     }

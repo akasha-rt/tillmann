@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -75,11 +75,21 @@ class SugarWidgetFieldDateTime extends SugarWidgetReportField
 		global $timedate;
         $begin = $layout_def['input_name0'];
         $hasTime = $this->hasTime($begin);
-        if(!$hasTime)
-        {
-            return $this->queryDay($layout_def, $timedate->fromDbDate($begin));
+        $date = $timedate->fromString($begin);
+
+        if (!$hasTime) {
+            return $this->queryDay(
+                $layout_def,
+                $date
+            );
         }
-        return $this->queryDateOp($this->_get_column_select($layout_def), $begin, '=', "datetime");
+
+        return $this->queryDateOp(
+            $this->_get_column_select($layout_def),
+            $date,
+            '=',
+            "datetime"
+        );
 	}
 
     /**
@@ -336,7 +346,14 @@ class SugarWidgetFieldDateTime extends SugarWidgetReportField
 	function queryFilterTP_this_month($layout_def)
 	{
 		global $timedate;
-		return $this->queryMonth($layout_def, $this->now()->get_day_by_index_this_month(1));
+
+        //Bug 62414 - take timezone into account when determining current month
+        $now = $this->now();
+        $timezoneOffset = $timedate->getUserUTCOffset();
+        $timezoneOffset = "$timezoneOffset minutes";
+        $now->modify($timezoneOffset);
+
+        return $this->queryMonth($layout_def, $now->get_day_by_index_this_month(0));
 	}
 
 	function queryFilterTP_next_month($layout_def)
@@ -362,15 +379,76 @@ class SugarWidgetFieldDateTime extends SugarWidgetReportField
 		return $this->get_start_end_date_filter($layout_def,$begin->asDb(),$end->asDb());
 	}
 
+    /**
+     * Return the between WHERE query for Quarter filter
+     *
+     * Find quarter for given date, modify the start/end with $modifyFilter parameter
+     *
+     * @param $layout_def - Filter layout_def
+     * @param string $modifyFilter - Modification to start/end date, used to select previous/next quarter
+     * @param string $date - Date for which to find the quarter filter, if not set uses current date
+     * @return string - BETWEEN WHERE query for quarter filter
+     */
+    protected function getQuarterFilter($layout_def, $modifyFilter, $date = '')
+    {
+        $timedate = TimeDate::getInstance();
 
-	function queryFilterTP_this_quarter($layout_def)
-	{
-		global $timedate;
-		$begin = $this->now();
-		$begin->setDate($begin->year, floor(($begin->month-1)/3)*3+1, 1)->setTime(0, 0);
-		$end = $begin->get("+3 month")->setTime(23, 59, 59);
-		return $this->get_start_end_date_filter($layout_def,$begin->asDb(),$end->asDb());
-	}
+        // See if date is set, if not, use current date
+        if (empty($date)) {
+            $begin = $timedate->getNow(true);
+        } else {
+            $begin = $timedate->fromString($date);
+        }
+
+        $begin->setDate(
+            $begin->year,
+            floor(($begin->month - 1) / 3) * 3 + 1, // Find starting month of quarter
+            1
+        )->setTime(0, 0);
+
+        $end = $begin->get("+3 month")->setTime(23, 59, 59)->get("-1 day");
+
+        // Modify begin/end if filter is set
+        if (!empty($modifyFilter)) {
+            $begin->modify($modifyFilter);
+            $end->modify($modifyFilter);
+        }
+
+        return $this->get_start_end_date_filter($layout_def, $begin->asDb(), $end->asDb());
+    }
+
+    /**
+     * Returns part of query for select
+     *
+     * @param array $layout_def for field
+     * @return string part of select query with last quarter only
+     */
+    public function queryFilterTP_last_quarter($layout_def)
+    {
+        return $this->getQuarterFilter($layout_def, '-3 month');
+    }
+
+    /**
+     * Returns part of query for select
+     *
+     * @param array $layout_def for field
+     * @return string part of select query with this quarter only
+     */
+    public function queryFilterTP_this_quarter($layout_def)
+    {
+        return $this->getQuarterFilter($layout_def, '');
+    }
+
+    /**
+     * Returns part of query for select
+     *
+     * @param array $layout_def for field
+     * @return string part of select query with next quarter only
+     */
+    public function queryFilterTP_next_quarter($layout_def)
+    {
+        return $this->getQuarterFilter($layout_def, '+3 month');
+    }
 
 	function queryFilterTP_last_year($layout_def)
 	{
@@ -439,7 +517,7 @@ class SugarWidgetFieldDateTime extends SugarWidgetReportField
                 $td = $timedate->to_display_date_time($content);
                 return $td;
             }else{// if date only field
-                $td = $timedate->to_display_date($content, false); // avoid php notice of returing by reference
+                $td = $timedate->to_display_date($content, false); // Avoid PHP notice of returning by reference.
                 return $td;
             }
         }
@@ -481,12 +559,14 @@ class SugarWidgetFieldDateTime extends SugarWidgetReportField
 		return parent :: querySelect($layout_def)." \n";
 	}
 	function & displayListday(& $layout_def) {
-		return parent:: displayListPlain($layout_def);
+        $value = parent:: displayListPlain($layout_def);
+        return $value;
 	}
 
 	function & displayListyear(& $layout_def) {
 		global $app_list_strings;
-    	return parent:: displayListPlain($layout_def);
+    	$value = parent:: displayListPlain($layout_def);
+    	return $value;
 	}
 
 	function displayListmonth($layout_def)
@@ -502,35 +582,126 @@ class SugarWidgetFieldDateTime extends SugarWidgetReportField
 
 	}
 
-	function querySelectmonth($layout_def)
-	{
-	    return $this->reporter->db->convert($this->_get_column_select($layout_def), "date_format", array('%Y-%m'))." ".$this->_get_column_alias($layout_def)."\n";
-	}
+    /**
+     * Returns part of query for select
+     *
+     * @param array $layout_def for field
+     * @return string part of select query with year & month only
+     */
+    function querySelectmonth($layout_def)
+    {
+        $return = $this->_get_column_select($layout_def);
+        if ($layout_def['type'] == 'datetime')
+        {
+            $return = $this->reporter->db->convert($return, 'add_tz_offset');
+        }
+        return $this->reporter->db->convert($return, "date_format", array('%Y-%m')) . ' ' . $this->_get_column_alias($layout_def) . "\n";
+    }
 
-	function queryGroupByMonth($layout_def)
-	{
-        return $this->reporter->db->convert($this->_get_column_select($layout_def), "date_format", array('%Y-%m'))."\n";
-	}
+    /**
+     * Returns part of query for group by
+     *
+     * @param array $layout_def for field
+     * @return string part of group by query with year & month only
+     */
+    function queryGroupByMonth($layout_def)
+    {
+        $return = $this->_get_column_select($layout_def);
+        if ($layout_def['type'] == 'datetime')
+        {
+            $return = $this->reporter->db->convert($return, 'add_tz_offset');
+        }
+        return $this->reporter->db->convert($return, "date_format", array('%Y-%m')) . "\n";
+    }
 
-	function querySelectday($layout_def)
-	{
-	    return $this->reporter->db->convert($this->_get_column_select($layout_def), "date_format", array('%Y-%m-%d'))." ".$this->_get_column_alias($layout_def)."\n";
-	}
+    /**
+     * For oracle we have to return order by string like group by string instead of return field alias
+     *
+     * @param array $layout_def definition of field
+     * @return string order by string for field
+     */
+    function queryOrderByMonth($layout_def)
+    {
+        $return = $this->_get_column_select($layout_def);
+        if ($layout_def['type'] == 'datetime')
+        {
+            $return = $this->reporter->db->convert($return, 'add_tz_offset');
+        }
+        $orderBy = $this->reporter->db->convert($return, "date_format", array('%Y-%m'));
 
-	function queryGroupByDay($layout_def)
-	{
-	    return $this->reporter->db->convert($this->_get_column_select($layout_def), "date_format", array('%Y-%m-%d'))."\n";
-	}
+        if (empty($layout_def['sort_dir']) || $layout_def['sort_dir'] == 'a')
+        {
+            return $orderBy . " ASC\n";
+        }
+        else
+        {
+            return $orderBy . " DESC\n";
+        }
+    }
 
-	function querySelectyear($layout_def)
-	{
-	    return $this->reporter->db->convert($this->_get_column_select($layout_def), "date_format", array('%Y'))." ".$this->_get_column_alias($layout_def)."\n";
-	}
+    /**
+     * Returns part of query for select
+     *
+     * @param array $layout_def for field
+     * @return string part of select query with year & month & day
+     */
+    function querySelectday($layout_def)
+    {
+        $return = $this->_get_column_select($layout_def);
+        if ($layout_def['type'] == 'datetime')
+        {
+            $return = $this->reporter->db->convert($return, 'add_tz_offset');
+        }
+        return $this->reporter->db->convert($return, "date_format", array('%Y-%m-%d')) . ' ' . $this->_get_column_alias($layout_def) . "\n";
+    }
 
-	function queryGroupByYear($layout_def)
-	{
-	    return $this->reporter->db->convert($this->_get_column_select($layout_def), "date_format", array('%Y'))."\n";
-	}
+    /**
+     * Returns part of query for group by
+     *
+     * @param array $layout_def for field
+     * @return string part of group by query with year & month & day
+     */
+    function queryGroupByDay($layout_def)
+    {
+        $return = $this->_get_column_select($layout_def);
+        if ($layout_def['type'] == 'datetime')
+        {
+            $return = $this->reporter->db->convert($return, 'add_tz_offset');
+        }
+        return $this->reporter->db->convert($return, "date_format", array('%Y-%m-%d')) . "\n";
+    }
+
+    /**
+     * Returns part of query for select
+     *
+     * @param array $layout_def for field
+     * @return string part of select query with year only
+     */
+    function querySelectyear($layout_def)
+    {
+        $return = $this->_get_column_select($layout_def);
+        if ($layout_def['type'] == 'datetime')
+        {
+            $return = $this->reporter->db->convert($return, 'add_tz_offset');
+        }
+        return $this->reporter->db->convert($return, "date_format", array('%Y')) . ' ' . $this->_get_column_alias($layout_def) . "\n";
+    }
+
+    /**
+     * Returns part of query for group by
+     *
+     * @param array $layout_def for field
+     * @return string part of group by query with year only
+     */
+    function queryGroupByYear($layout_def)
+    {
+        $return = $this->_get_column_select($layout_def);
+        if ($layout_def['type'] == 'datetime')
+        {
+            $return = $this->reporter->db->convert($return, 'add_tz_offset');
+        }
+        return $this->reporter->db->convert($return, "date_format", array('%Y')) . "\n";
+    }
 
 	function querySelectquarter($layout_def)
 	{
@@ -558,6 +729,32 @@ class SugarWidgetFieldDateTime extends SugarWidgetReportField
 	        	'CONCAT',
 	            array("'-'", $this->reporter->db->convert($column, "quarter")));
 	}
+
+    /**
+     * For oracle we have to return order by string like group by string instead of return field alias
+     *
+     * @param array $layout_def definition of field
+     * @return string order by string for field
+     */
+    public function queryOrderByQuarter($layout_def)
+    {
+        $column = $this->_get_column_select($layout_def);
+        $orderBy = $this->reporter->db->convert(
+            $this->reporter->db->convert($column, "date_format", array('%Y')),
+            'CONCAT',
+            array("'-'", $this->reporter->db->convert($column, "quarter"))
+        );
+
+
+        if (empty($layout_def['sort_dir']) || $layout_def['sort_dir'] == 'a')
+        {
+            return $orderBy . " ASC\n";
+        }
+        else
+        {
+            return $orderBy . " DESC\n";
+        }
+    }
 
     function displayInput(&$layout_def) {
     	global $timedate, $current_language, $app_strings;

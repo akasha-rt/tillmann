@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2012 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -55,7 +55,7 @@ class DetailView extends ListView {
 		$this->local_app_strings =$app_strings;
 	}
 
-	function processSugarBean($html_varName, $seed, &$offset, $isfirstview=0) {
+	function processSugarBean($html_varName, $seed, $offset/*, $isfirstview=0*/) {
 		global $row_count, $sugar_config;
 
 		global $next_offset;
@@ -149,7 +149,7 @@ class DetailView extends ListView {
         //indicate that this is not the first time anymore
         $this->setLocalSessionVariable($html_varName, "IS_FIRST_VIEW",  false);
 
-        // All 3 databases require this because the limit query does a > db_offset comparision.
+        // All 3 databases require this because the limit query does a > db_offset comparison.
 		$db_offset=$offset-1;
 
 		$this->populateQueryWhere($isFirstView, $html_varName);
@@ -161,7 +161,22 @@ class DetailView extends ListView {
        		}
        		$this->query_where .= $seed->getOwnerWhere($current_user->id);
 		}
-
+		/* BEGIN - SECURITY GROUPS */
+    	if(ACLController::requireSecurityGroup($seed->module_dir, 'view') )
+    	{
+			require_once('modules/SecurityGroups/SecurityGroup.php');
+    		global $current_user;
+    		$owner_where = $seed->getOwnerWhere($current_user->id);
+    		$group_where = SecurityGroup::getGroupWhere($seed->table_name,$seed->module_dir,$current_user->id);
+    		if(empty($this->query_where))
+    		{
+    			$this->query_where = " (".$owner_where." or ".$group_where.")";
+    		} else {
+    			$this->query_where .= " AND (".$owner_where." or ".$group_where.")";
+    		}
+    	}
+    	/* END - SECURITY GROUPS */
+        
         $order = $this->getLocalSessionVariable($seed->module_dir.'2_'.$html_varName, "ORDER_BY");
         $orderBy = '';
         if(!empty($order['orderBy']))
@@ -196,7 +211,7 @@ class DetailView extends ListView {
 		}
 
 		//update the request with correct value for the record attribute.
-		//need only when using the VCR buttuoms. This is a workaround need to fix the values
+		//need only when using the VCR buttons. This is a workaround need to fix the values
 		//set in the VCR links.
 		$_REQUEST['record'] = $object->id;
 		$_GET['record'] = $object->id;
@@ -238,7 +253,7 @@ class DetailView extends ListView {
 		}
 	}
 
-	function processListNavigation( &$xtpl, $html_varName, $current_offset, $display_audit_link = false){
+	function processListNavigation( $xtpl, $html_varName, $current_offset, $display_audit_link = false , $next_offset = null, $previous_offset = null, $row_count = null, $sugarbean = NULL, $subpanel_def = NULL, $col_count = 20){
 		global $export_module, $sugar_config, $current_user;
         //intialize audit_link
         $audit_link = '';

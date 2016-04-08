@@ -2,37 +2,40 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 require_once('include/SubPanel/SubPanel.php');
@@ -101,14 +104,15 @@ class SubPanelTilesTabs extends SubPanelTiles
      * @param boolean $showTabs	Call the view code to display the generated tabs
      * @param string $selectedGroup	(Optional) Name of any selected tab (defaults to 'All')
      */
-	function getTabs($tabs, $showTabs = true, $selectedGroup='All')
+    function getTabs($showTabs = true, $selectedGroup='') {
+        $args = func_get_args();
+        return call_user_func_array(array($this, '_getTabs'), $args);
+    }
+    function _getTabs($tabs, $showTabs = true, $selectedGroup='All')
     {
         //WDong Bug: 12258 "All" tab in the middle of a record's detail view is not localized.
         if($selectedGroup=='All')
         	$selectedGroup=translate('LBL_TABGROUP_ALL');
-
-    	require_once 'include/SubPanel/SubPanelDefinitions.php' ;
-    	$spd = new SubPanelDefinitions ( $this->focus ) ;
 
     	// Set up a mapping from subpanelID, found in the $tabs list, to the source module name
     	// As the $GLOBALS['tabStructure'] array holds the Group Tabs by module name we need to efficiently convert between the two
@@ -120,7 +124,9 @@ class SubPanelTilesTabs extends SubPanelTiles
     	$moduleNames = array () ;
     	foreach ( $tabs as $subpanelID )
     	{
-    		$subpanel =  $spd->load_subpanel( $subpanelID );
+            // Bug #44344 : Custom relationships under same module only show once in subpanel tabs
+            // use object property instead new object to have ability run unit test (can override subpanel_definitions)
+            $subpanel =  $this->subpanel_definitions->load_subpanel( $subpanelID );
     		if ($subpanel !== false)
     		  $moduleNames [ $subpanelID ] = $subpanel->get_module_name() ;
     	}
@@ -135,9 +141,9 @@ class SubPanelTilesTabs extends SubPanelTiles
     			foreach ( $tabs as $subpanelID )
                     if (isset($moduleNames[ $subpanelID ] ) && strcasecmp( $subModule , $moduleNames[ $subpanelID ] ) === 0)
                     {
-                    	$groups [ translate ( $mainTab ) ] [ 'modules' ] [ $key ] = $subpanelID ;
+                        // Bug #44344 : Custom relationships under same module only show once in subpanel tabs
+                        $groups [ translate ( $mainTab ) ] [ 'modules' ] [] = $subpanelID ;
                     	$found [ $subpanelID ] = true ;
-                    	break;
                 	}
             }
         }

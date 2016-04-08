@@ -1,37 +1,40 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
- * 
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
+
+ * SuiteCRM is an extension to SugarCRM Community Edition developed by Salesagility Ltd.
+ * Copyright (C) 2011 - 2014 Salesagility Ltd.
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
  * Free Software Foundation with the addition of the following permission added
  * to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED WORK
  * IN WHICH THE COPYRIGHT IS OWNED BY SUGARCRM, SUGARCRM DISCLAIMS THE WARRANTY
  * OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with
  * this program; if not, see http://www.gnu.org/licenses or write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
- * 
+ *
  * You can contact SugarCRM, Inc. headquarters at 10050 North Wolfe Road,
  * SW2-130, Cupertino, CA 95014, USA. or at email address contact@sugarcrm.com.
- * 
+ *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
  * Section 5 of the GNU Affero General Public License version 3.
- * 
+ *
  * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "Powered by
- * SugarCRM" logo. If the display of the logo is not reasonably feasible for
- * technical reasons, the Appropriate Legal Notices must display the words
- * "Powered by SugarCRM".
+ * SugarCRM" logo and "Supercharged by SuiteCRM" logo. If the display of the logos is not
+ * reasonably feasible for  technical reasons, the Appropriate Legal Notices must
+ * display the words  "Powered by SugarCRM" and "Supercharged by SuiteCRM".
  ********************************************************************************/
 
 
@@ -54,6 +57,7 @@ class PackageManager{
      */
     function PackageManager(){
         $this->db = DBManagerFactory::getInstance();
+        $this->upload_dir = empty($GLOBALS['sugar_config']['upload_dir']) ? 'upload' : rtrim($GLOBALS['sugar_config']['upload_dir'], '/\\');
     }
 
     function initializeComm(){
@@ -229,7 +233,7 @@ class PackageManager{
          }
     }
 
-    function getCredentials(){
+    static function getCredentials(){
 
         $admin = new Administration();
         $admin->retrieveSettings(CREDENTIAL_CATEGORY, true);
@@ -350,17 +354,35 @@ class PackageManager{
         return $xml;
     }
 
+    private $cleanUpDirs = array();
+
+    private function addToCleanup($dir)
+    {
+        if(empty($this->cleanUpDirs)) {
+            register_shutdown_function(array($this, "cleanUpTempDir"));
+        }
+        $this->cleanUpDirs[] = $dir;
+    }
+
+    public function cleanUpTempDir()
+    {
+        foreach($this->cleanUpDirs as $dir) {
+            rmdir_recursive($dir);
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////
     /////////// INSTALL SECTION
     function extractFile( $zip_file, $file_in_zip, $base_tmp_upgrade_dir){
         $my_zip_dir = mk_temp_dir( $base_tmp_upgrade_dir );
+        $this->addToCleanup($my_zip_dir);
         unzip_file( $zip_file, $file_in_zip, $my_zip_dir );
         return( "$my_zip_dir/$file_in_zip" );
     }
 
     function extractManifest( $zip_file,$base_tmp_upgrade_dir ) {
         global $sugar_config;
-        $base_upgrade_dir       = sugar_cached("/upgrades");
+        $base_upgrade_dir       = $this->upload_dir."/upgrades";
         $base_tmp_upgrade_dir   = "$base_upgrade_dir/temp";
         return $this->extractFile( $zip_file, "manifest.php",$base_tmp_upgrade_dir );
     }
@@ -436,10 +458,10 @@ class PackageManager{
     }
 
     function performSetup($tempFile, $view = 'module', $display_messages = true){
-        global $sugar_config;
+        global $sugar_config,$mod_strings;
         $base_filename = urldecode($tempFile);
         $GLOBALS['log']->debug("BaseFileName: ".$base_filename);
-        $base_upgrade_dir       = sugar_cached("/upgrades");
+        $base_upgrade_dir       = $this->upload_dir.'/upgrades';
         $base_tmp_upgrade_dir   = "$base_upgrade_dir/temp";
         $manifest_file = $this->extractManifest( $base_filename,$base_tmp_upgrade_dir);
          $GLOBALS['log']->debug("Manifest: ".$manifest_file);
@@ -506,7 +528,7 @@ class PackageManager{
         global $sugar_config;
         global $mod_strings;
         global $current_language;
-        $base_upgrade_dir       = sugar_cached("/upgrades");
+        $base_upgrade_dir       = $this->upload_dir.'/upgrades';
         $base_tmp_upgrade_dir   = "$base_upgrade_dir/temp";
         if(!file_exists($base_tmp_upgrade_dir)){
             mkdir_recursive($base_tmp_upgrade_dir, true);
@@ -524,6 +546,7 @@ class PackageManager{
             include($target_manifest);
             $GLOBALS['log']->debug("2: ".$file);
             $unzip_dir = mk_temp_dir( $base_tmp_upgrade_dir );
+            $this->addToCleanup($unzip_dir);
             unzip($file, $unzip_dir );
             $GLOBALS['log']->debug("3: ".$unzip_dir);
             $id_name = $installdefs['id'];
@@ -568,21 +591,25 @@ class PackageManager{
     	$uh->id_name = $name;
     	$found = $uh->checkForExisting($uh);
     	if($found != null){
-
     		global $sugar_config;
 	        global $mod_strings;
 	        global $current_language;
-	        $base_upgrade_dir       = sugar_cached("/upgrades");
+	        $base_upgrade_dir       = $this->upload_dir.'/upgrades';
 	        $base_tmp_upgrade_dir   = "$base_upgrade_dir/temp";
-	    	if(!isset($GLOBALS['mi_remove_tables']))$GLOBALS['mi_remove_tables'] = true;
-	    	$unzip_dir = mk_temp_dir( $base_tmp_upgrade_dir );
-	    	unzip($found->filename, $unzip_dir );
-	    	$mi = new ModuleInstaller();
-	        $mi->silent = true;
-	        $mi->uninstall( "$unzip_dir");
-	        $found->delete();
-	        unlink(remove_file_extension( $found->filename ) . '-manifest.php');
-	        unlink($found->filename);
+            if(is_file($found->filename)){
+                if(!isset($GLOBALS['mi_remove_tables']))$GLOBALS['mi_remove_tables'] = true;
+                $unzip_dir = mk_temp_dir( $base_tmp_upgrade_dir );
+                unzip($found->filename, $unzip_dir );
+                $mi = new ModuleInstaller();
+                $mi->silent = true;
+                $mi->uninstall( "$unzip_dir");
+                $found->delete();
+                unlink(remove_file_extension( $found->filename ) . '-manifest.php');
+                unlink($found->filename);
+            }else{
+                //file(s_ have been deleted or are not found in the directory, allow database delete to happen but no need to change filesystem
+                $found->delete();
+            }
     	}
     }
 
@@ -639,7 +666,6 @@ class PackageManager{
         global $current_language;
         $uh = new UpgradeHistory();
         $base_upgrade_dir       = "upload://upgrades";
-        $base_tmp_upgrade_dir   = sugar_cached("upgrades/temp");
         $uContent = findAllFiles( $base_upgrade_dir, array() , false, 'zip');
         $upgrade_contents = array();
         $content_values = array_values($uContent);
@@ -666,20 +692,22 @@ class PackageManager{
             if(empty($md5_matches))
             {
                 $target_manifest = remove_file_extension( $upgrade_content ) . '-manifest.php';
-                require_once($target_manifest);
+                if(file_exists($target_manifest)) {
+	                require_once($target_manifest);
 
-                $name = empty($manifest['name']) ? $upgrade_content : $manifest['name'];
-                $version = empty($manifest['version']) ? '' : $manifest['version'];
-                $published_date = empty($manifest['published_date']) ? '' : $manifest['published_date'];
-                $icon = '';
-                $description = empty($manifest['description']) ? 'None' : $manifest['description'];
-                $uninstallable = empty($manifest['is_uninstallable']) ? 'No' : 'Yes';
-                $type = $this->getUITextForType( $manifest['type'] );
-                $manifest_type = $manifest['type'];
-                $dependencies = array();
-                if( isset( $manifest['dependencies']) ){
-    				$dependencies    = $manifest['dependencies'];
-				}
+	                $name = empty($manifest['name']) ? $upgrade_content : $manifest['name'];
+	                $version = empty($manifest['version']) ? '' : $manifest['version'];
+	                $published_date = empty($manifest['published_date']) ? '' : $manifest['published_date'];
+	                $icon = '';
+	                $description = empty($manifest['description']) ? 'None' : $manifest['description'];
+	                $uninstallable = empty($manifest['is_uninstallable']) ? 'No' : 'Yes';
+	                $type = $this->getUITextForType( $manifest['type'] );
+	                $manifest_type = $manifest['type'];
+	                $dependencies = array();
+	                if( isset( $manifest['dependencies']) ){
+	    				$dependencies    = $manifest['dependencies'];
+					}
+                }
 
 				//check dependencies first
 				if(!empty($dependencies)) {
@@ -710,7 +738,7 @@ class PackageManager{
 
                 $packages[] = array('name' => $name, 'version' => $version, 'published_date' => $published_date,
                 	'description' => $description, 'uninstallable' =>$uninstallable, 'type' => $type,
-                	'file' => fileToHash($upgrade_content), 'file_install' => fileToHash($upgrade_content));
+                	'file' => fileToHash($upgrade_content), 'file_install' => fileToHash($upgrade_content), 'unFile' => fileToHash($upgrade_content));
             }//fi
         }//rof
         return $packages;
@@ -718,7 +746,7 @@ class PackageManager{
 
     function getLicenseFromFile($file){
         global $sugar_config;
-        $base_upgrade_dir       = sugar_cached("/upgrades");
+        $base_upgrade_dir       = $this->upload_dir.'/upgrades';
         $base_tmp_upgrade_dir   = "$base_upgrade_dir/temp";
         $license_file = $this->extractFile($file, 'LICENSE.txt', $base_tmp_upgrade_dir);
         if(is_file($license_file)){
@@ -756,7 +784,7 @@ class PackageManager{
     	$packages = array();
     	$upgrades_installed = 0;
     	$uh = new UpgradeHistory();
-        $base_upgrade_dir       = sugar_cached("/upgrades");
+        $base_upgrade_dir       = $this->upload_dir.'/upgrades';
         $base_tmp_upgrade_dir   = "$base_upgrade_dir/temp";
     	foreach($installeds as $installed)
 		{

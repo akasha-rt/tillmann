@@ -2,7 +2,7 @@
 if(!defined('sugarEntry'))define('sugarEntry', true);
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -462,6 +462,9 @@ function set_entry($session,$module_name, $name_value_list){
 		if($module_name == 'Users' && !empty($seed->id) && ($seed->id != $current_user->id) && $name == 'user_hash'){
 			continue;
 		}
+		if(!empty($seed->field_name_map[$name]['sensitive'])) {
+			continue;
+		}
 		if(!is_array($value)){
 			$seed->$name = $value;
 		}else{
@@ -530,7 +533,7 @@ public function login($user_auth, $application, $name_value_list){
 	//rrs
 		$system_config = new Administration();
 	$system_config->retrieveSettings('system');
-	$authController = new AuthenticationController((!empty($sugar_config['authenticationClass'])? $sugar_config['authenticationClass'] : 'SugarAuthenticate'));
+	$authController = new AuthenticationController();
 	//rrs
 	$isLoginSuccess = $authController->login($user_auth['user_name'], $user_auth['password'], array('passwordEncrypted' => true));
 	$usr_id=$user->retrieve_user_id($user_auth['user_name']);
@@ -715,7 +718,7 @@ function seamless_login($session){
 	if(!self::$helperObject->validate_authenticated($session)){
 		return 0;
 	}
-	$_SESSION['seamless_login'] = true;
+
 	$GLOBALS['log']->info('End: SugarWebServiceImpl->seamless_login');
 	return 1;
 }
@@ -870,7 +873,7 @@ function get_document_revision($session, $id) {
 
 /**
  * Given a list of modules to search and a search string, return the id, module_name, along with the fields
- * We will support Accounts, Bug Tracker, Cases, Contacts, Leads, Opportunities, Project, ProjectTask, Quotes
+ * We will support Accounts, Bugs, Cases, Contacts, Leads, Opportunities, Project, ProjectTask, Quotes
  *
  * @param string $session			- Session ID returned by a previous call to login.
  * @param string $search_string 	- string to search
@@ -1132,10 +1135,13 @@ function get_entries_count($session, $module_name, $query, $deleted) {
 	$sql = 'SELECT COUNT(*) result_count FROM ' . $seed->table_name . ' ';
 
 
+    $customJoin = $seed->getCustomJoin();
+    $sql .= $customJoin['join'];
+
 	// build WHERE clauses, if any
 	$where_clauses = array();
 	if (!empty($query)) {
-		$where_clauses[] = $query;
+	    $where_clauses[] = $query;
 	}
 	if ($deleted == 0) {
 		$where_clauses[] = $seed->table_name . '.deleted = 0';

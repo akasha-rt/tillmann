@@ -1,7 +1,7 @@
 {*
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -35,7 +35,25 @@
  ********************************************************************************/
 
 *}
-<div id="settings_dialog" style="width: 340px; display: none;">
+
+<script type="text/javascript">
+{literal}
+function toggleDisplayTimeslots() {
+	if (document.getElementById('display_timeslots').checked) {
+		$(".time_range_options_row").css('display', '');
+	} else {
+		$(".time_range_options_row").css('display', 'none');
+	}
+}
+
+$(function() {
+	toggleDisplayTimeslots();
+});
+
+{/literal}
+</script>
+
+<div id="settings_dialog" style="width: 450px; display: none;">
 	<div class="hd">{$MOD.LBL_SETTINGS_TITLE}</div>
 	<div class="bd">
 	<form name="settings" id="form_settings" method="POST" action="index.php?module=Calendar&action=SaveSettings">
@@ -46,6 +64,15 @@
 		
 		<table class='edit view tabForm'>
 				<tr>
+					<td scope="row" valign="top" width="55%">
+						{$MOD.LBL_SETTINGS_DISPLAY_TIMESLOTS}
+					</td>
+					<td width="45%">	
+						<input type="hidden" name="display_timeslots" value="">
+						<input type="checkbox" id="display_timeslots" name="display_timeslots" {if $display_timeslots}checked{/if} value="1" tabindex="102" onchange="toggleDisplayTimeslots();">
+					</td>
+				</tr>
+				<tr class="time_range_options_row">
 					<td scope="row" valign="top">
 						{$MOD.LBL_SETTINGS_TIME_STARTS}
 					</td>
@@ -63,7 +90,7 @@
 						</div>
 					</td>
 				</tr>
-				<tr>
+				<tr class="time_range_options_row">
 					<td scope="row" valign="top">
 						{$MOD.LBL_SETTINGS_TIME_ENDS}
 					</td>
@@ -100,6 +127,17 @@
 						<select size="1" name="show_tasks" tabindex="102">
 							<option value='' {if !$show_tasks}selected{/if}>{$MOD.LBL_NO}</option>
 							<option value='true' {if $show_tasks}selected{/if}>{$MOD.LBL_YES}</option>								
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td scope="row" valign="top">
+						{$MOD.LBL_SETTINGS_COMPLETED_SHOW}
+					</td>
+					<td>	
+						<select size="1" name="show_completed" tabindex="102">
+							<option value='' {if !$show_completed}selected{/if}>{$MOD.LBL_NO}</option>
+							<option value='true' {if $show_completed}selected{/if}>{$MOD.LBL_YES}</option>								
 						</select>
 					</td>
 				</tr>

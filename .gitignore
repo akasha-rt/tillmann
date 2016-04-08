@@ -34,3 +34,4 @@ silentUpgrade*.php
 *.log
 upload/*
 MonthlyWorkLog/*
+/nbproject/private/

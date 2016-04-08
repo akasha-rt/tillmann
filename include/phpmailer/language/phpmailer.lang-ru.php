@@ -1,55 +1,26 @@
 <?php
-
-/*
-
-Modification information for LGPL compliance
-
-r56990 - 2010-06-16 13:05:36 -0700 (Wed, 16 Jun 2010) - kjing - snapshot "Mango" svn branch to a new one for GitHub sync
-
-r56989 - 2010-06-16 13:01:33 -0700 (Wed, 16 Jun 2010) - kjing - defunt "Mango" svn dev branch before github cutover
-
-r55980 - 2010-04-19 13:31:28 -0700 (Mon, 19 Apr 2010) - kjing - create Mango (6.1) based on windex
-
-r51719 - 2009-10-22 10:18:00 -0700 (Thu, 22 Oct 2009) - mitani - Converted to Build 3  tags and updated the build system 
-
-r51634 - 2009-10-19 13:32:22 -0700 (Mon, 19 Oct 2009) - mitani - Windex is the branch for Sugar Sales 1.0 development
-
-r50375 - 2009-08-24 18:07:43 -0700 (Mon, 24 Aug 2009) - dwong - branch kobe2 from tokyo r50372
-
-r43691 - 2009-01-29 15:25:53 -0800 (Thu, 29 Jan 2009) - faissah - 27521  : Update to phpmailer version 2.3.
-
-r42807 - 2008-12-29 11:16:59 -0800 (Mon, 29 Dec 2008) - dwong - Branch from trunk/sugarcrm r42806 to branches/tokyo/sugarcrm
-
-r11652 - 2006-02-21 18:24:06 -0800 (Tue, 21 Feb 2006) - chris - Bug 4719: updating PHPMailer classes for security (DDoS)
-Touched:
-include/phpmailer (everything)
-include/SugarPHPMailer.php (adding our constructor)
-modules/Email/Email.php (to use the new constructor)
-
-
-*/
-
-
 /**
- * PHPMailer language file.
- * Russian Version by Alexey Chumakov <alex@chumakov.ru> */
+ * Russian PHPMailer language file: refer to English translation for definitive list
+ * @package PHPMailer
+ * @author Alexey Chumakov <alex@chumakov.ru>
+ */
 
-$PHPMAILER_LANG = array();
-
-$PHPMAILER_LANG["provide_address"]      = 'œÓÊ‡ÎÛÈÒÚ‡, ‚‚Â‰ËÚÂ ıÓÚˇ ·˚ Ó‰ËÌ ‡‰ÂÒ e-mail ' .
-                                          'ÔÓÎÛ˜‡ÚÂÎˇ.';
-$PHPMAILER_LANG["mailer_not_supported"] = ' - ÔÓ˜ÚÓ‚˚È ÒÂ‚Â ÌÂ ÔÓ‰‰ÂÊË‚‡ÂÚÒˇ.';
-$PHPMAILER_LANG["execute"]              = 'ÕÂ‚ÓÁÏÓÊÌÓ ‚˚ÔÓÎÌËÚ¸ ÍÓÏ‡Ì‰Û: ';
-$PHPMAILER_LANG["instantiate"]          = 'ÕÂ‚ÓÁÏÓÊÌÓ Á‡ÔÛÒÚËÚ¸ ÙÛÌÍˆË˛ mail.';
-$PHPMAILER_LANG["authenticate"]         = 'Œ¯Ë·Í‡ SMTP: Ó¯Ë·Í‡ ‡‚ÚÓËÁ‡ˆËË.';
-$PHPMAILER_LANG["from_failed"]          = 'ÕÂ‚ÂÌ˚È ‡‰ÂÒ ÓÚÔ‡‚ËÚÂÎˇ: ';
-$PHPMAILER_LANG["recipients_failed"]    = 'Œ¯Ë·Í‡ SMTP: ÓÚÔ‡‚Í‡ ÔÓ ÒÎÂ‰Û˛˘ËÏ ' .
-                                          '‡‰ÂÒ‡Ï ÔÓÎÛ˜‡ÚÂÎÂÈ ÌÂ Û‰‡Î‡Ò¸: ';
-$PHPMAILER_LANG["data_not_accepted"]    = 'Œ¯Ë·Í‡ SMTP: ‰‡ÌÌ˚Â ÌÂ ÔËÌˇÚ˚.';
-$PHPMAILER_LANG["connect_host"]         = 'Œ¯Ë·Í‡ SMTP: ÌÂ Û‰‡ÂÚÒˇ ÔÓ‰ÍÎ˛˜ËÚ¸Òˇ Í ÒÂ‚ÂÛ SMTP.';
-$PHPMAILER_LANG["file_access"]          = 'ÕÂÚ ‰ÓÒÚÛÔ‡ Í Ù‡ÈÎÛ: ';
-$PHPMAILER_LANG["file_open"]            = '‘‡ÈÎÓ‚‡ˇ Ó¯Ë·Í‡: ÌÂ Û‰‡ÂÚÒˇ ÓÚÍ˚Ú¸ Ù‡ÈÎ: ';
-$PHPMAILER_LANG["encoding"]             = 'ÕÂËÁ‚ÂÒÚÌ˚È ‚Ë‰ ÍÓ‰ËÓ‚ÍË: ';
-$PHPMAILER_LANG["signing"]              = 'Signing Error: ';
-
-?>
+$PHPMAILER_LANG['authenticate']         = '–û—à–∏–±–∫–∞ SMTP: –æ—à–∏–±–∫–∞ –∞–≤—Ç–æ—Ä–∏–∑–∞—Ü–∏–∏.';
+$PHPMAILER_LANG['connect_host']         = '–û—à–∏–±–∫–∞ SMTP: –Ω–µ —É–¥–∞–µ—Ç—Å—è –ø–æ–¥–∫–ª—é—á–∏—Ç—å—Å—è –∫ —Å–µ—Ä–≤–µ—Ä—É SMTP.';
+$PHPMAILER_LANG['data_not_accepted']    = '–û—à–∏–±–∫–∞ SMTP: –¥–∞–Ω–Ω—ã–µ –Ω–µ –ø—Ä–∏–Ω—è—Ç—ã.';
+$PHPMAILER_LANG['encoding']             = '–ù–µ–∏–∑–≤–µ—Å—Ç–Ω—ã–π –≤–∏–¥ –∫–æ–¥–∏—Ä–æ–≤–∫–∏: ';
+$PHPMAILER_LANG['execute']              = '–ù–µ–≤–æ–∑–º–æ–∂–Ω–æ –≤—ã–ø–æ–ª–Ω–∏—Ç—å –∫–æ–º–∞–Ω–¥—É: ';
+$PHPMAILER_LANG['file_access']          = '–ù–µ—Ç –¥–æ—Å—Ç—É–ø–∞ –∫ —Ñ–∞–π–ª—É: ';
+$PHPMAILER_LANG['file_open']            = '–§–∞–π–ª–æ–≤–∞—è –æ—à–∏–±–∫–∞: –Ω–µ —É–¥–∞–µ—Ç—Å—è –æ—Ç–∫—Ä—ã—Ç—å —Ñ–∞–π–ª: ';
+$PHPMAILER_LANG['from_failed']          = '–ù–µ–≤–µ—Ä–Ω—ã–π –∞–¥—Ä–µ—Å –æ—Ç–ø—Ä–∞–≤–∏—Ç–µ–ª—è: ';
+$PHPMAILER_LANG['instantiate']          = '–ù–µ–≤–æ–∑–º–æ–∂–Ω–æ –∑–∞–ø—É—Å—Ç–∏—Ç—å —Ñ—É–Ω–∫—Ü–∏—é mail.';
+$PHPMAILER_LANG['provide_address']      = '–ü–æ–∂–∞–ª—É–π—Å—Ç–∞, –≤–≤–µ–¥–∏—Ç–µ —Ö–æ—Ç—è –±—ã –æ–¥–∏–Ω –∞–¥—Ä–µ—Å e-mail –ø–æ–ª—É—á–∞—Ç–µ–ª—è.';
+$PHPMAILER_LANG['mailer_not_supported'] = ' - –ø–æ—á—Ç–æ–≤—ã–π —Å–µ—Ä–≤–µ—Ä –Ω–µ –ø–æ–¥–¥–µ—Ä–∂–∏–≤–∞–µ—Ç—Å—è.';
+$PHPMAILER_LANG['recipients_failed']    = '–û—à–∏–±–∫–∞ SMTP: –æ—Ç–ø—Ä–∞–≤–∫–∞ –ø–æ —Å–ª–µ–¥—É—é—â–∏–º –∞–¥—Ä–µ—Å–∞–º –ø–æ–ª—É—á–∞—Ç–µ–ª–µ–π –Ω–µ —É–¥–∞–ª–∞—Å—å: ';
+$PHPMAILER_LANG['empty_message']        = '–ü—É—Å—Ç–æ–µ —Ç–µ–ª–æ —Å–æ–æ–±—â–µ–Ω–∏—è';
+$PHPMAILER_LANG['invalid_address']      = '–ù–µ –æ—Ç–æ—Å–ª–∞–Ω–æ, –Ω–µ–ø—Ä–∞–≤–∏–ª—å–Ω—ã–π —Ñ–æ—Ä–º–∞—Ç email –∞–¥—Ä–µ—Å–∞: ';
+$PHPMAILER_LANG['signing']              = '–û—à–∏–±–∫–∞ –ø–æ–¥–ø–∏—Å—ã–≤–∞–Ω–∏—è: ';
+$PHPMAILER_LANG['smtp_connect_failed']  = '–û—à–∏–±–∫–∞ —Å–æ–µ–¥–∏–Ω–µ–Ω–∏—è —Å SMTP-—Å–µ—Ä–≤–µ—Ä–æ–º';
+$PHPMAILER_LANG['smtp_error']           = '–û—à–∏–±–∫–∞ SMTP-—Å–µ—Ä–≤–µ—Ä–∞: ';
+$PHPMAILER_LANG['variable_set']         = '–ù–µ–≤–æ–∑–º–æ–∂–Ω–æ —É—Å—Ç–∞–Ω–æ–≤–∏—Ç—å –∏–ª–∏ –ø–µ—Ä–µ—É—Å—Ç–∞–Ω–æ–≤–∏—Ç—å –ø–µ—Ä–µ–º–µ–Ω–Ω—É—é: ';
+//$PHPMAILER_LANG['extension_missing']    = 'Extension missing: ';

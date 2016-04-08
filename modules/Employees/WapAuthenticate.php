@@ -3,7 +3,7 @@ if (!defined('sugarEntry') || !sugarEntry)
     die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -57,13 +57,7 @@ $focus->load_user($user_password);
 if ($focus->is_authenticated()) {
     // save the user information into the session
     // go to the home screen
-    if (!empty($_POST['login_record'])) {
-        $login_direction = "module={$_POST['login_module']}&action={$_POST['login_action']}&record={$_POST['login_record']}";
-    } else {
-        $login_direction = "action=index&module=Home";
-    }
-
-    header("Location: index.php?{$login_direction}");
+    header("Location: ".$GLOBALS['app']->getLoginRedirect());
     unset($_SESSION['login_password']);
     unset($_SESSION['login_error']);
     unset($_SESSION['login_user_name']);

@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -55,7 +55,7 @@ class Sugarpdf extends TCPDF
     const STRETCH_SCALE = 1;
     const STRETCH_SCALE_FORCED = 2;
     const STRETCH_SPACING = 3;
-    const STRETCH_SPACING_FORCED = 4; 
+    const STRETCH_SPACING_FORCED = 4;
 
     /**
      * This array is meant to hold an objects/data that we would like to pass between
@@ -361,6 +361,10 @@ class Sugarpdf extends TCPDF
             // need to adjust the current page number
             // so the following output will not overlap the previous output
             if ($this->getNumPages() != $this->getPage()) {
+                if (!empty($this->currentY)) {
+                    $this->y = $this->currentY;
+                    $this->currentY = 0;
+                }
                 $this->setPage($this->getNumPages());
             }
             $firstcell = true;
@@ -400,7 +404,7 @@ class Sugarpdf extends TCPDF
                         $this->MultiCell($options["width"][$kk],$h,$value,$cellOptions['border'],$cellOptions['align'],$cellOptions['fillstate'],0,'','',true,0,$cellOptions['ishtml'], true, 0, false);
                     }
                 }
-                
+
                 $this->SetFillColorArray($this->convertHTMLColorToDec($options['fill']));
             }
             $this->Ln();
@@ -449,8 +453,22 @@ class Sugarpdf extends TCPDF
             }
             $html.=$this->wrap("tr", $line, $options["header"]);
         }
+        $even = true;
         foreach ($item as $k=>$v){
+            $even = !$even;
             $line="";
+
+            if($even){
+                if (isset($options['evencolor']))
+                {
+                    $options["tr"]["bgcolor"] = $options['evencolor'];
+                }
+            } else {
+                if (isset($options['oddcolor']))
+                {
+                    $options["tr"]["bgcolor"] = $options['oddcolor'];
+                }
+            }
             foreach($v as $kk => $vv){
                 if(!empty($options["width"]) && isset($options["width"][$kk]))$options["td"]["width"]=$options["width"][$kk];
                 $line.=$this->wrap("td", $vv, $options);
@@ -625,7 +643,7 @@ class Sugarpdf extends TCPDF
                 $lines++;
             // If the block is in more than one line
             }else if(ceil($this->GetStringWidth($block) / $wmax)>1){
-                //devide in words
+                //divide into words
                 $words = explode(" ", $block);
                 //TODO explode with space is not the best things to do...
                 $wordBlock = "";

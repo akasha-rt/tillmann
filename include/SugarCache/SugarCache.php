@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -130,6 +130,18 @@ class SugarCache
             }
         }
     }
+
+    /**
+     * Try to reset file from caches
+     */
+    public static function cleanFile( $file )
+    {
+        // APC
+        if ( function_exists('apc_delete_file') && ini_get('apc.stat') == 0 )
+        {
+            apc_delete_file( $file );
+        }
+    }
 }
 
 /**
@@ -153,9 +165,9 @@ function sugar_cache_retrieve($key)
  * @param String $key -- Global namespace cache.  Key for the data.
  * @param Serializable $value -- The value to store in the cache.
  */
-function sugar_cache_put($key, $value)
+function sugar_cache_put($key, $value, $ttl = null)
 {
-    SugarCache::instance()->$key = $value;
+    SugarCache::instance()->set($key,$value, $ttl);
 }
 
 /**

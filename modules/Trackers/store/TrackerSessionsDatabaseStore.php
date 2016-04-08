@@ -2,7 +2,7 @@
 if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -49,9 +49,9 @@ class TrackerSessionsDatabaseStore implements Store {
         global $db;
        $metrics = $monitor->getMetrics();
 
-       if(isset($monitor->client_ip) && strlen($monitor->client_ip) > 20)
+       if(isset($monitor->client_ip) && strlen($monitor->client_ip) > 45)
        {
-          $monitor->client_ip = substr($monitor->client_ip, 0, 20);
+          $monitor->client_ip = substr($monitor->client_ip, 0, 45);
        }
 
        $columns = array();

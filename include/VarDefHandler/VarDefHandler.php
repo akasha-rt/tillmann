@@ -1,7 +1,7 @@
 <?php
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -51,7 +51,10 @@ class VarDefHandler {
 	var $module_object;
 	var $start_none_lbl = null;
 
-	function VarDefHandler(& $module, $meta_array_name=null){
+
+    function VarDefHandler($module, $meta_array_name=null)
+    {
+        $this->meta_array_name = $meta_array_name;
 		$this->module_object = $module;
 		if($meta_array_name!=null){
 			global $vardef_meta_array;
@@ -206,10 +209,6 @@ class VarDefHandler {
 			foreach($this->target_meta_array['exclusion'] as $attribute => $value){
 
 				foreach($value as $actual_value){
-				    if ( $attribute == 'reportable' ) {
-				        if ( $actual_value == 'true' ) $actual_value = 1;
-				        if ( $actual_value == 'false' ) $actual_value = 0;
-				    }
 					if(isset($value_array[$attribute]) && $value_array[$attribute] == $actual_value) return false;
 				}
 

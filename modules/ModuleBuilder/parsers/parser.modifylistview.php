@@ -3,7 +3,7 @@ if (! defined ( 'sugarEntry' ) || ! sugarEntry)
 die ( 'Not A Valid Entry Point' ) ;
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -286,7 +286,7 @@ class ParserModifyListView extends ModuleBuilderParser
 				if (isset ( $_REQUEST [ strtolower ( $fieldname ) . 'width' ] ))
 				{
 					$width = substr ( $_REQUEST [ strtolower ( $fieldname ) . 'width' ], 6, 3 ) ;
-					if (strpos ( $width, "%" ) != false)
+					if (strpos ( $width, "%" ) !== false)
 					{
 						$width = substr ( $width, 0, 2 ) ;
 					}

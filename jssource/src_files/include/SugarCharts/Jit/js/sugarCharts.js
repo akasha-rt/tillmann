@@ -1,6 +1,6 @@
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
- * SugarCRM, Inc. Copyright (C) 2004-2011 SugarCRM Inc.
+ * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
  * 
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by the
@@ -36,12 +36,13 @@
 
 
 
-function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
+function loadSugarChart (chartId,jsonFilename,css,chartConfig) {
 
                 //Bug#45831
                 if(document.getElementById(chartId) == null) {
                     return false;
                 }
+
 				var labelType, useGradients, nativeTextSupport, animate;		    	
 				(function() {
 				  var ua = navigator.userAgent,
@@ -55,7 +56,7 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 				  animate = false;
 				})();
 				
-			var delay = (SUGAR.isIE) ? 500 : 0;
+			var delay = 500;
 			switch(chartConfig["chartType"]) {
 			case "barChart":
 				var handleFailure = function(o){
@@ -71,6 +72,39 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 
 				var properties = $jit.util.splat(json.properties)[0];	
 				var marginBottom = (chartConfig["orientation"] == 'vertical' && json.values.length > 8) ? 20*4 : 20;
+
+                 // Bug #49732 : Bars in charts overlapping
+                // if to many data to display fix canvas width and set up width to container to allow overflow
+                if ( chartConfig["orientation"] == 'vertical' )
+                {
+                    function fixChartContainer(event, itemsCount)
+                    {
+                        var region = YAHOO.util.Dom.getRegion('content');
+                        if ( region && region.width )
+                        {
+                            // one bar needs about 40 px to correct display data and labels
+                            var realWidth = itemsCount * 40;
+                            if ( realWidth > region.width )
+                            {
+                                var chartCanvas = YAHOO.util.Dom.getElementsByClassName('chartCanvas', 'div');
+                                var chartContainer = YAHOO.util.Dom.getElementsByClassName('chartContainer', 'div');
+                                if ( chartContainer.length > 0 && chartCanvas.length > 0 )
+                                {
+                                    chartContainer = YAHOO.util.Dom.get(chartContainer[0])
+                                    YAHOO.util.Dom.setStyle(chartContainer, 'width', region.width+'px')
+                                    chartCanvas = YAHOO.util.Dom.get(chartCanvas[0]);
+                                    YAHOO.util.Dom.setStyle(chartCanvas, 'width', realWidth+'px');
+                                    if (!event)
+                                    {
+                                        YAHOO.util.Event.addListener(window, "resize", fixChartContainer, json.values.length);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    fixChartContainer(null, json.values.length);
+                }
+
 				//init BarChart
 				var barChart = new $jit.BarChart({
 				  //id of the visualization container
@@ -216,30 +250,10 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 				//save canvas to image for pdf consumption
 				$jit.util.saveImageTest(chartId,jsonFilename,chartConfig["imageExportType"]);
 		    	
-		    	var firstLoad = (SUGAR.isIE) ? true: false,
-		    	orgWindowWidth = document.body.offsetWidth,
-		    	orgContainerDivWidth = document.getElementById(chartId).offsetWidth;
-		    	
-				var refreshGraph = function() {
-					var newWindowWidth = document.body.offsetWidth;
-					var diff = Math.abs(newWindowWidth - orgWindowWidth);		
-					if(diff>20 && !firstLoad){
-						barChart.resizeGraph(json,orgWindowWidth,orgContainerDivWidth,pageCols);
-					}
-					firstLoad = false;	
-				}
-				
-				//refresh graph on window resize
-    
-				var doRefresh = function() {
-					setTimeout(function() {refreshGraph()}, delay);	
-				}
-				
-				YAHOO.util.Event.addListener(window, 'resize', function() {doRefresh()});
-				
+                trackWindowResize(barChart, chartId, json);
 					}
 				}
-						
+				
 				var callback =
 				{
 				  success:handleSuccess,
@@ -405,30 +419,10 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 				//save canvas to image for pdf consumption
 				$jit.util.saveImageTest(chartId,jsonFilename,chartConfig["imageExportType"]);
 
-		    	var firstLoad = (SUGAR.isIE) ? true: false,
-		    	orgWindowWidth = document.body.offsetWidth,
-		    	orgContainerDivWidth = document.getElementById(chartId).offsetWidth;
-		    	
-				var refreshGraph = function() {
-					var newWindowWidth = document.body.offsetWidth;
-					var diff = Math.abs(newWindowWidth - orgWindowWidth);		
-					if(diff>20 && !firstLoad){
-						lineChart.resizeGraph(json,orgWindowWidth,orgContainerDivWidth,pageCols);
-					}
-					firstLoad = false;	
-				}
-				
-				//refresh graph on window resize
-    
-				var doRefresh = function() {
-					setTimeout(function() {refreshGraph()}, delay);	
-				}
-				
-				YAHOO.util.Event.addListener(window, 'resize', function() {doRefresh()});
-				
+                trackWindowResize(lineChart, chartId, json);
 					}
 				}
-						
+				
 				var callback =
 				{
 				  success:handleSuccess,
@@ -565,31 +559,10 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 				//save canvas to image for pdf consumption
 				$jit.util.saveImageTest(chartId,jsonFilename,chartConfig["imageExportType"]);
 			
-		    	var firstLoad = (SUGAR.isIE) ? true: false,
-		    	orgWindowWidth = document.body.offsetWidth,
-		    	orgContainerDivWidth = document.getElementById(chartId).offsetWidth;
-		    	
-				var refreshGraph = function() {
-					var newWindowWidth = document.body.offsetWidth;
-					var diff = Math.abs(newWindowWidth - orgWindowWidth);		
-					if(diff>20 && !firstLoad){
-						pieChart.resizeGraph(json,orgWindowWidth,orgContainerDivWidth,pageCols);
+                trackWindowResize(pieChart, chartId, json);
 					}
-					firstLoad = false;	
 				}
 				
-				//refresh graph on window resize
-    
-				var doRefresh = function() {
-					setTimeout(function() {refreshGraph()}, delay);	
-				}
-				
-				YAHOO.util.Event.addListener(window, 'resize', function() {doRefresh()});
-				
-				
-				}
-			}
-								
 				var callback =
 				{
 				  success:handleSuccess,
@@ -746,31 +719,10 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 				//save canvas to image for pdf consumption
 				$jit.util.saveImageTest(chartId,jsonFilename,chartConfig["imageExportType"]);
 				
-		    	var firstLoad = (SUGAR.isIE) ? true: false,
-		    	orgWindowWidth = document.body.offsetWidth,
-		    	orgContainerDivWidth = document.getElementById(chartId).offsetWidth;
-		    	
-				var refreshGraph = function() {
-					var newWindowWidth = document.body.offsetWidth;
-					var diff = Math.abs(newWindowWidth - orgWindowWidth);		
-					if(diff>20 && !firstLoad){
-						funnelChart.resizeGraph(json,orgWindowWidth,orgContainerDivWidth,pageCols);
+                trackWindowResize(funnelChart, chartId, json);
 					}
-					firstLoad = false;	
 				}
 				
-				//refresh graph on window resize
-    
-				var doRefresh = function() {
-					setTimeout(function() {refreshGraph()}, delay);	
-				}
-				
-				YAHOO.util.Event.addListener(window, 'resize', function() {doRefresh()});
-				
-				
-				}
-			}
-						
 				var callback =
 				{
 				  success:handleSuccess,
@@ -907,31 +859,10 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 				//save canvas to image for pdf consumption
 				$jit.util.saveImageTest(chartId,jsonFilename,chartConfig["imageExportType"]);
 				
-		    	var firstLoad = (SUGAR.isIE) ? true: false,
-		    	orgWindowWidth = document.body.offsetWidth,
-		    	orgContainerDivWidth = document.getElementById(chartId).offsetWidth;
-		    	
-				var refreshGraph = function() {
-					var newWindowWidth = document.body.offsetWidth;
-					var diff = Math.abs(newWindowWidth - orgWindowWidth);		
-					if(diff>20 && !firstLoad){
-						gaugeChart.resizeGraph(json,orgWindowWidth,orgContainerDivWidth,pageCols);
+                trackWindowResize(gaugeChart, chartId, json);
 					}
-						firstLoad = false;	
 				}
 				
-				//refresh graph on window resize
-    
-				var doRefresh = function() {
-					setTimeout(function() {refreshGraph()}, delay);	
-				}
-				
-				YAHOO.util.Event.addListener(window, 'resize', function() {doRefresh()});
-				
-				
-				}
-			}
-								
 				var callback =
 				{
 				  success:handleSuccess,
@@ -943,5 +874,52 @@ function loadSugarChart (chartId,jsonFilename,css,chartConfig,pageCols) {
 							
 				break;
 				
+			}
+    
+            function trackWindowResize(chart, chartId, json)
+            {
+                var origWindowWidth = document.documentElement.scrollWidth,
+                    container = document.getElementById(chartId),
+                    widget = document.getElementById(chartId + "-canvaswidget");
+
+                var timeout;
+
+                // refresh graph on window resize
+                YAHOO.util.Event.addListener(window, "resize", function()
+                {
+                    if (timeout)
+                    {
+                        clearTimeout(timeout);
+                    }
+
+                    timeout = setTimeout(function()
+                    {
+                        var newWindowWidth = document.documentElement.scrollWidth;
+
+                        // if window width has changed during resize
+                        if (newWindowWidth != origWindowWidth)
+                        {
+                            // hide widget in order to let it's container have
+                            // width corresponding to current window size,
+                            // not it's contents
+                            widget.style.display = "none";
+
+                            // add one more timeout in order to let all widgets
+                            // on the page hide
+                            setTimeout(function()
+                            {
+                                // measure container width
+                                var width = container.offsetWidth;
+
+                                // display widget before resize, otherwise
+                                // it will be rendered incorrectly in IE
+                                widget.style.display = "";
+
+                                chart.resizeGraph(json, width);
+                                origWindowWidth = newWindowWidth;
+                            }, 0);
+                        }
+                    }, delay);
+                });
 			}
 		}
