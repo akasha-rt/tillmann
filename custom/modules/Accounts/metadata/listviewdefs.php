@@ -187,5 +187,6 @@ $listViewDefs['Accounts'] = array (
     'label' => 'LBL_ITEM_HISTORY',
     'sortable' => false,
     'align' => 'center',
+    'default' => true,
   ),
 );
