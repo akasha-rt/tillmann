@@ -336,23 +336,32 @@ ENDQ;
         if (!in_array(strtolower($direction), array('asc', 'desc'))) {
             $direction = $this->defaultDirection;
         }
-
+       //Dhaval - query was failing due to no order by col set
         if (!empty($this->hrSortLocal[$sort])) {
-            $order = " ORDER BY {$this->hrSortLocal[$sort]} {$direction}";
+            $orderBy = $this->hrSortLocal[$sort];
         } else {
-            $order = "";
+            $orderBy = 'date_sent';
         }
+         //$order = " ORDER BY {$this->hrSortLocal[$sort]} {$direction}";
+        $order = " ORDER BY {$orderBy} {$direction}";
+        //End - Dhaval
 
 		if($this->is_dynamic) {
 			$r = $this->db->limitQuery(from_html($this->generateSugarsDynamicFolderQuery() . $order), $start, $pageSize);
 		} else {
 			// get items and iterate through them
+			/**
+                         * To hide closed emails
+                         * @author Dhaval darji 
+                         */
 			$q = "SELECT emails.id , emails.name, emails.date_sent, emails.status, emails.type, emails.flagged, emails.reply_to_status, emails_text.from_addr, emails_text.to_addrs, 'Emails' polymorphic_module FROM emails JOIN folders_rel ON emails.id = folders_rel.polymorphic_id" .
 				  " JOIN emails_text on emails.id = emails_text.email_id
-                  WHERE folders_rel.folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0";
+                  WHERE folders_rel.folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0
+                  AND emails.status <> 'closed'";
 			if ($this->is_group) {
 				$q = $q . " AND (emails.assigned_user_id is null or emails.assigned_user_id = '')";
 			}
+                  //End - Dhaval
 			$r = $this->db->limitQuery($q . $order, $start, $pageSize);
 		}
 
@@ -404,8 +413,13 @@ ENDQ;
 	    	$r = $this->db->query ( from_html ( $modified_select_query )) ;
 		} else {
 			// get items and iterate through them
+			/**
+                         * To hide closed emails
+                         * @author Dhaval darji 
+                         */
 			$q = "SELECT count(*) c FROM folders_rel JOIN emails ON emails.id = folders_rel.polymorphic_id" .
-			" WHERE folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0" ;
+			" WHERE folder_id = '{$folderId}' AND folders_rel.deleted = 0 AND emails.deleted = 0
+                        AND emails.status <> 'closed'" ;
 			if ($this->is_group) {
 				$q .= " AND (emails.assigned_user_id is null or emails.assigned_user_id = '')";
 			}
@@ -430,6 +444,10 @@ ENDQ;
 	    	$r = $this->db->query (from_html($modified_select_query) . " AND emails.status = 'unread'") ;
         } else {
             // get items and iterate through them
+           /**
+            * To hide closed emails
+            * @author Dhaval darji 
+            */
             $q = "SELECT count(*) c FROM folders_rel fr JOIN emails on fr.folder_id = '{$folderId}' AND fr.deleted = 0 " .
                "AND fr.polymorphic_id = emails.id AND emails.status = 'unread' AND emails.deleted = 0" ;
             if ($this->is_group) {

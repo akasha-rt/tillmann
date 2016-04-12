@@ -1,3 +1,4 @@
+/*
 $(document).ready(function() {
     if (webkitNotifications.checkPermission() != 0) {
         $('body').append('<div id="notification_setting_div" style="top:0px;position:absolute; display:none;z-index: 5000;"><button id="notifSettings" >Change notification settings</button></div>');
@@ -17,6 +18,7 @@ $(document).ready(function() {
         }
     }
 });
+*/
 function createNotificationInstance() {
 
     if (webkitNotifications.checkPermission() == 0)
@@ -116,4 +118,4 @@ function createNotificationInstance() {
 //alert( "Please request permissions first." );
     }
 }
-setInterval(createNotificationInstance, 10000);
+//setInterval(createNotificationInstance, 10000);

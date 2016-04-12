@@ -224,10 +224,20 @@ function checkForDuplicates($prefix='')
 	$count = 0;
 	$emails = array();
 	$emailStr = '';
+        //Dhaval
+        $widgetId = $count;
+        $widgetIsSet = false;
+        if (isset($_POST['Contacts_email_widget_id']) && !empty($_POST['Contacts_email_widget_id'])) {
+            $widgetId = $_POST['Contacts_email_widget_id'];
+            $widgetIsSet = true;
+        }
 	while(isset($_POST["{$this->moduleName}{$count}emailAddress{$count}"]))
     {
 	      $emailStr .= ",'" . strtoupper(trim($_POST["{$this->moduleName}{$count}emailAddress" . $count++])) . "'";
+               if (!$widgetIsSet)
+                $widgetId++;
 	} //while
+        //End - Dhaval
 
 	if(!empty($emailStr))
     {

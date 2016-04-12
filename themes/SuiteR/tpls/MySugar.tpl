@@ -83,6 +83,12 @@
             </li>{/if}
     {/foreach}
     {if !$lock_homepage}
+        
+        <li class="addButton">
+                                     <a style='cursor: pointer;' onclick="return SUGAR.mySugar.showChangeLayoutDialog();">
+                                        <span>{$app.LBL_CHANGE_LAYOUT}</span>
+                                    </a>
+                                </li>
         <li class="addButton">
             <a style='cursor: pointer;' onclick="return SUGAR.mySugar.showDashletsDialog();">{$lblAddDashlets}</a>
         </li>
