@@ -261,9 +261,18 @@ class Task extends SugarBean {
             $task_fields['DATE_START']= "<font class='$taskClass'>$date_due</font>";
         }
     }
-
+    function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
+        if ($order_by == '' || empty($order_by)) {
+            $order_by = 'date_entered DESC';
+        }
+        $ret_array = parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, true, $parentbean, $singleSelect);
+        $ret_array['select'] .= ', "" as follow_button_c ';
+        if (!$return_array)
+            return $ret_array['select'] . $ret_array['from'] . $ret_array['where'] . $ret_array['order_by'];
+        return $ret_array;
+    }
 	function get_list_view_data(){
-		global $action, $currentModule, $focus, $current_module_strings, $app_list_strings, $timedate;
+		global $action, $currentModule, $focus, $current_module_strings, $app_list_strings, $timedate,$current_user;
 
 		$override_date_for_subpanel = false;
 		if(!empty($_REQUEST['module']) && $_REQUEST['module'] !='Calendar' && $_REQUEST['module'] !='Tasks' && $_REQUEST['module'] !='Home'){
@@ -273,6 +282,13 @@ class Task extends SugarBean {
 
 		$today = $timedate->nowDb();
 		$task_fields = $this->get_list_view_array();
+                global $current_user,$db;
+                $follow_result = $db->query("SELECT id from followup where module_id='{$task_fields['ID']}' and deleted=0 and module_name='Task' and user_id='{$current_user->id}'");
+                $follow_row = $db->fetchByAssoc($follow_result);
+                if($follow_row)
+                    $task_fields['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow2.png" style="height:17px;width:20px;cursor:pointer;" id="'.$task_fields['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Task\');" title="Remove from Watch List" />';
+                else
+                    $task_fields['FOLLOW_BUTTON_C'] = '<img src="custom/image/follow1.png" style="height:17px;width:20px;cursor:pointer;" id="'.$task_fields['ID'].'" onclick="addToWatchList(this,\''.$current_user->id.'\',\'Task\');" title="Add to Watch List" />';
 		$dbtime = $timedate->to_db($task_fields['DATE_DUE']);
 		if($override_date_for_subpanel){
 			$dbtime = $timedate->to_db($task_fields['DATE_START']);

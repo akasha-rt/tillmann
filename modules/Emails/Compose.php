@@ -123,7 +123,9 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE)
         $email_id = "";
         $attachments = array();
         if ($bean->module_dir == 'Cases') {
-            $subject = str_replace('%1', $bean->case_number, $bean->getEmailSubjectMacro() . " " . from_html($bean->name));//bug 41928
+            //reena sattani 24-2-2012
+            //$subject = str_replace('%1', $bean->case_number, $bean->getEmailSubjectMacro() . " ". from_html($bean->name)) ;//bug 41928
+            $body = str_replace('%1', $bean->case_number, $bean->getEmailSubjectMacro()); //bug 41928
             $bean->load_relationship("contacts");
             $contact_ids = $bean->contacts->get();
             $contact = new Contact();
@@ -162,7 +164,29 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE)
             'email_id' => $email_id,
 
         );
-    } else if (isset($data['recordId'])) {
+    } //change by bc - to correctly add original email body when mail is forwarded
+    else if (empty($data['parent_type']) && empty($data['parent_name']) && !($data['replyForward'])) {
+        $namePlusEmail = '';
+        if (isset($data['to_email_addrs'])) {
+            $namePlusEmail = $data['to_email_addrs'];
+            $namePlusEmail = from_html(str_replace("&nbsp;", " ", $namePlusEmail));
+        } else {
+            if (isset($bean->full_name)) {
+                $namePlusEmail = from_html($bean->full_name) . " <" . from_html($bean->emailAddress->getPrimaryAddress($bean)) . ">";
+            } else if (isset($bean->emailAddress)) {
+                $namePlusEmail = "<" . from_html($bean->emailAddress->getPrimaryAddress($bean)) . ">";
+            }
+        }
+        $ret = array(
+            'to_email_addrs' => $namePlusEmail,
+            'subject' => ($data['subject']) ? $data['subject'] : $subject,
+            'cc_addrs' => $data['cc_addrs'],
+            'bcc_addrs' => $data['bcc_addrs'],
+            'body' => ($body) ? $body : $data['body'],
+            'email_id' => $email_id,
+        );
+    }
+    else if (isset($data['recordId'])) {
 
 
         $quotesData = getQuotesRelatedData($data);
@@ -210,7 +234,12 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE)
         $ie->email->cc_addrs = to_html($ie->email->cc_addrs_names);
         $ie->email->bcc_addrs = $ie->email->bcc_addrs_names;
         $ie->email->from_name = $ie->email->from_addr;
-        $preBodyHTML = "&nbsp;<div><hr></div>";
+        /**
+         *  To remove hr from the body part when pressed reply
+         *  @author Dhaval darji
+         */
+        //$preBodyHTML = "&nbsp;<div><hr></div>";
+        $preBodyHTML = "&nbsp;<div></div>";
         if ($ie->email->type != 'draft') {
             $email = $ie->email->et->handleReplyType($ie->email, $replyType);
         } else {
