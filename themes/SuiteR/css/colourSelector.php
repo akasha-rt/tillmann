@@ -13,7 +13,7 @@ if(is_file('../../../config_override.php')) {
 if(!isset($sugar_config['theme_settings']['SuiteR'])) return;
 
 //set file type back to css from php
-header("Content-type: text/css; charset: UTF-8");
+header("Content-type: text/html; charset: UTF-8");
 
 ?>
 
