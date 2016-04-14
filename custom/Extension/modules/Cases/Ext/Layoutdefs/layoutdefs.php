@@ -41,4 +41,6 @@ if (!defined('sugarEntry') || !sugarEntry)
 
 
 $layout_defs['Cases']['subpanel_setup']['history']['collection_list']['emails']['get_subpanel_data'] = 'function:getEmailAdd';
+$layout_defs['Cases']['subpanel_setup']['history']['collection_list']['emails']['generate_select'] = false;
+unset($layout_defs['Cases']['subpanel_setup']['history']['collection_list']['emails']['function_parameters']);
 ?>
