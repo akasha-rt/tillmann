@@ -50,7 +50,8 @@ $focus->email2init();
 $focus->et->preflightUser($current_user);
 $out = $focus->et->displayEmailFrame();
 echo $out;
-echo "<script type='text/javascript' language='javascript' src='custom/include/js/jquery.js'></script>";
+// Comment By Govind: After upgarde Sugar640 to Suite753, now don't need to include jquery.
+//echo "<script type='text/javascript' language='javascript' src='custom/include/js/jquery.js'></script>";
 echo "<script>var composePackage = null;</script>";
 
 $skipFooters = true;
