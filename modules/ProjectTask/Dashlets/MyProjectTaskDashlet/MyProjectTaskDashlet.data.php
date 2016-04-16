@@ -51,7 +51,8 @@ $dashletData['MyProjectTaskDashlet']['searchFields'] = array(
         'default' => $current_user->name),
 
 );
-$dashletData['ProjectTaskDashlet']['columns'] = array(
+// Change By BC: Display columns in Project task Dashlet Listview.
+$dashletData['MyProjectTaskDashlet']['columns'] = array(
     'name' =>
         array(
             'width' => '30%',

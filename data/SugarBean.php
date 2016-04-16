@@ -2569,7 +2569,11 @@ class SugarBean
         foreach ($raw_elements as $key => $value) {
 
             $is_valid = false;
-
+           // Change By BC: Resolve sorting issue in POST Listview In Thread Module DetailsView After Upgrade.
+            if (strchr($value, '.') !== false && isset($_REQUEST['Threads_POST_ORDER_BY'])) {
+                $is_valid = true;
+            }
+            // End
             //value might have ascending and descending decorations
             $list_column = preg_split('/\s/', trim($value), 2);
             $list_column = array_map('trim', $list_column);
