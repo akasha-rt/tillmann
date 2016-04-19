@@ -10,6 +10,7 @@ function retrievePage(page_id){
 }
 
 function retrieveData(page_id){
+    SUGAR.ajaxUI.showLoadingPanel();
     $.ajax({
 
         url : "index.php?entryPoint=retrieve_dash_page",
@@ -23,6 +24,7 @@ function retrieveData(page_id){
             var pageContent = data;
 
             outputPage(page_id,pageContent)
+            window.location.reload();
         },
         error : function(request,error)
         {
