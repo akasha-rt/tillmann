@@ -96,6 +96,41 @@ var homepage_dd;
                         });
                 },
                 //Change by bc to change the layout in the multiple home page tabs
+
+                showChangeLayoutDialog:function(tabNum){
+                document.getElementById('changeLayoutDialog_c').style.display = '';
+                        SUGAR.mySugar.changeLayoutDialog.show();
+                        SUGAR.mySugar.changeLayoutDialog.configFixedCenter(null, false);
+                },
+                changePageLayout:function(numCols){
+                SUGAR.mySugar.changeLayout(numCols);
+                        if (!SUGAR.isIE){
+                setTimeout("document.getElementById('changeLayoutDialog_c').style.display = 'none';", 2000);
+                }
+                SUGAR.mySugar.changeLayoutDialog.hide();
+                },
+                renderChangeLayoutDialog:function(){
+                SUGAR.mySugar.changeLayoutDialog = new YAHOO.widget.Dialog("changeLayoutDialog", {
+                width:"300px",
+                        fixedcenter:true,
+                        visible:false,
+                        draggable:false,
+                        effect:[{
+                        effect:YAHOO.widget.ContainerEffect.SLIDE,
+                                duration:0.5
+                        }, {
+                        effect:YAHOO.widget.ContainerEffect.FADE,
+                                duration:0.5
+                        }],
+                        modal:true
+                });
+                        document.getElementById('changeLayoutDialog').style.display = '';
+                        SUGAR.mySugar.changeLayoutDialog.render();
+                        document.getElementById('changeLayoutDialog_c').style.display = 'none';
+                },
+                retrievePage:function (page_id){
+                retrieveData(page_id);
+                },
                 changeLayout:function(numCols){
                 ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_SAVING_LAYOUT'));
                         var success = function(data){
@@ -533,37 +568,6 @@ var homepage_dd;
                         document.getElementById('dashletsDialog').style.display = '';
                         SUGAR.mySugar.dashletsDialog.render();
                         document.getElementById('dashletsDialog_c').style.display = 'none';
-                },
-                showChangeLayoutDialog:function(tabNum){
-                document.getElementById('changeLayoutDialog_c').style.display = '';
-                        SUGAR.mySugar.changeLayoutDialog.show();
-                        SUGAR.mySugar.changeLayoutDialog.configFixedCenter(null, false);
-                },
-                changePageLayout:function(numCols){
-                SUGAR.mySugar.changeLayout(numCols);
-                        if (!SUGAR.isIE){
-                setTimeout("document.getElementById('changeLayoutDialog_c').style.display = 'none';", 2000);
-                }
-                SUGAR.mySugar.changeLayoutDialog.hide();
-                },
-                renderChangeLayoutDialog:function(){
-                SUGAR.mySugar.changeLayoutDialog = new YAHOO.widget.Dialog("changeLayoutDialog", {
-                width:"300px",
-                        fixedcenter:true,
-                        visible:false,
-                        draggable:false,
-                        effect:[{
-                        effect:YAHOO.widget.ContainerEffect.SLIDE,
-                                duration:0.5
-                        }, {
-                        effect:YAHOO.widget.ContainerEffect.FADE,
-                                duration:0.5
-                        }],
-                        modal:true
-                });
-                        document.getElementById('changeLayoutDialog').style.display = '';
-                        SUGAR.mySugar.changeLayoutDialog.render();
-                        document.getElementById('changeLayoutDialog_c').style.display = 'none';
                 },
         };
 }();

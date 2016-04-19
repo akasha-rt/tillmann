@@ -264,6 +264,7 @@
                                 {literal}
                                             SUGAR.mySugar.renderDashletsDialog();
                                             SUGAR.mySugar.sugarCharts.loadSugarCharts(activePage);
+                                            SUGAR.mySugar.renderChangeLayoutDialog();
                                 {/literal}
                                 {literal}
                                         }

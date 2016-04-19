@@ -34,7 +34,6 @@ function retrieveData(page_id){
 function outputPage(page_id,pageContent){
 
 
-
     $("div[id^=pageNum_]").each(function(){
         $( this ).css( "display", "none" );
         $( this ).empty();

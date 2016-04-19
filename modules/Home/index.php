@@ -286,6 +286,10 @@ $sugar_smarty->assign('dashboardPages', $pageTabs);
 $sugar_smarty->assign('current_user', $current_user->id);
 
 $sugar_smarty->assign('lblAdd', $GLOBALS['app_strings']['LBL_ADD_BUTTON']);
+// Change By BC: Show Change layout window in home
+$sugar_smarty->assign('lblChangeLayout', $GLOBALS['app_strings']['LBL_CHANGE_LAYOUT']);
+$sugar_smarty->assign('lblNumberOfColumns', $GLOBALS['app_strings']['LBL_NUMBER_OF_COLUMNS']);
+// End
 $sugar_smarty->assign('lblAddTab', $GLOBALS['app_strings']['LBL_ADD_TAB']);
 $sugar_smarty->assign('lblAddDashlets', $GLOBALS['app_strings']['LBL_ADD_DASHLETS']);
 $sugar_smarty->assign('lblLnkHelp', $GLOBALS['app_strings']['LNK_HELP']);
