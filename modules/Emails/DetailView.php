@@ -307,6 +307,8 @@ $show_raw = FALSE;
 if (!empty($focus->raw_source)) {
     $xtpl->assign("RAW_METADATA", $focus->id);
     $show_raw = TRUE;
+}else {
+    $xtpl->assign("DISABLE_RAW_BUTTON", 'none');
 }
 
 if (!empty($focus->reply_to_email)) {
@@ -317,133 +319,6 @@ if (!empty($focus->reply_to_email)) {
         </tr>";
     $xtpl->assign("REPLY_TO", $replyTo);
 }
-
-
-
-// Using action menu (new UI) instead of buttons for Archived Email DetailView.
-$buttons = array(
-    <<<EOD
-            <input	title="{$app_strings['LBL_EDIT_BUTTON_TITLE']}" accessKey="{$app_strings['LBL_EDIT_BUTTON_KEY']}" class="button"
-                    id="edit_button"
-					onclick="	this.form.return_module.value='Emails';
-								this.form.return_action.value='DetailView';
-								this.form.return_id.value='{$focus->id}';
-								this.form.action.value='EditView'"
-					type="submit" name="Edit" value=" {$app_strings['LBL_EDIT_BUTTON_LABEL']}">
-EOD
-    ,
-    <<<EOD
-            <input title="{$app_strings['LBL_DELETE_BUTTON_TITLE']}"
-					accessKey="{$app_strings['LBL_DELETE_BUTTON_KEY']}"
-					class="button"
-					id="delete_button"
-					onclick="this.form.return_module.value='{$start['module']}';
-											this.form.return_action.value='{$start['action']}';
-											this.form.return_id.value='{$start['record']}';
-											this.form.type.value='{$start['type']}';
-											this.form.assigned_user_id.value='{$start['assigned_user_id']}';
-											this.form.action.value='Delete';
-											return confirm('{$app_strings['NTC_DELETE_CONFIRMATION']}')"
-					type="submit" name="button"
-					value="{$app_strings['LBL_DELETE_BUTTON_LABEL']}"
-			>
-EOD
-);
-
-// Bug #52046: Disable the 'Show Raw' link where it does not need to be shown.
-if ($show_raw) {
-    $buttons[] = <<<EOD
-        <input type="button" name="button" class="button"
-            id="rawButton"
-            title="{$mod_strings['LBL_BUTTON_RAW_TITLE']}"
-            value="{$mod_strings['LBL_BUTTON_RAW_LABEL']}"
-            onclick="open_popup('Emails', 800, 600, '', true, true, '', 'show_raw', '', '{$focus->id}');"
-        />
-EOD;
-}
-
-require_once('include/Smarty/plugins/function.sugar_action_menu.php');
-$action_button = smarty_function_sugar_action_menu(array(
-    'id' => 'detail_header_action_menu',
-    'buttons' => $buttons,
-    'class' => 'clickMenu fancymenu',
-        ), $xtpl);
-
-$xtpl->assign("ACTION_BUTTON", $action_button);
-
-/////////
-///Using action menu (new UI) instead of buttons for Sent Email DetailView.
-$buttons_sent_email = array();
-if ($show_forward) {
-    $buttons_sent_email[] = <<<EOD
-            <input title="{$mod_strings['LBL_BUTTON_FORWARD']}"
-					class="button" onclick="this.form.return_module.value='{$ret_mod}';
-											this.form.return_action.value='{$ret_action}';
-											this.form.return_id.value='{$focus->id}';
-											this.form.action.value='EditView';
-											this.form.type.value='forward'"
-					type="submit" name="button"
-					value="  {$mod_strings['LBL_BUTTON_FORWARD']}  "
-					style="display:{DISABLE_FORWARD_BUTTON};"
-			>
-EOD;
-}
-$buttons_sent_email[] = <<<EOD
-            <input title="{$mod_strings['LBL_BUTTON_REPLY_TITLE']}"
-					class="button" onclick="this.form.return_module.value='{$ret_mod}';
-											this.form.return_action.value='{$ret_action}';
-											this.form.return_id.value='{$focus->id}';
-											this.form.action.value='EditView';
-											this.form.type.value='reply'"
-					type="submit" name="button"
-					value="  {$mod_strings['LBL_BUTTON_REPLY']}  "
-			>
-EOD;
-$buttons_sent_email[] = <<<EOD
-            <input title="{$mod_strings['LBL_BUTTON_REPLY_ALL']}"
-					class="button" onclick="this.form.return_module.value='{$ret_mod}';
-											this.form.return_action.value='{$ret_action}';
-											this.form.return_id.value='{$focus->id}';
-											this.form.action.value='EditView';
-											this.form.type.value='replyAll'"
-					type="submit" name="button"
-					value="  {$mod_strings['LBL_BUTTON_REPLY_ALL']}  "
-			>
-EOD;
-$buttons_sent_email[] = <<<EOD
-            <input title="{$app_strings['LBL_DELETE_BUTTON_TITLE']}"
-					accessKey="{$app_strings['LBL_DELETE_BUTTON_KEY']}"
-					class="button" onclick="this.form.return_module.value='{$start['module']}';
-											this.form.return_action.value='{$start['action']}';
-											this.form.return_id.value='{$start['record']}';
-											this.form.type.value='{$start['type']}';
-											this.form.assigned_user_id.value='{$start['assigned_user_id']}';
-											this.form.action.value='Delete';
-											return confirm('{$app_strings['NTC_DELETE_CONFIRMATION']}')"
-					type="submit" name="button"
-					value="    {$app_strings['LBL_DELETE_BUTTON']}    "
-			>
-EOD;
-
-if ($show_raw) {
-    $buttons_sent_email[] = <<<EOD
-            <input type="button" name="button" class="button"
-				id="rawButton"
-				title="{$mod_strings['LBL_BUTTON_RAW_TITLE']}"
-				value=" {$mod_strings['LBL_BUTTON_RAW_LABEL']} "
-				onclick="open_popup('Emails', 800, 600, '', true, true, '', 'show_raw', '', '{$focus->id}');"
-			/>
-EOD;
-}
-
-require_once('include/Smarty/plugins/function.sugar_action_menu.php');
-$action_button_sent_email = smarty_function_sugar_action_menu(array(
-    'id' => 'detail_header_action_menu',
-    'buttons' => $buttons_sent_email,
-    'class' => 'clickMenu fancymenu',
-        ), $xtpl);
-
-$xtpl->assign("ACTION_BUTTON_SENT_EMAIL", $action_button_sent_email);
 
 ///////////////////////////////////////////////////////////////////////////////
 ////	JAVASCRIPT VARS
@@ -501,6 +376,33 @@ for ($i = 0; $i < count($notes_list); $i++) {
 $xtpl->assign('DESCRIPTION', nl2br($focus->description));
 $xtpl->assign('DESCRIPTION_HTML', from_html($focus->description_html));
 $xtpl->assign("ATTACHMENTS", $attachments);
+
+//Genereate reply box when replied from detail view rather than redirecting to EMail page
+require_once('modules/Emails/EmailUI.php');
+$eUi = new EmailUI();
+$focus->from_name = $focus->from_addr;
+//Code to handle Reply all from Email Detail View
+$ema_rply = $eUi->handleReplyType($focus, 'replyAll');
+$forward_header = $ema_rply->getForwardHeader();
+$count = 1;
+$description = str_replace('<br /><br />', '<br />', $forward_header, $count) . $focus->description;
+
+$composeData = array("parent_id" => $focus->parent_id, "parent_type" => $focus->parent_type, "parent_name" => $focus->parent_name, "to_email_addrs" => $focus->from_addr, "cc_addrs" => $focus->cc_addrs, "bcc_addrs" => $focus->bcc_addrs, "subject" => $focus->name, "body" => $description);
+$j_quickComposeOptions = $eUi->generateComposePackageForQuickCreate($composeData, http_build_query($composeData), false, $focus);
+$replyFunction = "SUGAR.quickCompose.init(" . $j_quickComposeOptions . ");";
+$xtpl->assign('REPLYAllFUNCTION', $replyFunction);
+//End
+$ema = $eUi->handleReplyType($focus, 'reply');
+$forward_header = $ema->getForwardHeader();
+$count = 1;
+$description = str_replace('<br /><br />', '<br />', $forward_header, $count) . $focus->description;
+
+$composeData = array("parent_id" => $focus->parent_id, "parent_type" => $focus->parent_type, "parent_name" => $focus->parent_name, "to_email_addrs" => $focus->from_addr, "subject" => $focus->name, "body" => $description);
+$j_quickComposeOptions = $eUi->generateComposePackageForQuickCreate($composeData, http_build_query($composeData), false, $focus);
+$replyFunction = "SUGAR.quickCompose.init(" . $j_quickComposeOptions . ");";
+$xtpl->assign('REPLYFUNCTION', $replyFunction);
+//End
+
 $xtpl->parse("main");
 $xtpl->out("main");
 

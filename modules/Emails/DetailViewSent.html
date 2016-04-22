@@ -67,9 +67,80 @@
     <input type="hidden" name="email_name" value="{EMAIL_NAME}">
     <input type="hidden" name="to_email_addrs" value="{FROM}">
 
-    <table width="80%" cellpadding="0" cellspacing="0" border="0">
+    <table width="10%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-            <td>{ACTION_BUTTON_SENT_EMAIL}</td>
+            <td style="padding-bottom: 2px;" align="left" width="5%">
+                <input title="{MOD.LBL_BUTTON_FORWARD}"
+                       accessKey="{MOD.LBL_BUTTON_FORWARD_KEY}"
+                       class="button" onclick="this.form.return_module.value='{RETURN_MODULE}';
+                           this.form.return_action.value='{RETURN_ACTION}';
+                           this.form.return_id.value='{ID}';
+                           this.form.action.value='EditView';
+                           this.form.type.value='forward'"
+                       type="submit" name="button"
+                       value="  {MOD.LBL_BUTTON_FORWARD}  "
+                       style="display:{DISABLE_FORWARD_BUTTON};"
+                       >
+            </td>
+            <td>&nbsp;</td>
+            <td style="padding-bottom: 2px;" align="left" width="5%">
+                <!--<input title="{MOD.LBL_BUTTON_REPLY_TITLE}"
+                                accessKey="{MOD.LBL_BUTTON_REPLY_KEY}"
+                                class="button" onclick="this.form.return_module.value='{RETURN_MODULE}';
+                                                                                this.form.return_action.value='{RETURN_ACTION}';
+                                                                                this.form.return_id.value='{ID}';
+                                                                                this.form.action.value='EditView'"
+                                type="submit" name="button"
+                                value="  {MOD.LBL_BUTTON_REPLY}  "
+                                style="display:{DISABLE_REPLY_BUTTON};"
+                >-->
+                <input title="{MOD.LBL_BUTTON_REPLY_TITLE}"
+                       accessKey="{MOD.LBL_BUTTON_REPLY_KEY}"
+                       id="composeemail_button"
+                       class="button" 
+                       onclick='{REPLYFUNCTION}'
+                       type="button" name="ComposeEmail_button"
+                       value="  {MOD.LBL_BUTTON_REPLY}  "
+                       style="display:{DISABLE_REPLY_BUTTON};"
+                       >
+            </td>
+            <td>&nbsp;</td>
+            <td style="padding-bottom: 2px;" align="left" width="5%">
+                <input title="{MOD.LBL_BUTTON_REPLY_TITLE}"
+                       accessKey="{MOD.LBL_BUTTON_REPLY_KEY}"
+                       id="composeemail_button"
+                       class="button" 
+                       onclick='{REPLYAllFUNCTION}'
+                       type="button" name="ReplyAll_button"
+                       value="Reply All"
+                       style="display:{DISABLE_REPLY_BUTTON};"
+                       >
+            <td>&nbsp;</td>
+            <td style="padding-bottom: 2px;" align="left" width="5%">
+                <input title="{APP.LBL_DELETE_BUTTON_TITLE}"
+                       accessKey="{APP.LBL_DELETE_BUTTON_KEY}"
+                       class="button" onclick="this.form.return_module.value='{DELETE_RETURN_MODULE}';
+                           this.form.return_action.value='{DELETE_RETURN_ACTION}';
+                           this.form.return_id.value='{DELETE_RETURN_ID}';
+                           this.form.type.value='{DELETE_RETURN_TYPE}';
+                           this.form.assigned_user_id.value='{DELETE_RETURN_ASSIGNED_USER_ID}';
+                           this.form.action.value='Delete';
+                           return confirm('{APP.NTC_DELETE_CONFIRMATION}')"
+                       type="submit" name="button"
+                       value="    {APP.LBL_DELETE_BUTTON}    "
+                       >
+            </td>
+            <td>&nbsp;</td>
+            <td style="padding-bottom: 2px;" align="left" width="5%">
+                <input type="button" name="button" class="button"
+                       style="display:{DISABLE_RAW_BUTTON};"
+                       id="rawButton"
+                       title="{MOD.LBL_BUTTON_RAW_TITLE}"
+                       accesskey="{MOD.LBL_BUTTON_RAW_KEY}"
+                       value=" {MOD.LBL_BUTTON_RAW_LABEL} "
+                       onclick="open_popup('Emails', 800, 600, '', true, true, '', 'show_raw', '', '{RAW_METADATA}');"
+                       />
+            </td>
             <td align='right'>{ADMIN_EDIT}</td>
         </tr>
     </table>

@@ -48,9 +48,9 @@ var originalLayout = null;
         var charts = new Object();
         if (module == 'Dashboard') {
 cookiePageIndex = current_user + "_activeDashboardPage";
-        } else {
+} else {
 cookiePageIndex = current_user + "_activePage";
-        }
+}
 var homepage_dd;
         return {
         getLayout: function(asString) {
@@ -103,35 +103,36 @@ var homepage_dd;
                         SUGAR.mySugar.changeLayoutDialog.configFixedCenter(null, false);
                 },
                 changePageLayout:function(numCols){
-                        SUGAR.mySugar.changeLayout(numCols);
+                SUGAR.mySugar.changeLayout(numCols);
                         if (!SUGAR.isIE){
                 setTimeout("document.getElementById('changeLayoutDialog_c').style.display = 'none';", 2000);
                 }
                 SUGAR.mySugar.changeLayoutDialog.hide();
                 },
                 renderChangeLayoutDialog:function(){
-                        SUGAR.mySugar.changeLayoutDialog = new YAHOO.widget.Dialog("changeLayoutDialog", {
-                        width:"300px",
-                                fixedcenter:true,
-                                visible:false,
-                                draggable:false,
-                                effect:[{
-                                effect:YAHOO.widget.ContainerEffect.SLIDE,
-                                        duration:0.5
-                                }, {
-                                effect:YAHOO.widget.ContainerEffect.FADE,
-                                        duration:0.5
-                                }],
-                                modal:true
-                        });
+                SUGAR.mySugar.changeLayoutDialog = new YAHOO.widget.Dialog("changeLayoutDialog", {
+                width:"300px",
+                        fixedcenter:true,
+                        visible:false,
+                        draggable:false,
+                        effect:[{
+                        effect:YAHOO.widget.ContainerEffect.SLIDE,
+                                duration:0.5
+                        }, {
+                        effect:YAHOO.widget.ContainerEffect.FADE,
+                                duration:0.5
+                        }],
+                        modal:true
+                });
                         document.getElementById('changeLayoutDialog').style.display = '';
                         SUGAR.mySugar.changeLayoutDialog.render();
                         document.getElementById('changeLayoutDialog_c').style.display = 'none';
                 },
-                retrievePage:function (page_id){
-                        retrieveData(page_id);
+                retrievePage:function (page_id, pageRefresh){
+                        retrieveData(page_id, pageRefresh);
                 },
                 changeLayout:function(numCols){
+                        var pageRefresh = true;
                         ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_SAVING_LAYOUT'));
                         var success = function(data){
                         ajaxStatus.showStatus(SUGAR.language.get('app_strings', 'LBL_SAVED_LAYOUT'));
@@ -142,7 +143,7 @@ var homepage_dd;
                                 pageNum = pageNum.replace(/\n/g, '');
                                 //For IE and Opera
                                 pageNum = pageNum.replace(/\s/g, ' ').replace(/  ,/g, '');
-                                SUGAR.mySugar.retrievePage(pageNum);
+                                SUGAR.mySugar.retrievePage(pageNum, pageRefresh);
                         }
                 url = 'index.php?to_pdf=1&module=' + module + '&action=DynamicAction&DynamicAction=changeLayout&selectedPage=' + activeTab + '&numColumns=' + numCols;
                         var cObj = YAHOO.util.Connect.asyncRequest('GET', url, {
@@ -570,5 +571,5 @@ var homepage_dd;
                         document.getElementById('dashletsDialog_c').style.display = 'none';
                 },
         };
-        }();
-        }
+}();
+}
