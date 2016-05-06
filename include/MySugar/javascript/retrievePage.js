@@ -25,10 +25,11 @@ function retrieveData(page_id, pageRefresh) {
             if (pageRefresh) {
                 window.location.reload();
             }
+            SUGAR.ajaxUI.hideLoadingPanel();
         },
         error: function (request, error)
         {
-
+            SUGAR.ajaxUI.hideLoadingPanel();
         }
     })
 }
