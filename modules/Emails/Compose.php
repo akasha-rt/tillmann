@@ -81,13 +81,12 @@ function initFullCompose($ret)
  * @param Bool $forFullCompose If full compose is set to TRUE, then continue execution and include the full Emails UI.  Otherwise
  *             the data generated is returned.
  */
-function generateComposeDataPackage($data, $forFullCompose = TRUE)
-{
+function generateComposeDataPackage($data, $forFullCompose = TRUE, $bean = null) {
     // we will need the following:
     if (isset($data['parent_type']) && !empty($data['parent_type']) &&
         isset($data['parent_id']) && !empty($data['parent_id']) &&
-        !isset($data['ListView']) && !isset($data['replyForward'])
-    ) {
+            !isset($data['ListView']) && !isset($data['replyForward'])) {
+        if (empty($bean)) {
         global $beanList;
         global $beanFiles;
         global $mod_strings;
@@ -98,6 +97,7 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE)
 
         $bean = new $class();
         $bean->retrieve($data['parent_id']);
+        }
         if (isset($bean->full_name)) {
             $parentName = $bean->full_name;
         } elseif (isset($bean->name)) {
@@ -157,9 +157,16 @@ function generateComposeDataPackage($data, $forFullCompose = TRUE)
             'to_email_addrs' => $namePlusEmail,
             'parent_type' => $data['parent_type'],
             'parent_id' => $data['parent_id'],
-            'parent_name' => $parentName,
-            'subject' => $subject,
-            'body' => $body,
+            // Chnage By BC: Upgrade On April 2016
+            'cc_addrs' => $data['cc_addrs'],
+            'bcc_addrs' => $data['bcc_addrs'],
+            //'parent_name' => $parentName,
+            //'subject' => $subject,
+            //'body' => $body,
+            'parent_name' => ($data['parent_name']) ? $data['parent_name'] : $parentName,
+            'subject' => ($data['subject']) ? $data['subject'] : $subject,
+            'body' => ($body) ? $body : $data['body'],
+            // End
             'attachments' => $attachments,
             'email_id' => $email_id,
 

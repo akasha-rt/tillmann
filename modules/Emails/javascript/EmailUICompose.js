@@ -815,7 +815,7 @@ var sw = YAHOO.SUGAR,
 
                         YAHOO.util.Event.onAvailable('htmleditordiv' + idx, function() {
                         SE.composeLayout._createComposeLayout(idx);
-                                SE.composeLayout[idx].set('height', 350);
+                                SE.composeLayout[idx].set('height', (80 * document.documentElement.clientHeight) / 100);
                                 SE.composeLayout[idx].render();
                         });
                         });
@@ -2502,4 +2502,4 @@ var sw = YAHOO.SUGAR,
 ///////////////////////////////////////////////////////////////////////////////
 
 
-        })();
+})();
