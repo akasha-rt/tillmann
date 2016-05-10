@@ -65,7 +65,7 @@ class ContactFormBase extends PersonFormBase {
      * @param $prefix String value of prefix that may be present in $_POST variables
      * @return SQL String of the query that should be used for the initial duplicate lookup check
      */
-    public function getDuplicateQuery($focus, $prefix = '') {
+    /*public function getDuplicateQuery($focus, $prefix = '') {
         $query = 'SELECT contacts.id, contacts.first_name, contacts.last_name, contacts.title FROM contacts ';
 
         // Bug #46427 : Records from other Teams shown on Potential Duplicate Contacts screen during Lead Conversion
@@ -82,7 +82,34 @@ class ContactFormBase extends PersonFormBase {
             $query .= " AND  contacts.id != '" . $_POST[$prefix . 'record'] . "'";
         }
         return $query;
+    }*/
+    // Change By BC:
+    public function getDuplicateQuery($prefix = '') {
+
+        $query = 'SELECT
+                    contacts.id,
+                    contacts.first_name,
+                    contacts.last_name,
+                    contacts.title
+                  FROM contacts
+                    LEFT JOIN email_addr_bean_rel
+                      ON email_addr_bean_rel.bean_id = contacts.id
+                        AND email_addr_bean_rel.deleted = 0
+                    LEFT JOIN email_addresses
+                      ON email_addresses.id = email_addr_bean_rel.email_address_id
+                        AND email_addresses.deleted = 0
+                  WHERE contacts.deleted = 0
+                      AND ';
+
+        $query .= " email_addresses.email_address = '" . $_POST['Contacts0emailAddress0'] . "'";
+
+        if (!empty($_POST[$prefix . 'record'])) {
+            $query .= " AND  id != '" . $_POST[$prefix . 'record'] . "'";
+        }
+        return $query;
+        //return ' ';
     }
+    // End
 
     function getWideFormBody($prefix, $mod = '', $formname = '', $contact = '', $portal = true) {
 

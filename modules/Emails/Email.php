@@ -2243,8 +2243,18 @@ class Email extends SugarBean {
         return $email;
     }
 
-    function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false, $ifListForExport = false) {
-
+    function create_new_list_query($order_by, $where, $filter = array(), $params = array(), $show_deleted = 0, $join_type = '', $return_array = false, $parentbean = null, $singleSelect = false) {
+        // Change By BC:
+        if($_REQUEST['action'] == 'UnifiedSearch' && !empty($_REQUEST['query_string'])){
+            return array(
+                'select' => 'SELECT  emails.id  , emails.name , emails.status , emails.date_entered , emails.assigned_user_id ',
+                'from' => 'FROM emails LEFT JOIN emails_cstm ON emails.id = emails_cstm.id_c INNER JOIN emails_text ON emails_text.email_id = emails.id AND emails_text.deleted = 0 ',
+                'from_min' => 'FROM emails ',
+                'where' => "WHERE (MATCH(description)AGAINST('{$_REQUEST['query_string']}') OR MATCH(NAME)AGAINST('{$_REQUEST['query_string']}')) AND emails.deleted = 0 ",
+                'order_by' => 'ORDER BY emails.date_entered DESC '
+            );
+                // End
+        }else{
         if ($return_array) {
             return parent::create_new_list_query($order_by, $where, $filter, $params, $show_deleted, $join_type, $return_array, $parentbean, $singleSelect);
         }
@@ -2281,7 +2291,7 @@ class Email extends SugarBean {
             $query .= " ORDER BY $order_by";
         else
             $query .= " ORDER BY date_sent DESC";
-
+        }
         return $query;
     }
 
@@ -2507,6 +2517,7 @@ class Email extends SugarBean {
         global $beanList;
         global $sugar_config;
         global $app_strings;
+        global $app_list_strings;
 
         $emailSettings = $current_user->getPreference('emailSettings', 'Emails');
         // cn: default to a low number until user specifies otherwise
@@ -2530,7 +2541,8 @@ class Email extends SugarBean {
             'subject' => 'name',
             'date' => 'date_sent',
             'AssignedTo' => 'assigned_user_id',
-            'flagged' => 'flagged'
+            'flagged' => 'flagged',
+            'emailstatus' => 'status'
         );
 
         $sort = !empty($_REQUEST['sort']) ? $this->db->getValidDBName($_REQUEST['sort']) : "";
@@ -2559,6 +2571,7 @@ class Email extends SugarBean {
             $temp = array();
             $temp['flagged'] = (is_null($a['flagged']) || $a['flagged'] == '0') ? '' : 1;
             $temp['status'] = (is_null($a['reply_to_status']) || $a['reply_to_status'] == '0') ? '' : 1;
+            $temp['emailstatus'] = $app_list_strings['dom_email_status'][$a['status']];
             $temp['subject'] = $a['name'];
             $temp['date'] = $timedate->to_display_date_time($a['date_sent']);
             $temp['uid'] = $a['id'];

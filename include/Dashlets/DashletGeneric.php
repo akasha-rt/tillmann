@@ -207,7 +207,10 @@ class DashletGeneric extends Dashlet {
 
         $chooser->args['left_name'] = 'display_tabs';
         $chooser->args['right_name'] = 'hide_tabs';
-        $chooser->args['max_left'] = '6';
+        // Change By BC:
+//        $chooser->args['max_left'] = '6';
+        $chooser->args['max_left'] = '8';
+        // End
 
         $chooser->args['left_label'] = $GLOBALS['app_strings']['LBL_DISPLAY_COLUMNS'];
         $chooser->args['right_label'] = $GLOBALS['app_strings']['LBL_HIDE_COLUMNS'];

@@ -1394,7 +1394,11 @@ eoq;
         $smarty->assign("userId", $email->assigned_user_id);
         $smarty->assign("userName", $email->assigned_user_name);
         $parent_types = $app_list_strings['record_type_display'];
-        $smarty->assign('parentOptions', get_select_options_with_id($parent_types, $email->parent_type));
+        if ($_REQUEST['emailUIAction'] == 'getRelateForm') {
+            $smarty->assign('parentOptions', get_select_options_with_id($parent_types, 'Cases'));
+        } else {
+            $smarty->assign('parentOptions', get_select_options_with_id($parent_types, $email->parent_type));
+        }
 
         $quicksearch_js = '<script type="text/javascript" language="javascript">sqs_objects = ' . json_encode($sqs_objects) . '</script>';
         $smarty->assign('SQS', $quicksearch_js);

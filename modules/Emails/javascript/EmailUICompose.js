@@ -1469,7 +1469,10 @@ var sw = YAHOO.SUGAR,
                 //bug 48285
                 var newHtml = html;
                         //remove custom spacing
-                        var spacing = '<span id="spacing"><br /><br /><br /></span>&nbsp;';
+                       // Change By BC:
+                       // var spacing = '<span id="spacing"><br /><br /><br /></span>&nbsp;';
+                        var spacing = '&nbsp;';
+                        // End
                         var customSpacingStart = html.indexOf(spacing);
                         if (customSpacingStart > - 1)
                 {
@@ -1900,7 +1903,12 @@ var sw = YAHOO.SUGAR,
                 document.getElementById("addressCC" + SE.composeLayout.currentInstanceId).value = composePackage.cc_addrs;
                         SE.composeLayout.showHiddenAddress('cc', SE.composeLayout.currentInstanceId);
                 }
-
+                // Change By BC:
+                if (composePackage.bcc_addrs) {
+                document.getElementById("addressBCC" + SE.composeLayout.currentInstanceId).value = composePackage.bcc_addrs;
+                        SE.composeLayout.showHiddenAddress('bcc', SE.composeLayout.currentInstanceId);
+                }
+                // End
                 if (composePackage.subject != null && composePackage.subject.length > 0) {
                 document.getElementById("emailSubject" + SE.composeLayout.currentInstanceId).value = composePackage.subject;
                 }
@@ -1973,8 +1981,10 @@ var sw = YAHOO.SUGAR,
                 //bug 48179
                 //check tinyHTML for closing tags
                 var body = tinyHTML.lastIndexOf('</body>');
+                // Chnage By BC:
                         //spacing = '<span id="spacing"><br /><br /><br /></span>&nbsp;';
                         spacing = '&nbsp;';
+                        // End
                         if (body > - 1)
                 {
                 var part1 = tinyHTML.substr(0, body);

@@ -275,7 +275,11 @@ class Contact extends Person {
                                 email_addresses.email_address email_address,
                                 '' email_addresses_non_primary, " . // email_addresses_non_primary needed for get_field_order_mapping()
                 "accounts.name as account_name,
-                                users.user_name as assigned_user_name ";
+                    ". // Chnage By BC:
+                   " email_addresses.opt_out email_opt_out,
+                                email_addresses.invalid_email invalid_email,"
+                .// End
+                                "users.user_name as assigned_user_name ";
         $query .= $custom_join['select'];
         $query .= " FROM contacts ";
         $query .= "LEFT JOIN users

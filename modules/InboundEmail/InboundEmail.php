@@ -1526,9 +1526,11 @@ class InboundEmail extends SugarBean {
             );
         }
         $mailboxes = $this->getMailboxes(true);
-        if (!in_array('INBOX', $mailboxes)) {
+        // Change By BC:
+        /* if (!in_array('INBOX', $mailboxes)) {
             $mailboxes[] = 'INBOX';
-        }
+          } */
+        // End
         sort($mailboxes);
         if (isset($_REQUEST['mbox']) && !empty($_REQUEST['mbox']) && isset($_REQUEST['currentCount'])) {
             $GLOBALS['log']->info("INBOUNDEMAIL: Picking up from where we left off");
@@ -4579,7 +4581,10 @@ eoq;
             } else {
                 $date = $storedOptions['only_since_last'];
             }
+            //Dhaval - To enable import of read email from gmail
             $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED UNSEEN');
+            // $ret = imap_search($this->conn, 'SINCE "' . $date . '" UNDELETED');
+            //End - Dhaval
             $check = imap_check($this->conn);
             $storedOptions['only_since_last'] = $check->Date;
             $this->stored_options = base64_encode(serialize($storedOptions));

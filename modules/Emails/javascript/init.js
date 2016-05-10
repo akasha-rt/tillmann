@@ -65,12 +65,13 @@ convert_urls : false,
         strict_loading_mode : true,
         force_br_newlines : false,
         forced_root_block : '',
+        force_p_newlines : false,
         directionality : (typeof (rtl) == "undefined") ? "ltr" : "rtl",
-       // gecko_spellcheck : tinyConfig.gecko_spellcheck
-       //Enable Spell checker auto - dhaval
+        // gecko_spellcheck : tinyConfig.gecko_spellcheck
+        //Enable Spell checker auto - dhaval
         gecko_spellcheck : true
-});
-}
+        });
+        }
 
 // initialze message overlay
 SUGAR.email2.e2overlay = new YAHOO.widget.Dialog("SUGAR.email2.e2overlay", {
@@ -80,7 +81,7 @@ modal       : false,
         width       : 300,
         height      : 120,
         shadow      : true
-}
+        }
 );
         // Hide Sugar menu
         if (SUGAR.themes.tempHideLeftCol)
@@ -303,7 +304,7 @@ SUGAR.email2.folders.startCheckTimer();
         YAHOO.util.Event.on(window, 'resize', SUGAR.email2.autoSetLayout);
         //Init fix for YUI 2.7.0 datatable sort.
         SUGAR.email2.addressBook.initFixForDatatableSort();
-        }
+}
 
 function createTreePanel(treeData, params) {
 var tree = new YAHOO.widget.TreeView(params.id);
@@ -311,7 +312,7 @@ var tree = new YAHOO.widget.TreeView(params.id);
         //if (treeData.nodes && treeData[0].id == "Home")
         //	treeData = treeData[0];
         return tree;
-        }
+}
 
 function addChildNodes(parentNode, parentData) {
 var Ck = YAHOO.util.Cookie;
@@ -324,16 +325,16 @@ if (nodes[i].data) {
 // nodes[i].data.href = '#';
 var node = new YAHOO.widget.TextNode(nodes[i].data, parentNode);
         node.action = nodes[i].data.action;
-} else {
+        } else {
 if (nodes[i].id == SUGAR.language.get('app_strings', 'LBL_EMAIL_HOME_FOLDER')) {
 addChildNodes(parentNode, nodes[i]);
         return;
-}
+        }
 nodes[i].expanded = Ck.getSub("EmailTreeLayout", nodes[i].id + "") == "true";
         Ck.setSub("EmailTreeLayout", nodes[i].id + "", nodes[i].expanded ? true : false, {expires: SUGAR.email2.nextYear});
         if (nodes[i].cls) {
 nodes[i].className = nodes[i].cls;
-}
+        }
 // Previously, span was added in the label so it was rendering in the tree.
 // Default behavior is to wrap in span if no href property, and since this href
 // doesn't do anything, remove it so that it will be wrapped in spans.
@@ -346,13 +347,13 @@ nodes[i].text = unescape(nodes[i].text);
         if (nodes[i].children) {
 nodes[i].nodes = nodes[i].children;
         nodes[i].children = [ ];
-}
+        }
 var node = new YAHOO.widget.TextNode(nodes[i], parentNode);
-}
+        }
 
 if (typeof (nodes[i].nodes) == 'object') {
 addChildNodes(node, nodes[i]);
-}
+        }
 }
 }
 }
@@ -364,15 +365,15 @@ function email2treeinit(tree, treedata, treediv, params) {
 //ensure the tree data is not corrupt
 if (!treedata) {
 return;
-}
+        }
 if (SUGAR.email2.tree) {
 SUGAR.email2.tree.destroy();
         SUGAR.email2.tree = null;
-}
+        }
 
 var tree = SUGAR.email2.tree = createTreePanel({nodes : {}}, {
 id: 'emailtree'
-});
+        });
         tree.subscribe("clickEvent", SUGAR.email2.folders.handleClick);
         tree.subscribe("collapseComplete", function(node){YAHOO.util.Cookie.setSub("EmailTreeLayout", node.data.id + "", false, {expires: SUGAR.email2.nextYear}); });
         tree.subscribe("expandComplete", function(node){
@@ -388,15 +389,15 @@ id: 'emailtree'
 var node = root.children[0];
         node.destroy();
         tree.removeNode(root.children[0], false);
-}
+        }
 addChildNodes(root, treedata);
         tree.render();
         SUGAR.email2.accounts.renderTree();
-        }
+}
 
 SUGAR.email2.folders.folderDD = function(id, sGroup, config) {
 SUGAR.email2.folders.folderDD.superclass.constructor.call(this, id, sGroup, config);
-        };
+};
         YAHOO.extend(SUGAR.email2.folders.folderDD, YAHOO.util.DDProxy, {
         startDrag: function(x, y) {
         var Dom = YAHOO.util.Dom;
