@@ -84,7 +84,7 @@ class ContactFormBase extends PersonFormBase {
         return $query;
     }*/
     // Change By BC:
-    public function getDuplicateQuery($prefix = '') {
+    public function getDuplicateQuery($focus,$prefix = '') {
 
         $query = 'SELECT
                     contacts.id,
