@@ -98,9 +98,17 @@ var homepage_dd;
                 //Change by bc to change the layout in the multiple home page tabs
 
                 showChangeLayoutDialog:function(tabNum){
+                /* Change By BC: Resolve dashlet change layout issue.
+                 * On 24-06-2016 */
+                if(typeof SUGAR.mySugar.changeLayoutDialog !== 'undefined'){
                         document.getElementById('changeLayoutDialog_c').style.display = '';
                         SUGAR.mySugar.changeLayoutDialog.show();
                         SUGAR.mySugar.changeLayoutDialog.configFixedCenter(null, false);
+                    }else{  
+                        $('#changeLayoutDialog_mask').show();
+                        $('#changeLayoutDialog_c').show();
+                        $('#changeLayoutDialog_c').css('visibility', 'visible');
+                    }
                 },
                 changePageLayout:function(numCols){
                 SUGAR.mySugar.changeLayout(numCols);
@@ -110,20 +118,20 @@ var homepage_dd;
                 SUGAR.mySugar.changeLayoutDialog.hide();
                 },
                 renderChangeLayoutDialog:function(){
-                SUGAR.mySugar.changeLayoutDialog = new YAHOO.widget.Dialog("changeLayoutDialog", {
-                width:"300px",
-                        fixedcenter:true,
-                        visible:false,
-                        draggable:false,
-                        effect:[{
-                        effect:YAHOO.widget.ContainerEffect.SLIDE,
-                                duration:0.5
-                        }, {
-                        effect:YAHOO.widget.ContainerEffect.FADE,
-                                duration:0.5
-                        }],
-                        modal:true
-                });
+                        SUGAR.mySugar.changeLayoutDialog = new YAHOO.widget.Dialog("changeLayoutDialog", {
+                        width:"300px",
+                                fixedcenter:true,
+                                visible:false,
+                                draggable:false,
+                                effect:[{
+                                effect:YAHOO.widget.ContainerEffect.SLIDE,
+                                        duration:0.5
+                                }, {
+                                effect:YAHOO.widget.ContainerEffect.FADE,
+                                        duration:0.5
+                                }],
+                                modal:true
+                        });
                         document.getElementById('changeLayoutDialog').style.display = '';
                         SUGAR.mySugar.changeLayoutDialog.render();
                         document.getElementById('changeLayoutDialog_c').style.display = 'none';
