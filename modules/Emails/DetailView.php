@@ -387,7 +387,25 @@ $forward_header = $ema_rply->getForwardHeader();
 $count = 1;
 $description = str_replace('<br /><br />', '<br />', $forward_header, $count) . $focus->description;
 
-$composeData = array("parent_id" => $focus->parent_id, "parent_type" => $focus->parent_type, "parent_name" => $focus->parent_name, "to_email_addrs" => $focus->from_addr, "cc_addrs" => $focus->cc_addrs, "bcc_addrs" => $focus->bcc_addrs, "subject" => $focus->name, "body" => $description);
+$reply_all_arr = explode(',', $focus->to_addrs_names);
+array_push($reply_all_arr, $focus->from_addr);
+$reply_all_arr = array_filter($reply_all_arr, function($string) {
+    global $current_user;
+    return strpos($string, $current_user->getUsersNameAndEmail()['email']) === false;
+});
+foreach($reply_all_arr as $key=>$email) {
+    echo $key;
+    echo $email;
+    $email = htmlspecialchars_decode($email);
+    // extract first_name and email address from from_addr
+    $pattern = '/[\._a-zA-Z0-9-]+@[\._a-zA-Z0-9-]+/i';
+    preg_match_all($pattern, $email, $matches);
+    $reply_all_arr[$key] = $matches[0][0];
+}
+$reply_all_arr = array_unique($reply_all_arr);
+$reply_all = implode(',', $reply_all_arr);
+
+$composeData = array("parent_id" => $focus->parent_id, "parent_type" => $focus->parent_type, "parent_name" => $focus->parent_name, "to_email_addrs" => $reply_all, "cc_addrs" => $focus->cc_addrs, "bcc_addrs" => $focus->bcc_addrs, "subject" => $focus->name, "body" => $description);
 $j_quickComposeOptions = $eUi->generateComposePackageForQuickCreate($composeData, http_build_query($composeData), false, $focus);
 $replyFunction = "SUGAR.quickCompose.init(" . $j_quickComposeOptions . ");";
 $xtpl->assign('REPLYAllFUNCTION', $replyFunction);
@@ -421,3 +439,4 @@ if ($show_subpanels) {
     echo $subpanel->display();
 }
 ?>
+
