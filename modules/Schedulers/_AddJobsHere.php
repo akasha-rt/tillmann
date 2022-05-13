@@ -145,6 +145,8 @@ function pollMonitoredInboxes()
                     } // if
                     $messagesToDelete = array();
                     if ($ieX->isMailBoxTypeCreateCase()) {
+                        require_once 'modules/AOP_Case_Updates/AOPAssignManager.php';
+                        $assignManager = new AOPAssignManager($ieX);			
                         $users[] = $sugarFolder->assign_to_id;
                         $distributionMethod = $ieX->get_stored_options("distrib_method", "");
                         if ($distributionMethod != 'roundRobin') {
@@ -200,6 +202,7 @@ function pollMonitoredInboxes()
                                             $counts[$leastBusy] = $counts[$leastBusy] + 1;
                                         }
                                     } // else
+                                    $userId = $assignManager->getNextAssignedUser();
                                     $GLOBALS['log']->debug('userId [ ' . $userId . ' ]');
                                     $ieX->handleCreateCase($ieX->email, $userId);
                                 } // if
