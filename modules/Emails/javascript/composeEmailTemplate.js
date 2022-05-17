@@ -32,6 +32,19 @@
  * technical reasons, the Appropriate Legal Notices must display the words
  * "Powered by SugarCRM".
  ********************************************************************************/
+ var nDelayID = -1;
+ var onTextboxKeyUp = function(input_fields, module_name, action, div) {
+         // // Clear previous timeout
+         if(nDelayID != -1) {
+         clearTimeout(nDelayID);
+         }
+ 
+         // Set new timeout
+         nDelayID = setTimeout(function(){
+                 ForwardLookUp(input_fields, module_name, action);
+                 SE.composeLayout.showAddressDetails(div);
+         },(200));
+ };
 var http = createRequestObject();
         function createRequestObject()
                 {
@@ -102,7 +115,7 @@ var input_field = input_fields;
         $("#" + input_field).attr('autocomplete', 'off');
         $($("#" + input_field).parent()).append("<div id='" + input_field + "_search' class='" + input_field + "_search_class'>");
         $("#" + input_field + "_search").hide();
-        $(document).on("input", "#" + input_field, function() {
+        // $(document).on("input", "#" + input_field, function() {
 
 var search = $("#" + input_field).val().replace(new RegExp('<[^<]+\>', 'g'), "");
         search = $.trim(search);
@@ -134,7 +147,7 @@ cache: true,
         }
 });
 }
-});
+// });
         $(document).on('click', "#" + input_field + "_search_offers", function() {
 
 var str = "";
@@ -272,7 +285,7 @@ SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout
         '							</td>' +
         '							<td class="emailUIField" NOWRAP>' +
                 '								<div class="">' +
-                '									&nbsp;&nbsp;<input class="sqsEnabled" type="text" size="96" id="addressTO{idx}" title="{app_strings.LBL_EMAIL_TO}" name="addressTO{idx}" onkeypress="ForwardLookUp(\'addressTO{idx}\', \'Emails\', \'EmailQuickSearch\');" onkeyup="SE.composeLayout.showAddressDetails(this);">' +
+                '									&nbsp;&nbsp;<input class="sqsEnabled" type="text" size="96" id="addressTO{idx}" title="{app_strings.LBL_EMAIL_TO}" name="addressTO{idx}" onkeyup="onTextboxKeyUp(\'addressTO{idx}\', \'Emails\', \'EmailQuickSearch\', this);">' +
         '									<span class="rolloverEmail"> <a id="MoreaddressTO{idx}" href="#" style="display: none;">+<span id="DetailaddressTO{idx}">&nbsp;</span></a> </span>' +
         '									<div class="ac_container" id="addressToAC{idx}"></div>' +
         '								</div>' +
@@ -289,7 +302,7 @@ SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout
         '							</td>' +
         '							<td class="emailUIField" NOWRAP>' +
         '								<div class="ac_autocomplete">' +
-                '									&nbsp;&nbsp;<input class="ac_input" type="text" size="96" id="addressCC{idx}" name="addressCC{idx}"   title="{app_strings.LBL_EMAIL_CC}" onkeypress="ForwardLookUp(\'addressCC{idx}\', \'Emails\', \'EmailQuickSearch\');" onkeyup="SE.composeLayout.showAddressDetails(this);">' +
+                '									&nbsp;&nbsp;<input class="ac_input" type="text" size="96" id="addressCC{idx}" name="addressCC{idx}"   title="{app_strings.LBL_EMAIL_CC}" onkeyup="onTextboxKeyUp(\'addressCC{idx}\', \'Emails\', \'EmailQuickSearch\', this);">' +
         '									<span class="rolloverEmail"> <a id="MoreaddressCC{idx}" href="#"  style="display: none;">+<span id="DetailaddressCC{idx}">&nbsp;</span></a> </span>' +
         '									<div class="ac_container" id="addressCcAC{idx}"></div>' +
         '								</div>' +
@@ -303,7 +316,7 @@ SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout
         '							</td>' +
         '							<td class="emailUIField" NOWRAP>' +
         '								<div class="ac_autocomplete">' +
-                '									&nbsp;&nbsp;<input class="ac_input" type="text" size="96" id="addressBCC{idx}" name="addressBCC{idx}" title="{app_strings.LBL_EMAIL_BCC}" onkeypress="ForwardLookUp(\'addressBCC{idx}\', \'Emails\', \'EmailQuickSearch\');" onkeyup="SE.composeLayout.showAddressDetails(this);">' +
+                '									&nbsp;&nbsp;<input class="ac_input" type="text" size="96" id="addressBCC{idx}" name="addressBCC{idx}" title="{app_strings.LBL_EMAIL_BCC}" onkeyup="onTextboxKeyUp(\'addressBCC{idx}\', \'Emails\', \'EmailQuickSearch\', this);">' +
         '									<span class="rolloverEmail"> <a id="MoreaddressBCC{idx}" href="#" style="display: none;">+<span id="DetailaddressBCC{idx}">&nbsp;</span></a> </span>' +
         '									<div class="ac_container" id="addressBccAC{idx}"></div>' +
         '								</div>' +
@@ -395,7 +408,7 @@ SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout
         '					</tr>' +
         '					<tr>' +
         '						<td NOWRAP style="padding:2px;">' +
-                '							<select name="department" tabindex="2" onchange="selectDeptartment(\'{idx}\',this.value);"><option id="" value="">-none-</option><option id="Operation"  value="Operation">Operation</option><option id="Marketing" value="Marketing">Marketing</option><option id="Accounts" value="Accounts">Accounts</option><option id="Support" value="Support">Support</option></select>' +
+                '							<select name="department" tabindex="2" onchange="selectDeptartment(\'{idx}\',this.value);"><option id="" value="">-none-</option><option id="Operation"  value="Operation">Operation</option><option id="Marketing" value="Marketing">Marketing</option><option id="Accounts" value="Accounts">Accounts</option><option id="Support" value="Support">Support</option><option id="CustomerService" value="Customer Service">Customer Service</option></select>' +
         '						</td>' +
         '					</tr>' +
                 '					<tr>' +
@@ -441,7 +454,7 @@ SUGAR.email2.templates['compose'] = '<div id="composeLayout{idx}" class="ylayout
                 '						<td NOWRAP style="padding:2px;">' +
                 '							<div id="cannedresponsediv{idx}" style="display:none;">' +
                 '                                                   <b>Name : </b> <br/> <input type="text" name="name{idx}" id="name{idx}"><br/><br/>' +
-                '                                                   <b>Department : </b> <br/> <select name="dept{idx}" id="dept{idx}"><option id="Operation"  value="Operation">Operation</option><option id="Marketing" value="Marketing">Marketing</option><option id="Accounts" value="Accounts">Accounts</option><option id="Support" value="Support">Support</option></select>' +
+                '                                                   <b>Department : </b> <br/> <select name="dept{idx}" id="dept{idx}"><option id="Operation"  value="Operation">Operation</option><option id="Marketing" value="Marketing">Marketing</option><option id="Accounts" value="Accounts">Accounts</option><option id="Support" value="Support">Support</option><option id="CustomerService" value="Customer Service">Customer Service</option></select>' +
                 '                                                   <input type="button" onclick="return saveCannedResponse(\'{idx}\');" value="Create" name="submit">' +
                 '						</td>' +
                 '					</tr>' +
