@@ -280,32 +280,87 @@ function createOppFromCase() {
     return true;
 }
 
+function getWorkingDays($startDate,$endDate){
+    // do strtotime calculations just once
+    $endDate = strtotime($endDate);
+    $startDate = strtotime($startDate);
+
+    //The total number of days between the two dates. We compute the no. of seconds and divide it to 60*60*24
+    //We add one to inlude both dates in the interval.
+    $days = ($endDate - $startDate) / 86400;
+
+    $no_full_weeks = floor($days / 7);
+    $no_remaining_days = fmod($days, 7);
+
+    //It will return 1 if it's Monday,.. ,7 for Sunday
+    $the_first_day_of_week = date("N", $startDate);
+    $the_last_day_of_week = date("N", $endDate);
+
+    //---->The two can be equal in leap years when february has 29 days, the equal sign is added here
+    //In the first case the whole interval is within a week, in the second case the interval falls in two weeks.
+    if ($the_first_day_of_week <= $the_last_day_of_week) {
+        if ($the_first_day_of_week <= 6 && 6 <= $the_last_day_of_week) $no_remaining_days--;
+        if ($the_first_day_of_week <= 7 && 7 <= $the_last_day_of_week) $no_remaining_days--;
+    }
+    else {
+        // (edit by Tokes to fix an edge case where the start day was a Sunday
+        // and the end day was NOT a Saturday)
+
+        // the day of the week for start is later than the day of the week for end
+        if ($the_first_day_of_week == 7) {
+            // if the start date is a Sunday, then we definitely subtract 1 day
+            $no_remaining_days--;
+
+            if ($the_last_day_of_week == 6) {
+                // if the end date is a Saturday, then we subtract another day
+                $no_remaining_days--;
+            }
+        }
+        else {
+            // the start date was a Saturday (or earlier), and the end date was (Mon..Fri)
+            // so we skip an entire weekend and subtract 2 days
+            $no_remaining_days -= 2;
+        }
+    }
+
+    //The no. of business days is: (number of weeks between the two dates) * (5 working days) + the remainder
+//---->february in none leap years gave a remainder of 0 but still calculated weekends between first and last day, this is one way to fix it
+   $workingDays = $no_full_weeks * 5;
+    if ($no_remaining_days > 0 )
+    {
+      $workingDays += $no_remaining_days;
+    }
+
+    return $workingDays;
+}
+
+function resetEmailSentCount() {
+    global $db;
+    $db->query("UPDATE contacts SET email_sent_count = 0");
+}
+
 function checkOpportunitySalesData() {
     $GLOBALS['log']->debug('Custom Scheduler : Starting checkOpportunitySalesData');
+    $dateToday = TimeDate::getInstance()->nowDbDate();
+    $date = date_create($dateToday);
+    if(date_format($date,"m") == '01' && date_format($date,"d") == '01') {
+        resetEmailSentCount();
+    }
+
     require_once('modules/Emails/Email.php');
     require_once('modules/Opportunities/Opportunity.php');
     global $db, $sugar_config;
-    $oppDataSql = $db->query("SELECT
-                                    opp.id                      AS id,
-                                    opp_c.product_c             AS product_sku,
-                                    opp_c.country_c             AS country,
+    $conDataSql = $db->query("SELECT
                                     LTRIM(RTRIM(jt0.first_name)) AS assigned_user_name,
                                     LTRIM(RTRIM(contacts.first_name)) AS contact_name,
                                     contacts.id                 AS conid,
                                     contact_email.email_address AS email_address
-                                  FROM opportunities opp
-                                    LEFT JOIN opportunities_cstm opp_c
-                                      ON opp.id = opp_c.id_c
-                                      AND opp_c.is_email_sent_c = 0
+                                  FROM contacts contacts
                                     LEFT JOIN users jt0
-                                      ON opp.assigned_user_id = jt0.id
+                                      ON contacts.assigned_user_id = jt0.id
                                         AND jt0.deleted = 0
-                                    LEFT JOIN opportunities_contacts
-                                      ON opp.id = opportunities_contacts.opportunity_id
-                                        AND opportunities_contacts.deleted = 0
-                                    INNER JOIN contacts contacts
-                                      ON contacts.id = opportunities_contacts.contact_id
-                                        AND contacts.deleted = 0
+                                    INNER JOIN contacts_cstm
+                                      ON contacts.id = contacts_cstm.id_c
                                     LEFT OUTER JOIN (SELECT
                                                        contacts.id                  AS con_id,
                                                        email_address
@@ -318,111 +373,102 @@ function checkOpportunitySalesData() {
                                                          AND email_addresses.deleted = 0
                                                          AND contacts.deleted = 0) contact_email
                                       ON contact_email.con_id = contacts.id
-                                  WHERE DATE_ADD(opp.date_entered,INTERVAL  7 DAY) <= NOW()
-                                      AND opp.sales_stage = 'Proposal/Price Quote'
-                                      AND opp_c.product_c IS NOT NULL
-                                      AND opp_c.product_c <> ''
-                                      AND opp_c.country_c IS NOT NULL
-                                      AND opp_c.country_c <> ''
-                                      AND opp.deleted = 0
-                                      AND opp_c.is_email_sent_c = 0");
-    $oppSoapData = array();
+                                  WHERE 
+                                        ABS(DATEDIFF(NOW(), contacts.date_modified))
+                                        - ABS(DATEDIFF(ADDDATE(NOW(), INTERVAL 1 - DAYOFWEEK(NOW()) DAY),
+                                        ADDDATE(contacts.date_modified, INTERVAL 1 - DAYOFWEEK(contacts.date_modified) DAY))) / 7 * 2
+                                        - (DAYOFWEEK(IF(contacts.date_modified < NOW(), contacts.date_modified, NOW())) = 1)
+                                        - (DAYOFWEEK(IF(contacts.date_modified > NOW(), contacts.date_modified, NOW())) = 7) = 7
+                                  
+                                      AND contacts_cstm.type_c = 'Enquiry'
+									");
     $contactData = array();
-    while ($oppData = $db->fetchByAssoc($oppDataSql)) {
-        $oppSoapData[$oppData['id']]['country'] = $oppData['country'];
-        $oppSoapData[$oppData['id']]['product_sku'] = $oppData['product_sku'];
-        $oppSoapData[$oppData['id']]['cust_email'] = $oppData['email_address'];
-        $contactData[$oppData['id']]['assigned_user_name'] = $oppData['assigned_user_name'];
-        $contactData[$oppData['id']]['Contact_name'] = $oppData['contact_name'];
-        $contactData[$oppData['id']]['email_address'] = $oppData['email_address'];
-    }
-
-    //SOAP CALL BEGIN
-    include 'custom/include/magentoSoapIntegration/config.php';
-
-    try {
-        $oppSoapResponse = $soap->call($session_id, 'sales_order.getOrderStatus', array($oppSoapData));
-    } catch (Exception $e) {
-        $oppSoapResponse = array();
+    while ($row = $db->fetchByAssoc($conDataSql)) {
+        $contactData[] = $row;
     }
     //SOAP CALL END
     //SEND EMAIL START
-    foreach ($oppSoapResponse as $oppId => $oppOrderStatus) {
-        //Create Opp object
-        $currentOpp = new Opportunity();
-        $currentOpp->retrieve($oppId);
-
-        $name = $contactData[$oppId]['Contact_name'];
-        $assigned_user_name = $contactData[$oppId]['assigned_user_name'];
-        $email_address = $contactData[$oppId]['email_address'];
-        //$email_address = 'dhaval@india.biztechconsultancy.com';
-        $emailtemplate = new EmailTemplate();
-        if (count($oppOrderStatus) == 0) {
-            $currentOpp->sales_stage = "Closed Lost";
+    foreach ($contactData as $conData) {
+        $name = $conData['contact_name'];
+        $assigned_user_name = $conData['assigned_user_name'];
+        $email_address = $conData['email_address'];
+        $con_id = $conData['conid'];
+        $currentCon = new Contact();
+        $currentCon->retrieve($con_id);
+        if(!$currentCon->email_opt_out && $currentCon->email_sent_count < 3) {
+            //$email_address = 'dhaval@india.biztechconsultancy.com';
+            $emailtemplate = new EmailTemplate();
             $emailtemplate->retrieve($sugar_config['opp_no_order_placed']);
-        } else {
-            $currentOpp->sales_stage = "Closed Won";
-            $emailtemplate->retrieve($sugar_config['opp_order_placed']);
-        }
-
-        //Load the signature
-        require_once 'modules/Users/UserSignature.php';
-        $signature = new UserSignature();
-        $signature->retrieve_by_string_fields(array("user_id" => '1'));
-
-        $email_body = $emailtemplate->body_html;
-        $email_body_plain = $emailtemplate->body;
-        $email_body = str_replace('$contact_first_name', $name, $email_body);
-        $email_body = str_replace('$contact_user_first_name', $assigned_user_name, $email_body);
-        //add the signature
-        $email_body = str_replace('[signature]', $signature->signature_html, $email_body);
-        $mailSubject = $emailtemplate->subject;
 
 
-        $emailObj = new Email();
-        $defaults = $emailObj->getSystemDefaultEmail();
-        $mail = new SugarPHPMailer();
-        $mail->setMailerForSystem();
-        $mail->ClearAllRecipients();
-        $mail->ClearReplyTos();
-        $mail->From = $defaults['email'];
-        $mail->FromName = $defaults['name'];
-        $subject = $mailSubject;
-        $mail->Subject = $subject;
-        $mail->Body = from_html($email_body);
-        $mail->AltBody = $email_body_plain;
-        $mail->prepForOutbound();
-        $address = $email_address;
-        $mail->AddAddress($email_address);
+            //Load the signature
+            require_once 'modules/Users/UserSignature.php';
+            $signature = new UserSignature();
+            $signature->retrieve_by_string_fields(array("user_id" => '1'));
 
-        if (!empty($email_address) && $mail->Send()) {
-            $emailObj->to_addrs = $address;
-            $emailObj->type = 'out';
-            $emailObj->deleted = '0';
-            $emailObj->name = $subject;
-            $emailObj->description = $email_body_plain;
-            $emailObj->description_html = from_html($email_body);
-            $emailObj->from_addr = $defaults['email'];
-            $emailObj->parent_type = 'Opportunities';
-            $emailObj->parent_id = $oppId;
-            $user_id = '1';
-            $emailObj->date_sent = TimeDate::getInstance()->nowDb();
-            $emailObj->assigned_user_id = $user_id;
-            $emailObj->modified_user_id = $user_id;
-            $emailObj->created_by = $user_id;
-            $emailObj->status = 'sent';
-            $emailObj->save();
-            $currentOpp->is_email_sent_c = 1;
-            $currentOpp->save();
-            /* $db->query("UPDATE opportunities_cstm
-              SET is_email_sent_c = 1
-              WHERE opportunities_cstm.id_c = '" . $oppId . "'"); */
-        } else {
-            $mail_msg = $mail->ErrorInfo;
-            //echo "error sending " . $mail_msg;
+            $email_body = $emailtemplate->body_html;
+            $email_body_plain = $emailtemplate->body;
+            $email_body = str_replace('$contact_first_name', $name, $email_body);
+            $email_body = str_replace('$contact_user_first_name', $assigned_user_name, $email_body);
+            //add the signature
+            $email_body = str_replace('[signature]', $signature->signature_html, $email_body);
+            $mailSubject = $emailtemplate->subject;
+
+            $emailObj = new Email();
+            $defaults = $emailObj->getSystemDefaultEmail();
+            $mail = new SugarPHPMailer();
+            $mail->setMailerForSystem();
+            $mail->ClearAllRecipients();
+            $mail->ClearReplyTos();
+            $mail->From = $defaults['email'];
+            $mail->FromName = $defaults['name'];
+            $subject = $mailSubject;
+            $mail->Subject = $subject;
+            $mail->Body = from_html($email_body);
+            $mail->AltBody = $email_body_plain;
+            $mail->prepForOutbound();
+            $address = $email_address;
+            $mail->AddAddress($email_address);
+            $sendEmail = false;
+            if($currentCon->is_email_sent == 0) {
+                $sendEmail = true;
+            } else {
+                if (getWorkingDays(str_replace('/', '-', $currentCon->email_sent_date), date("Y-m-d")) >= 7) {
+                    $sendEmail = true;
+                }
+            }
+            $GLOBALS['log']->fatal('$sendEmail', $sendEmail);
+
+            if ($sendEmail && !empty($email_address) && $mail->Send()) {
+                $emailObj->to_addrs = $address;
+                $emailObj->type = 'out';
+                $emailObj->deleted = '0';
+                $emailObj->name = $subject;
+                $emailObj->description = $email_body_plain;
+                $emailObj->description_html = from_html($email_body);
+                $emailObj->from_addr = $defaults['email'];
+                $user_id = '1';
+                $emailObj->date_sent = TimeDate::getInstance()->nowDb();
+                $emailObj->assigned_user_id = $user_id;
+                $emailObj->modified_user_id = $user_id;
+                $emailObj->created_by = $user_id;
+                $emailObj->status = 'sent';
+                $emailObj->save();
+                $dateToday = TimeDate::getInstance()->nowDbDate();
+                $db->query("UPDATE contacts
+                SET is_email_sent = 1,
+                email_sent_date ='" .  $dateToday . "',
+                email_sent_count= email_sent_count + 1
+                WHERE contacts.id = '" . $con_id . "'");
+                /* $db->query("UPDATE opportunities_cstm
+                    SET is_email_sent_c = 1
+                    WHERE opportunities_cstm.id_c = '" . $oppId . "'"); */
+            } else {
+                $mail_msg = $mail->ErrorInfo;
+                echo "error sending " . $mail_msg;
+            }
         }
     }
-
     //Return true to notify the successfull execution of the job
     return true;
 }
